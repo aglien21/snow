@@ -2,7 +2,7 @@
    Burimi: Xtream Codes (host + përdorues + fjalëkalim) ose link M3U.
    Videoja luhet me AVPlay të televizorit: luan .ts, HLS, MPEG-2, HEVC, MP2… direkt nga ofruesi. */
 "use strict";
-var VERSIONI = "1.1.0";
+var VERSIONI = "1.1.1";
 var $ = function (s) { return document.querySelector(s); };
 var NE_TV = !!(window.webapis && window.webapis.avplay);
 
