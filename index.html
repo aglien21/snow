@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Snow IPTV për Samsung TV</title>
+<title>Snow IPTV – Samsung TV, Android TV dhe telefon</title>
 <link rel="icon" href="icon.png">
 <style>
   body { margin: 0; background: #0f1320; color: #e9edf5; font: 17px/1.6 "Segoe UI", Roboto, Arial, sans-serif; }
@@ -14,24 +14,32 @@
   .nen { color: #9aa3b8; }
   .shkarko { display: block; text-align: center; background: #33b5f0; color: #fff; text-decoration: none; font-weight: 700; font-size: 21px;
     border-radius: 14px; padding: 16px; margin: 26px 0 8px; }
+  .dy { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 26px 0 8px; }
+  .dy .shkarko { margin: 0; font-size: 18px; padding: 14px 10px; }
+  .dy .shkarko small { display: block; font-weight: 400; font-size: 13px; opacity: .9; }
+  .shkarko.and { background: #3ddc84; color: #0f1320; }
+  @media (max-width: 520px) { .dy { grid-template-columns: 1fr; } }
   .v { text-align: center; color: #9aa3b8; font-size: 14px; }
   h2 { margin: 36px 0 10px; font-size: 22px; }
   .kuti { background: #171d2e; border: 1px solid #262f47; border-radius: 14px; padding: 14px 18px; margin: 12px 0; }
   .kujdes { border-color: #ff9f43; background: #2a2114; }
   ol { padding-left: 22px; } li { margin: 7px 0; }
   .k { background: #262f47; border-radius: 6px; padding: 1px 7px; font-weight: 600; }
-  a { color: #7fb3ff; }
+  a { color: #7fb3ff; overflow-wrap: anywhere; }
 </style>
 </head>
 <body><div class="faqe">
-  <div class="koka"><img src="icon.png" alt=""><div><h1>SNOW <b>IPTV</b></h1><div class="nen">Lojtar IPTV për televizorët Samsung (Tizen), në shqip</div></div></div>
+  <div class="koka"><img src="icon.png" alt=""><div><h1>SNOW <b>IPTV</b></h1><div class="nen">Lojtar IPTV në shqip · Samsung TV · Android TV · telefon Android</div></div></div>
 
-  <a class="shkarko" href="SnowIPTV.wgt" download>⬇️ Shkarko SnowIPTV.wgt</a>
-  <div class="v">Versioni 1.2.0 · Pasi instalohet, përditësohet vetë</div>
+  <div class="dy">
+    <a class="shkarko" href="SnowIPTV.wgt" download>📺 Samsung TV<small>SnowIPTV.wgt</small></a>
+    <a class="shkarko and" href="SnowIPTV.apk" download>🤖 Android TV / telefon<small>SnowIPTV.apk</small></a>
+  </div>
+  <div class="v">Versioni 1.3.0 · Pasi instalohet, përditësohet vetë</div>
 
   <div class="kuti">Aplikacioni është <b>bosh</b>: ti fut abonimin tënd (Xtream Codes ose link M3U) që të ka dhënë ofruesi. Nuk vjen me kanale.</div>
 
-  <h2>📱 Si instalohet me telefon Android</h2>
+  <h2>📺 Samsung TV – si instalohet (me telefon Android)</h2>
   <ol>
     <li>Telefoni dhe televizori duhet të jenë <b>në të njëjtin Wi-Fi</b>.</li>
     <li>Në telefon shkarko <b>SnowIPTV.wgt</b> me butonin lart.</li>
@@ -49,7 +57,35 @@
   </ol>
   <div class="kuti">💻 Pa Android? E njëjta gjë bëhet me Apps2Samsung në kompjuter (Windows ose Mac). Te Host PC IP vendoset IP-ja e kompjuterit.</div>
 
-  <h2>📺 Telekomanda</h2>
+  <h2>🤖 Telefon Android – si instalohet</h2>
+  <ol>
+    <li>Në telefon shtyp butonin e gjelbër <b>Android TV / telefon</b> lart → shkarkohet <b>SnowIPTV.apk</b>.</li>
+    <li>Hape skedarin (te njoftimi i shkarkimit ose te <b>Files → Downloads</b>).</li>
+    <li>Nëse telefoni thotë <i>„Për sigurinë tënde, telefoni nuk lejon aplikacione nga ky burim“</i>:
+      shtyp <b>Cilësimet</b> → aktivizo <b>Lejo nga ky burim</b> → kthehu mbrapa → <b>Instalo</b>.</li>
+    <li>Nëse del <b>Play Protect</b> („aplikacion i panjohur“): <b>Më shumë detaje → Instalo gjithsesi</b>.
+      Del sepse aplikacioni nuk është në Play Store.</li>
+    <li>Gati! <b>Snow IPTV</b> hapet horizontalisht, njësoj si në televizor.</li>
+  </ol>
+  <div class="kuti">👆 <b>Me gisht:</b> prek kanalin = kutia e vogël · prek përsëri = ekran i plotë · mbaj gishtin = ⭐<br>
+    Në ekran të plotë: rrëshqit <b>lart/poshtë</b> = kanali tjetër · <b>majtas</b> = lista e shpejtë · prek = info · <b>Mbrapa</b> = menuja<br>
+    Filmat: prek = info, prek përsëri = pauzë · rrëshqit <b>majtas/djathtas</b> = 10 sekonda</div>
+
+  <h2>📺 Android TV / Google TV / TV Box – si instalohet</h2>
+  <ol>
+    <li>Në TV hap <b>Google Play</b> dhe instalo aplikacionin falas <b>Downloader</b> (nga AFTVnews).</li>
+    <li>Lejo instalimin: <b>Cilësimet → Apps → Security &amp; restrictions → Unknown sources</b> → aktivizo <b>Downloader</b>.<br>
+      Në Google TV: <b>Cilësimet → System → About</b> → shtyp 7 herë <b>Android TV OS build</b> (bëhesh „developer“),
+      pastaj <b>Cilësimet → Apps → Security &amp; restrictions → Unknown sources → Downloader</b>.</li>
+    <li>Hap <b>Downloader</b> dhe te kutia e adresës shkruaj:<br><span class="k">aglien21.github.io/snow/SnowIPTV.apk</span> → <b>Go</b>.</li>
+    <li>Kur mbaron shkarkimi → <b>Install</b> → <b>Open</b>. Pastaj skedarin mund ta fshish (Delete) që të lirosh vend.</li>
+    <li>Gati! <b>Snow IPTV</b> del te aplikacionet e televizorit.</li>
+  </ol>
+  <div class="kuti">🔄 <b>Përditësimet në Android:</b> ndryshimet e zakonshme vijnë vetë, si në Samsung. Kur del një APK e re,
+    aplikacioni të pyet <i>„Ka një version të ri… Ta shkarkoj dhe ta instaloj tani?“</i>. Shtyp <b>Po, instaloje</b>, pastaj <b>Install</b>.
+    Herën e parë Android kërkon leje: aktivizo <b>Lejo nga ky burim</b> për Snow IPTV dhe kthehu mbrapa. Listat dhe të preferuarat nuk humbin.</div>
+
+  <h2>📺 Telekomanda (Samsung dhe Android TV)</h2>
   <div class="kuti">
     <b>OK</b>: kanali luan në kutinë e vogël · <b>OK</b> përsëri: ekran i plotë · mbaj <b>OK</b>: ⭐ të preferuarat<br>
     Në ekran të plotë: <b>▲▼ / CH</b> kanali tjetër · <b>OK</b> ose <b>Back</b> menuja · <b>◀</b> lista e shpejtë · <b>▶</b> formati i figurës<br>

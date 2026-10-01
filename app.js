@@ -1,8 +1,8 @@
-/* Snow IPTV për Samsung TV (Tizen) – lojtar IPTV në shqip.
+/* Snow IPTV për Samsung TV (Tizen) dhe Android (TV + telefon) – lojtar IPTV në shqip.
    Burimi: Xtream Codes (host + përdorues + fjalëkalim) ose link M3U.
    Videoja luhet me AVPlay të televizorit: luan .ts, HLS, MPEG-2, HEVC, MP2… direkt nga ofruesi. */
 "use strict";
-var VERSIONI = "1.2.0";
+var VERSIONI = "1.3.0";
 var PANELI = "http://130.61.238.162:8000/snow/api/pajisja";   // paneli i administratorit (Oracle)
 var $ = function (s) { return document.querySelector(s); };
 var NE_TV = !!(window.webapis && window.webapis.avplay);
@@ -1215,10 +1215,198 @@ function tastPlote(k) {
 
 // ------------------------------------------------------------------ nisja
 function shkallezo() {
-  var s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
-  $("#skena").style.transform = "scale(" + s + ")";
+  var W = window.innerWidth, H = window.innerHeight, s = Math.min(W / 1920, H / 1080), sk = $("#skena");
+  sk.style.transform = "scale(" + s + ")";
+  sk.style.left = Math.max(0, Math.round((W - 1920 * s) / 2)) + "px";   // në ekrane më të gjera (telefon) ekrani rri në mes
+  sk.style.top = Math.max(0, Math.round((H - 1080 * s) / 2)) + "px";
+}
+
+// ------------------------------------------------------------------ prekja (telefon / tablet). Në TV s'ka asnjë efekt.
+// Prekje = zgjidh + OK (si telekomanda) · prekje e gjatë = ⭐ · gishti lart/poshtë = lëviz listën
+// Ekran i plotë: prekje = info (filma: info, pastaj pauzë) · ▲▼ me gisht = kanal tjetër · ◀ = lista e shpejtë · ▶ = figura
+var PR = { aktiv: false, x0: 0, y0: 0, x: 0, y: 0, cak: null, lp: null, hapa: 0, timerGjate: null, gjate: false, levizi: false, fling: null, hist: [] };
+function shkallaSkenes() { var r = $("#skena").getBoundingClientRect(); return r.width / 1920 || 1; }
+function ePlote() { return document.body.classList.contains("plote"); }
+function listaPrekjes(el) {
+  var harta = { "l-kat": "kat", "l-kan": "kan", "v-kat": "vkat", "v-rrjet": "vrr", "s-kat": "skat", "s-rrjet": "srr", "d-sez": "sez", "d-ep": "ep", "k-lista": "klista", "c-lista": "clista", "z-lista": "zap" };
+  var obj = { kat: UI.lKat, kan: UI.lKan, vkat: UI.vKat, vrr: UI.vRr, skat: UI.sKat, srr: UI.sRr, sez: UI.dSez, ep: UI.dEp, klista: UI.kLista, clista: UI.cLista, zap: UI.zLista };
+  for (var e = el; e && e !== document.body && e.nodeType === 1; e = e.parentNode) if (e.id && harta[e.id] && obj[harta[e.id]]) return { zona: harta[e.id], l: obj[harta[e.id]], el: e };
+  return null;
+}
+function indeksiPrekjes(lp, cak) {
+  var l = lp.l;
+  for (var e = cak; e && e !== lp.el; e = e.parentNode) {
+    if (e.parentNode === l.inner) {
+      if (!l.items.length) return -1;
+      var i = (l.kol ? l.top * l.kol : l.top) + Array.prototype.indexOf.call(l.inner.children, e);
+      return i >= 0 && i < l.items.length ? i : -1;
+    }
+  }
+  return -1;
+}
+Lista.prototype.rrotullo = function (d) {   // lëviz faqen me gisht; zgjedhja ndjek faqen vetëm kur del jashtë saj
+  var v = this.dukshme(), kol = this.kol || 1, n = Math.ceil(this.items.length / kol);
+  var top = Math.max(0, Math.min(this.top + d, Math.max(0, n - v)));
+  if (top === this.top) return false;
+  this.top = top;
+  var rr = Math.floor(this.i / kol), i0 = this.i;
+  if (rr < top) this.i = Math.min(this.items.length - 1, top * kol + this.i % kol);
+  else if (rr >= top + v) this.i = Math.min(this.items.length - 1, (top + v - 1) * kol + this.i % kol);
+  this.vizato();
+  if (this.i !== i0) this.onFocus(this.tani(), this.i);
+  return true;
+};
+function listaLevizet() { return PR.lp && (!ePlote() || PR.lp.zona === "zap"); }
+// Kur lista rivizatohet, rreshti nën gisht zëvendësohet dhe shfletuesi vazhdon t'i dërgojë lëvizjet
+// te elementi i hequr (që s'arrijnë më te document). Prandaj i dëgjojmë edhe te vetë elementi i prekur.
+var PR_CAK = null;
+function prDegjo(el) {
+  if (PR_CAK === el) return;
+  prHiq();
+  if (!el || !el.addEventListener) return;
+  PR_CAK = el;
+  el.addEventListener("touchmove", prCakLeviz, { passive: false });
+  el.addEventListener("touchend", prCakMbaron, { passive: false });
+  el.addEventListener("touchcancel", prCakAnulo, { passive: true });
+}
+function prHiq() {
+  if (!PR_CAK) return;
+  PR_CAK.removeEventListener("touchmove", prCakLeviz, { passive: false });
+  PR_CAK.removeEventListener("touchend", prCakMbaron, { passive: false });
+  PR_CAK.removeEventListener("touchcancel", prCakAnulo, { passive: true });
+  PR_CAK = null;
+}
+function prCakLeviz(e) { e.__snow = 1; prekjaLeviz(e); }
+function prCakMbaron(e) { e.__snow = 1; prekjaMbaron(e); prHiq(); }
+function prCakAnulo(e) { e.__snow = 1; prekjaAnulohet(); prHiq(); }
+function prekjaAnulohet() { PR.aktiv = false; clearTimeout(PR.timerGjate); }
+function prekjaFillon(e) {
+  if (e.touches && e.touches.length === 1) prDegjo(e.target);
+  if (!e.touches || e.touches.length !== 1) { PR.aktiv = false; clearTimeout(PR.timerGjate); return; }
+  var t = e.touches[0];
+  clearInterval(PR.fling); PR.fling = null;
+  PR.aktiv = true; PR.x0 = PR.x = t.clientX; PR.y0 = PR.y = t.clientY; PR.cak = e.target; PR.levizi = false; PR.gjate = false; PR.hapa = 0;
+  PR.hist = [[Date.now(), PR.y]];
+  PR.lp = DG ? null : listaPrekjes(e.target);
+  clearTimeout(PR.timerGjate);
+  PR.timerGjate = setTimeout(function () { if (PR.aktiv && !PR.levizi) { PR.gjate = true; prekjeGjate(); } }, 650);
+}
+function prekjaLeviz(e) {
+  if (e.__snowU) return; e.__snowU = 1;   // e trajtuar një herë (te elementi ose te document)
+  if (!PR.aktiv || !e.touches || !e.touches.length) return;
+  var t = e.touches[0]; PR.x = t.clientX; PR.y = t.clientY;
+  var dx = PR.x - PR.x0, dy = PR.y - PR.y0;
+  if (!PR.levizi && Math.abs(dx) < 12 && Math.abs(dy) < 12) return;
+  if (!PR.levizi) { PR.levizi = true; clearTimeout(PR.timerGjate); }
+  PR.hist.push([Date.now(), PR.y]); if (PR.hist.length > 6) PR.hist.shift();
+  if (listaLevizet()) {
+    var hapa = Math.trunc(-dy / (PR.lp.l.h * shkallaSkenes()));   // gishti lart → më poshtë në listë
+    if (hapa !== PR.hapa) { PR.lp.l.rrotullo(hapa - PR.hapa); PR.hapa = hapa; }
+  }
+  if (e.cancelable) e.preventDefault();
+}
+function prekjaMbaron(e) {
+  if (e.__snowU) return; e.__snowU = 1;
+  if (!PR.aktiv) return;
+  PR.aktiv = false; clearTimeout(PR.timerGjate);
+  var cak = PR.cak, input = !!(cak && (cak.tagName === "INPUT" || cak.tagName === "TEXTAREA"));
+  if (PR.gjate) { if (e.cancelable) e.preventDefault(); return; }
+  if (PR.levizi) {
+    if (listaLevizet()) flingu(); else if (ePlote()) rreshqitjePlote(PR.x - PR.x0, PR.y - PR.y0);
+    if (e.cancelable) e.preventDefault();
+    return;
+  }
+  if (input) { prekInput(cak); return; }   // tastiera hapet vetë
+  if (e.cancelable) e.preventDefault();
+  var a = document.activeElement; if (a && a.tagName === "INPUT") a.blur();
+  try { prekje(cak); } catch (x) { if (window.console) console.error(x); }
+}
+function flingu() {
+  var h = PR.hist; if (h.length < 2) return;
+  var a = h[0], b = h[h.length - 1], dt = b[0] - a[0];
+  if (dt <= 0 || Date.now() - b[0] > 120) return;   // gishti ndaloi para se ta lëshonte
+  var v = (b[1] - a[1]) / dt; if (Math.abs(v) < 0.5) return;
+  var l = PR.lp.l, shpejt = -v * 16 / (l.h * shkallaSkenes()), mbetja = 0;
+  PR.fling = setInterval(function () {
+    mbetja += shpejt; var n = Math.trunc(mbetja);
+    if (n) { mbetja -= n; if (!l.rrotullo(n)) { clearInterval(PR.fling); PR.fling = null; return; } }
+    shpejt *= 0.94; if (Math.abs(shpejt) < 0.05) { clearInterval(PR.fling); PR.fling = null; }
+  }, 16);
+}
+function zgjidhNePrekje(lp, j) {
+  if (F.zona !== lp.zona) vendosZone(lp.zona);
+  var l = lp.l, ndryshoi = l.i !== j;
+  l.i = j; l.vizato();
+  if (ndryshoi) l.onFocus(l.tani(), j);
+}
+function prekje(cak) {
+  if (!cak || !cak.closest) return;
+  if (DG) {   // butonat e dialogut
+    var b = cak.closest("#dg-butonat .buton");
+    if (b) { var bi = Array.prototype.indexOf.call(b.parentNode.children, b); DG.i = bi; vizatoDialog(); mbyllDialog(bi); }
+    return;
+  }
+  if (ePlote()) {
+    if (!$("#zap").classList.contains("fsh")) {   // lista e shpejtë mbi video
+      var lz = listaPrekjes(cak);
+      if (lz && lz.zona === "zap") { var zi = indeksiPrekjes(lz, cak); if (zi >= 0) { UI.zLista.i = zi; UI.zLista.vizato(); veprim(K.OK); } }
+      else veprim(K.PRAPA);
+      return;
+    }
+    if (S.luan && S.luan.lloji === "live") veprim(K.INFO);
+    else veprim($("#osd").classList.contains("fsh") ? K.INFO : K.OK);
+    return;
+  }
+  var tab = cak.closest(".tab");
+  if (tab) {
+    if (F.ekran === "forma" || !S.burim) return;
+    var ti = TABET.indexOf(tab.dataset.t); if (ti < 0) return;
+    F.tab = ti; kaloTab(); tastTabet(K.OK);
+    return;
+  }
+  if (F.ekran === "forma") {
+    var fu = cak.closest("#m-forma .fusha, #m-forma .buton");
+    if (fu) { var fi = fushatForme().indexOf(fu.dataset.f); if (fi >= 0) { FM.fokus = fi; vizatoForme(); tastForme(K.OK); } }
+    return;
+  }
+  if (cak.closest("#kutia")) {   // kutia e vogël: si OK i dytë → ekran i plotë
+    if (F.ekran === "live" && S.luan && S.luan.lloji === "live" && L.luan()) hyrPlote();
+    return;
+  }
+  if (cak.closest("#k-input")) { vendosZone("kinput"); return; }
+  var lp = listaPrekjes(cak);
+  if (lp && lp.zona !== "zap") {
+    var j = indeksiPrekjes(lp, cak); if (j < 0) return;
+    zgjidhNePrekje(lp, j);
+    veprim(K.OK);
+  }
+}
+function prekjeGjate() {
+  if (DG) return;
+  if (ePlote()) { if ($("#zap").classList.contains("fsh") && okGjateLejohet()) veprimGjate(); return; }
+  var lp = PR.lp; if (!lp || lp.zona === "zap") return;
+  var j = indeksiPrekjes(lp, PR.cak); if (j < 0) return;
+  zgjidhNePrekje(lp, j);
+  if (okGjateLejohet()) { veprimGjate(); try { if (navigator.vibrate) navigator.vibrate(30); } catch (e) {} }
+}
+function prekInput(inp) {
+  if (inp.id === "k-input") { vendosZone("kinput"); return; }
+  if (F.ekran === "forma" && inp.closest) {
+    var fu = inp.closest(".fusha"); if (!fu) return;
+    var fi = fushatForme().indexOf(fu.dataset.f); if (fi >= 0) { FM.fokus = fi; vizatoForme(); }
+  }
+}
+function rreshqitjePlote(dx, dy) {
+  var ax = Math.abs(dx), ay = Math.abs(dy);
+  if ((ax < 50 && ay < 50) || !$("#zap").classList.contains("fsh")) return;
+  if (ay > ax) veprim(dy < 0 ? K.LART : K.POSHTE);   // live: kanali tjetër / i mëparshmi · film: info / figura
+  else veprim(dx < 0 ? K.MAJTAS : K.DJATHTAS);        // live: lista e shpejtë / figura · film: −10 s / +10 s
 }
 function nis() {
+  if (window.SNOW_ANDROID) {   // Android: videoja (ExoPlayer) luan poshtë faqes; <object> i Samsung-ut zëvendësohet me div bosh
+    var avO = $("#av");
+    if (avO && avO.tagName === "OBJECT") { var avD = document.createElement("div"); avD.id = "av"; avO.parentNode.replaceChild(avD, avO); }
+  }
   if (!NE_TV) document.body.classList.add("shfletues");
   else { var vd = $("#vd"); if (vd) vd.parentNode.removeChild(vd); }   // në TV videoja luan POSHTË faqes: asgjë e errët s'duhet ta mbulojë
   shkallezo(); window.addEventListener("resize", shkallezo);
@@ -1236,6 +1424,10 @@ function nis() {
   UI.zLista = new Lista($("#z-lista"), { h: 76, render: rreshtKanal });
   document.addEventListener("keydown", tasti);
   document.addEventListener("keyup", tastiLart);
+  document.addEventListener("touchstart", prekjaFillon, { passive: true });
+  document.addEventListener("touchmove", prekjaLeviz, { passive: false });
+  document.addEventListener("touchend", prekjaMbaron, { passive: false });
+  document.addEventListener("touchcancel", function () { prekjaAnulohet(); prHiq(); }, { passive: true });
   $("#k-input").addEventListener("input", function () { clearTimeout(kerkimTimer2); kerkimTimer2 = setTimeout(function () { kerko($("#k-input").value); }, 400); });
   document.addEventListener("visibilitychange", function () {
     if (!document.hidden && window.MI_PERDITESIM_GATI && window.MI_PERDITESIM_GATI()) {   // u shkarkua version i ri ndërsa ishe jashtë
