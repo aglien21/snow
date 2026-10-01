@@ -151,3 +151,6 @@ body.plote #ui { display: none; }
 #fillimi { position: absolute; inset: 0; z-index: 30; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 30px; }
 #fillimi-tekst { font-size: 30px; color: var(--zbehte); }
 .bosh-tekst { color: var(--zbehte); font-size: 26px; padding: 30px; text-align: center; line-height: 1.5; }
+.forma-id { background: #1c2333; border-radius: 12px; padding: 12px 18px; margin: 4px 0 14px; font-size: 24px; }
+.forma-id:empty { display: none; }
+.forma-id small { color: var(--zbehte); font-size: 19px; }

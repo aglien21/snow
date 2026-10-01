@@ -2,7 +2,8 @@
    Burimi: Xtream Codes (host + përdorues + fjalëkalim) ose link M3U.
    Videoja luhet me AVPlay të televizorit: luan .ts, HLS, MPEG-2, HEVC, MP2… direkt nga ofruesi. */
 "use strict";
-var VERSIONI = "1.1.1";
+var VERSIONI = "1.2.0";
+var PANELI = "http://130.61.238.162:8000/snow/api/pajisja";   // paneli i administratorit (Oracle)
 var $ = function (s) { return document.querySelector(s); };
 var NE_TV = !!(window.webapis && window.webapis.avplay);
 
@@ -156,6 +157,85 @@ M3U.prototype.urlLive = function (it) { return it.url; };
 M3U.prototype.urlVod = function (it) { return it.url; };
 M3U.prototype.epg = function (it) { return this.xt && it.xt ? this.xt.epg(it) : Promise.resolve([]); };  // linqe Xtream brenda M3U: guida nga ofruesi
 M3U.prototype.epgTani = function () { return Promise.resolve(null); };
+
+// ------------------------------------------------------------------ ID e TV-së dhe paneli i administratorit
+function idPajisjes() {
+  var mac = "";
+  try { if (window.webapis && webapis.network && webapis.network.getMac) mac = webapis.network.getMac() || ""; } catch (e) {}
+  mac = String(mac).toUpperCase().replace(/[^0-9A-F]/g, "");
+  if (mac.length === 12 && !/^0+$/.test(mac)) { mac = mac.match(/../g).join(":"); if (LS.get("pajisja_id", "") !== mac) LS.set("pajisja_id", mac); return mac; }
+  var id = LS.get("pajisja_id", "");
+  if (!id) {   // pa MAC (p.sh. versioni i vjetër pa leje): ID e rastësishme në formë MAC-u, që s'ndryshon më
+    id = "02"; for (var i = 0; i < 5; i++) id += ":" + ("0" + Math.floor(Math.random() * 256).toString(16)).slice(-2);
+    id = id.toUpperCase(); LS.set("pajisja_id", id);
+  }
+  return id;
+}
+function celesiPajisjes() {
+  var c = LS.get("pajisja_celesi", "");
+  if (!c) { c = String(100000 + Math.floor(Math.random() * 900000)); LS.set("pajisja_celesi", c); }
+  return c;
+}
+function modeliTV() {
+  try { return webapis.productinfo.getRealModel() || webapis.productinfo.getModel() || "Samsung"; } catch (e) { return NE_TV ? "Samsung" : "Shfletues"; }
+}
+var PN = { duke: false, gabimi: "", lidhur: 0 };
+function pyetPanelin() {
+  if (!PANELI || PN.duke) return;
+  PN.duke = true;
+  var x = new XMLHttpRequest();
+  x.open("POST", PANELI, true);
+  x.timeout = 15000;
+  x.setRequestHeader("Content-Type", "application/json");
+  x.onload = function () {
+    PN.duke = false;
+    var d = null; try { d = JSON.parse(x.responseText); } catch (e) {}
+    if (!d) { PN.gabimi = "përgjigje e gabuar"; return; }
+    if (x.status === 403 && d.gabim === "celesi") { PN.gabimi = "paneli pret që administratori të pranojë çelësin e ri"; return; }
+    if (!d.ok) { PN.gabimi = d.gabim || ("gabim " + x.status); return; }
+    PN.gabimi = ""; PN.lidhur = Date.now(); PN.emri = d.emri || "";
+    aplikoListatPanelit(d.listat || []);
+    (d.mesazhe || []).forEach(shtoMesazh);
+    if (F.ekran === "cil") vizatoCil();
+  };
+  x.onerror = x.ontimeout = function () { PN.duke = false; PN.gabimi = "paneli s'u arrit"; };
+  x.send(JSON.stringify({ id: idPajisjes(), celesi: celesiPajisjes(), v: VERSIONI, modeli: modeliTV() }));
+}
+function thelbiListes(l) { return JSON.stringify([l.lloji || "xtream", l.host || "", l.user || "", l.pass || "", l.m3u || ""]); }
+function aplikoListatPanelit(listat) {
+  var json = JSON.stringify(listat);
+  if (json === LS.get("paneli_json", "[]")) return;           // asgjë e re
+  LS.set("paneli_json", json);
+  var aktive = S.listat[S.aktive] || null, aktiveT = aktive ? thelbiListes(aktive) : "";
+  var reja = listat.map(function (l) { return { emri: l.emri, lloji: l.lloji, host: l.host, user: l.user, pass: l.pass, m3u: l.m3u, paneli: true }; });
+  S.listat = reja.concat(S.listat.filter(function (l) { return !l.paneli; }));
+  LS.set("listat", S.listat);
+  var idx = -1, hoqi = !reja.length || (aktive && aktive.paneli && !reja.some(function (l) { return thelbiListes(l) === aktiveT; }));
+  S.listat.forEach(function (l, i) { if (idx < 0 && thelbiListes(l) === aktiveT) idx = i; });
+  if (idx >= 0 && S.burim) {   // lista që po shikon s'ndryshoi
+    S.aktive = idx; LS.set("aktive", idx);
+    njofto("📋 Listat u përditësuan nga administratori", 4000);
+    if (F.ekran === "cil") vizatoCil();
+    return;
+  }
+  S.aktive = 0; LS.set("aktive", 0);
+  if (S.listat.length) { njofto(hoqi && !reja.length ? "📋 Administratori e hoqi listën" : "📋 Administratori të dërgoi listën", 4000); ngarkoListen(); }
+  else if (S.burim) { S.burim = null; hapForme(-1); }
+}
+var MQ = [];
+function shtoMesazh(m) {
+  if (!m || !m.id) return;
+  if (LS.get("mesazhe_pare", []).indexOf(m.id) >= 0 || MQ.some(function (x) { return x.id === m.id; })) return;
+  MQ.push(m);
+  shfaqMesazhet();
+}
+function shfaqMesazhet() {
+  if (!MQ.length) return;
+  if (DG || !$("#fillimi").classList.contains("fsh") || (document.activeElement && document.activeElement.tagName === "INPUT")) { setTimeout(shfaqMesazhet, 2000); return; }
+  var m = MQ.shift(), pare = LS.get("mesazhe_pare", []);
+  pare.push(m.id); LS.set("mesazhe_pare", pare.slice(-200));
+  dialog("📢 <b>Mesazh</b><br><div style='margin-top:16px;text-align:left;white-space:pre-wrap'>" + esc(m.tekst) + "</div>", [{ t: "OK" }]);
+}
 
 // ------------------------------------------------------------------ gjendja
 var S = {
@@ -697,7 +777,8 @@ function kerko(q) {
 function rreshtatCil() {
   var l = S.listat[S.aktive] || {};
   return [
-    { t: "📋 Lista aktive", v: l.emri || "—", f: zgjidhListen },
+    { t: "📺 ID e këtij TV", v: idPajisjes(), d: "Çelësi: " + celesiPajisjes() + " · jepja administratorit", f: function () { njofto("Duke pyetur panelin…"); pyetPanelin(); setTimeout(vizatoCil, 3000); } },
+    { t: "📋 Lista aktive", v: (l.paneli ? "🔒 " : "") + (l.emri || "—"), f: zgjidhListen },
     { t: "➕ Shto listë të re", f: function () { hapForme(-1); } },
     { t: "✏️ Ndrysho listën aktive", f: function () { hapForme(S.aktive); } },
     { t: "🗑️ Fshi listën aktive", f: fshiListen },
@@ -720,18 +801,22 @@ function vizatoCil() {
     var exp = inf.exp_date && +inf.exp_date ? new Date(+inf.exp_date * 1000).toLocaleDateString("sq-AL") : "pa afat";
     h += "Llogaria: <b>" + esc(inf.username) + "</b><br>Statusi: <b>" + esc(inf.status || "") + "</b><br>Skadon: <b>" + esc(exp) + "</b><br>Lidhje njëkohësisht: <b>" + esc(inf.max_connections || "?") + "</b><br>";
   }
-  h += "<br>Kanale: <b>" + S.live.length + "</b> · Filma: <b>" + S.vod.length + "</b> · Seriale: <b>" + S.ser.length + "</b>";
+  h += "<div style='background:#1c2333;border-radius:12px;padding:14px 18px;margin:0 0 14px'>📺 ID e TV-së: <b style='font-size:30px;letter-spacing:1px'>" + esc(idPajisjes()) +
+    "</b><br>Çelësi: <b style='font-size:26px'>" + esc(celesiPajisjes()) + "</b><br>Paneli: " +
+    (PN.lidhur ? "✅ i lidhur" + (PN.emri ? " · <b>" + esc(PN.emri) + "</b>" : "") : PN.gabimi ? "⚠️ " + esc(PN.gabimi) : "duke u lidhur…") + "</div>";
+  h += "Kanale: <b>" + S.live.length + "</b> · Filma: <b>" + S.vod.length + "</b> · Seriale: <b>" + S.ser.length + "</b>";
   h += "<br><br><b>Telekomanda</b><br>▲▼◀▶ lëviz · OK zgjidh · Mbaj OK: ⭐<br>CH+/CH−: kanali tjetër · Numrat: shko te kanali<br>Ekran i plotë: ▶ (filmat: ▼) ndryshon figurën<br>Back: kthehu";
   $("#c-info").innerHTML = h;
 }
 function zgjidhListen() {
   if (S.listat.length < 2) return njofto("Ke vetëm një listë. Shto një tjetër me „Shto listë të re“.");
   dialog("Cilën listë do të hapësh?", S.listat.slice(0, 5).map(function (l, i) {
-    return { t: (i === S.aktive ? "✔ " : "") + l.emri, f: function () { S.aktive = i; LS.set("aktive", i); ngarkoListen(); } };
+    return { t: (i === S.aktive ? "✔ " : "") + (l.paneli ? "🔒 " : "") + l.emri, f: function () { S.aktive = i; LS.set("aktive", i); ngarkoListen(); } };
   }));
 }
 function fshiListen() {
   var l = S.listat[S.aktive]; if (!l) return;
+  if (l.paneli) return njofto("🔒 Këtë listë e menaxhon administratori", 3500);
   dialog("Ta fshij listën „" + esc(l.emri) + "“?", [{ t: "🗑️ Po, fshije", f: function () {
     S.listat.splice(S.aktive, 1); S.aktive = 0; LS.set("listat", S.listat); LS.set("aktive", 0);
     if (S.listat.length) ngarkoListen(); else hapForme(-1);
@@ -741,6 +826,7 @@ function fshiListen() {
 // ---- FORMA (shto/ndrysho listë)
 var FM = { idx: -1, lloji: "xtream", fokus: 0 };
 function hapForme(idx) {
+  if (idx >= 0 && S.listat[idx] && S.listat[idx].paneli) return njofto("🔒 Këtë listë e menaxhon administratori", 3500);
   FM.idx = idx;
   var l = idx >= 0 ? S.listat[idx] : null;
   FM.lloji = l ? l.lloji : "xtream";
@@ -748,6 +834,8 @@ function hapForme(idx) {
   $("#f-emri").value = l ? l.emri : (S.listat.length ? "" : "Abonimi");
   $("#f-host").value = l && l.host || ""; $("#f-user").value = l && l.user || ""; $("#f-pass").value = l && l.pass || ""; $("#f-m3u").value = l && l.m3u || "";
   $("#f-gabim").textContent = "";
+  $("#f-id").innerHTML = PANELI ? "📺 ID e këtij TV: <b>" + esc(idPajisjes()) + "</b> · Çelësi: <b>" + esc(celesiPajisjes()) + "</b>" +
+    (S.listat.length ? "" : "<br><small>Nëse administratori ta dërgon listën, ajo hapet vetë këtu.</small>") : "";
   $("#fillimi").classList.add("fsh");
   shfaqEkran("forma"); vendosZone("forma");
   FM.fokus = l ? 0 : 2; vizatoForme();
@@ -866,6 +954,7 @@ function mbyllDialog(i) {
   var b = DG && i != null ? DG.b[i] : null;
   DG = null; $("#dialog").classList.add("fsh");
   if (b && b.f) b.f();
+  if (MQ.length) setTimeout(shfaqMesazhet, 400);
 }
 var njTimer = null;
 function njofto(t, ms) { var n = $("#njoftim"); n.textContent = t; n.classList.remove("fsh"); clearTimeout(njTimer); njTimer = setTimeout(function () { n.classList.add("fsh"); }, ms || 2500); }
@@ -1152,6 +1241,7 @@ function nis() {
     if (!document.hidden && window.MI_PERDITESIM_GATI && window.MI_PERDITESIM_GATI()) {   // u shkarkua version i ri ndërsa ishe jashtë
       location.reload(); return;
     }
+    if (!document.hidden) setTimeout(pyetPanelin, 1500);
     if (document.hidden) {
       if (S.luan && L.luan()) { if (S.luan.lloji !== "live") ruajPozicionin();
         S.pezull = { luan: S.luan, url: L.url, koha: L.kohaMs, onFund: L.onFund, plote: document.body.classList.contains("plote") }; L.ndalo(); }
@@ -1164,6 +1254,9 @@ function nis() {
   });
   $("#ora").textContent = oraTani();
   if (S.listat.length) ngarkoListen(); else hapForme(-1);
+  setTimeout(pyetPanelin, 1500);
+  setInterval(function () { if (!document.hidden) pyetPanelin(); }, 5 * 60000);
+  setInterval(function () { if (!document.hidden && !S.listat.length && F.ekran === "forma") pyetPanelin(); }, 20000);   // TV i ri: pret listën nga administratori
   var m = window.MI_GATI ? window.MI_GATI() : null;   // ngarkuesit: "u hap pa gabime"
   if (m) setTimeout(function () { njofto(m, 7000); }, 2500);
 }
