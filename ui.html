@@ -1,0 +1,100 @@
+
+  <!-- videoja: në TV luan AVPlay (poshtë shtresës web); në shfletues <video> (vetëm për prova) -->
+  <object id="av" type="application/avplayer"></object>
+  <video id="vd" muted playsinline></video>
+
+  <!-- ===== ekrani kryesor ===== -->
+  <div id="ui">
+    <header id="koka">
+      <div class="logo"><img src="icon.png" alt="">SNOW <b>IPTV</b></div>
+      <nav id="tabet">
+        <div class="tab" data-t="live">📺 Live</div>
+        <div class="tab" data-t="vod">🎬 Filma</div>
+        <div class="tab" data-t="ser">🎞️ Seriale</div>
+        <div class="tab" data-t="kerko">🔍 Kërko</div>
+        <div class="tab" data-t="cil">⚙️ Cilësimet</div>
+      </nav>
+      <div id="lista-emri"></div>
+      <div id="ora">--:--</div>
+    </header>
+
+    <main id="m-live" class="ekran">
+      <div class="kol kat"><div class="kol-titull">Kategoritë</div><div id="l-kat" class="vl"></div></div>
+      <div class="kol kan"><div class="kol-titull" id="l-kan-titull">Kanalet</div><div id="l-kan" class="vl"></div></div>
+      <div class="kol pamja">
+        <div id="kutia" class="kutia-video"><div id="kutia-bosh">Zgjidh një kanal</div></div>
+        <div id="l-info" class="info"></div>
+      </div>
+    </main>
+
+    <main id="m-vod" class="ekran">
+      <div class="kol kat"><div class="kol-titull">Kategoritë</div><div id="v-kat" class="vl"></div></div>
+      <div class="kol rrjete-kol"><div class="kol-titull" id="v-titull">Filma</div><div id="v-rrjet" class="rrjet"></div></div>
+    </main>
+
+    <main id="m-ser" class="ekran">
+      <div class="kol kat"><div class="kol-titull">Kategoritë</div><div id="s-kat" class="vl"></div></div>
+      <div class="kol rrjete-kol"><div class="kol-titull" id="s-titull">Seriale</div><div id="s-rrjet" class="rrjet"></div></div>
+    </main>
+
+    <main id="m-serdet" class="ekran">
+      <div class="kol kat"><div class="kol-titull">Sezonat</div><div id="d-sez" class="vl"></div></div>
+      <div class="kol kan"><div class="kol-titull" id="d-titull">Episodet</div><div id="d-ep" class="vl"></div></div>
+      <div class="kol pamja"><div id="d-info" class="info info-ser"></div></div>
+    </main>
+
+    <main id="m-kerko" class="ekran">
+      <div class="kerko-kol">
+        <input id="k-input" type="text" placeholder="Shkruaj emrin e kanalit, filmit ose serialit…" autocomplete="off">
+        <div class="ndihme-e-vogel">Shtyp OK te kutia për tastierën · ↓ për rezultatet</div>
+        <div id="k-lista" class="vl"></div>
+      </div>
+    </main>
+
+    <main id="m-cil" class="ekran">
+      <div class="cil-kol"><div id="c-lista" class="vl"></div></div>
+      <div class="cil-info" id="c-info"></div>
+    </main>
+
+    <main id="m-forma" class="ekran">
+      <div class="forma">
+        <h1 id="f-titull">Shto listën</h1>
+        <p class="forma-shpjeg">Shkruaj të dhënat që të ka dhënë ofruesi. Shtyp <b>OK</b> te një fushë për tastierën.
+          <br>Mund të ngjitësh edhe linkun e plotë <b>get.php?username=…&amp;password=…</b> te „Serveri“: e ndaj vetë.</p>
+        <div class="fusha" data-f="emri"><label>Emri i listës</label><input id="f-emri" type="text" placeholder="p.sh. Abonimi"></div>
+        <div class="fusha" data-f="lloji"><label>Lloji</label><div id="f-lloji" class="zgjedhes">◀ Xtream Codes ▶</div></div>
+        <div class="fusha x" data-f="host"><label>Serveri (host:porta)</label><input id="f-host" type="text" placeholder="http://serveri.com:8080"></div>
+        <div class="fusha x" data-f="user"><label>Përdoruesi</label><input id="f-user" type="text"></div>
+        <div class="fusha x" data-f="pass"><label>Fjalëkalimi</label><input id="f-pass" type="text"></div>
+        <div class="fusha m" data-f="m3u"><label>Linku M3U</label><input id="f-m3u" type="text" placeholder="http://…/playlist.m3u"></div>
+        <div class="butonat">
+          <div class="buton" data-f="ruaj">✔ Ruaj dhe hyr</div>
+          <div class="buton dyte" data-f="anulo">Anulo</div>
+        </div>
+        <div id="f-gabim" class="gabim-tekst"></div>
+      </div>
+    </main>
+  </div>
+
+  <!-- ===== ekran i plotë ===== -->
+  <div id="osd" class="fsh">
+    <div class="osd-majtas">
+      <div id="o-num" class="o-num"></div>
+      <div id="o-logo" class="o-logo"></div>
+    </div>
+    <div class="osd-mes">
+      <div id="o-emri" class="o-emri"></div>
+      <div id="o-tani" class="o-tani"></div>
+      <div class="o-shirit"><i id="o-prog"></i></div>
+      <div id="o-pastaj" class="o-pastaj"></div>
+    </div>
+    <div class="osd-djathtas"><div id="o-ora" class="o-ora"></div><div id="o-ndihme" class="o-ndihme"></div></div>
+  </div>
+  <div id="zap" class="fsh"><div class="kol-titull" id="z-titull">Kanalet</div><div id="z-lista" class="vl"></div></div>
+
+  <div id="numri" class="fsh"></div>
+  <div id="ngarkim" class="fsh"><i></i></div>
+  <div id="gabimV" class="fsh"></div>
+  <div id="dialog" class="fsh"><div class="dialog-kuti"><div id="dg-tekst"></div><div id="dg-butonat" class="butonat"></div></div></div>
+  <div id="njoftim" class="fsh"></div>
+  <div id="fillimi"><div class="logo madh"><img src="icon.png" alt=""><span>SNOW <b>IPTV</b></span></div><div id="fillimi-tekst">Duke u hapur…</div></div>
