@@ -2,7 +2,7 @@
    Burimi: Xtream Codes (host + përdorues + fjalëkalim) ose link M3U.
    Videoja luhet me AVPlay të televizorit: luan .ts, HLS, MPEG-2, HEVC, MP2… direkt nga ofruesi. */
 "use strict";
-var VERSIONI = "1.3.0";
+var VERSIONI = "1.4.0";
 var PANELI = "http://130.61.238.162:8000/snow/api/pajisja";   // paneli i administratorit (Oracle)
 var $ = function (s) { return document.querySelector(s); };
 var NE_TV = !!(window.webapis && window.webapis.avplay);
@@ -128,6 +128,8 @@ M3U.prototype.ngarko = function () {
   var self = this;
   return merr(this.url, "text", 90).then(function (t) {
     if (t.indexOf("#EXT") < 0) throw new Error("Linku nuk është playlist M3U.");
+    var koka = t.slice(0, 2000).split(/\r?\n/)[0] || "", tvg = koka.match(/(?:url-tvg|x-tvg-url)="([^"]+)"/i);
+    self.tvgUrl = tvg ? tvg[1] : "";
     var D = { live: [], liveKat: [], vod: [], vodKat: [], ser: [], serKat: [] }, katL = {}, katV = {}, info = null, n = 0;
     t.split(/\r?\n/).forEach(function (l) {
       l = l.trim();
@@ -157,6 +159,352 @@ M3U.prototype.urlLive = function (it) { return it.url; };
 M3U.prototype.urlVod = function (it) { return it.url; };
 M3U.prototype.epg = function (it) { return this.xt && it.xt ? this.xt.epg(it) : Promise.resolve([]); };  // linqe Xtream brenda M3U: guida nga ofruesi
 M3U.prototype.epgTani = function () { return Promise.resolve(null); };
+
+// ------------------------------------------------------------------ guida XMLTV (EPG nga një link — punon pa serverin/PC-në)
+// Fusha "Guida EPG" e listës: lidhje .xml / .xml.gz (disa, të ndara me presje ose hapësirë), ose kode të shkurtra:
+//   AL, IT, UK, DE… = epgshare01 (falas, rifreskohet çdo ditë) · OFRUESI = guida e plotë e abonimit Xtream (xmltv.php)
+// Skedari lexohet copë-copë dhe mbahen vetëm kanalet e listës (36 orët e ardhshme), që TV-ja të mos mbushë kujtesën.
+var GX = { prog: {}, harta: {}, n: 0, urls: [], gjendja: "", gabim: "", koha: 0, duke: false, nr: 0 };
+var EPG_KODET = "https://epgshare01.online/epgshare01/epg_ripper_";
+function linqetEpg(l) {
+  var tekst = String((l && l.epg) || "") + " " + String((S.burim && S.burim.tvgUrl) || ""), pare = {}, r = [];
+  tekst.split(/[\s,;]+/).forEach(function (u) {
+    if (!u) return;
+    if (/^[a-z]{2}\d?$/i.test(u)) u = EPG_KODET + u.toUpperCase() + (/\d$/.test(u) ? "" : "1") + ".xml.gz";
+    else if (/^(ofruesi|provider|abonimi)$/i.test(u)) {
+      if (!(l && l.lloji === "xtream" && l.host)) return;
+      u = String(l.host).trim().replace(/\/+$/, "").replace(/^(?!https?:\/\/)/i, "http://") + "/xmltv.php?username=" + encodeURIComponent(l.user) + "&password=" + encodeURIComponent(l.pass);
+    } else if (!/^https?:\/\//i.test(u)) { if (u.indexOf(".") < 0) return; u = "http://" + u; }
+    if (!pare[u]) { pare[u] = 1; r.push(u); }
+  });
+  return r.slice(0, 6);
+}
+function emerEpg(u) {   // për ekranin: "epgshare01 · AL" / "serveri.com (abonimi)"
+  var m = u.match(/epg_ripper_([A-Z0-9_]+)\.xml/i);
+  if (m) return m[1].replace(/1$/, "");
+  m = u.match(/^https?:\/\/([^\/:?#]+)/i);
+  return (m ? m[1] : u) + (/xmltv\.php/i.test(u) ? " (abonimi)" : "");
+}
+function epgNorm(emri) {   // "AL: Top Channel HD" == "Top Channel" == "top.channel" (si në serverin Mini IPTV)
+  var e = String(emri || "");
+  try { e = e.normalize("NFKD"); } catch (x) {}
+  e = e.replace(/[^\x00-\x7f]/g, "").toLowerCase();
+  e = e.replace(/^\s*(\[[^\]]*\]|\|[^|]*\||[a-z]{2,3}\s*[:|])\s*/, "");
+  e = e.replace(/\(.*?\)|\[.*?\]/g, " ").replace(/[^a-z0-9+]+/g, " ").replace(/\bplus\b/g, "+");
+  var hiq = { hd: 1, fhd: 1, uhd: 1, sd: 1, "4k": 1, hevc: 1, h265: 1, tv: 1, al: 1, alb: 1, backup: 1, raw: 1, live: 1, "1080p": 1, "720p": 1 };
+  return e.split(" ").filter(function (f) { return f && !hiq[f]; }).join("");
+}
+function epgVendi(tvgId, xmlId) {   // "24TV.by" s'merr guidën e "24.TV.al"
+  var a = /\.([a-z]{2})$/i.exec(tvgId || ""), b = /\.([a-z]{2})$/i.exec(xmlId || "");
+  return !(a && b) || a[1].toLowerCase() === b[1].toLowerCase();
+}
+function xmlTekst(s) {
+  s = String(s || "").replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1");
+  if (s.indexOf("&") >= 0) s = s.replace(/&(#x[0-9a-f]+|#\d+|amp|lt|gt|quot|apos);/gi, function (m, k) {
+    k = k.toLowerCase();
+    if (k[0] === "#") { var c = k[1] === "x" ? parseInt(k.slice(2), 16) : parseInt(k.slice(1), 10); try { return String.fromCharCode(c); } catch (e) { return ""; } }
+    return { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'" }[k];
+  });
+  return s.replace(/\s+/g, " ").trim();
+}
+function xmlKoha(s) {   // "20261002180000 +0200" -> sekonda UTC
+  var m = /^(\d{4})(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)?\s*([+-])?(\d\d)?(\d\d)?/.exec(s || "");
+  if (!m) return 0;
+  var t = Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +(m[6] || 0)) / 1000;
+  if (m[7]) t -= (m[7] === "-" ? -1 : 1) * (+m[8] * 3600 + (+m[9] || 0) * 60);
+  return t;
+}
+function xmlAtr(el, emri) { var m = new RegExp("\\s" + emri + "\\s*=\\s*\"([^\"]*)\"").exec(el) || new RegExp("\\s" + emri + "\\s*=\\s*'([^']*)'").exec(el); return m ? xmlTekst(m[1]) : ""; }
+function xmlFut(el, tag) { var m = new RegExp("<" + tag + "\\b[^>]*>([\\s\\S]*?)</" + tag + ">").exec(el); return m ? xmlTekst(m[1]) : ""; }
+
+// lidh kanalet e listës me kanalet e një burimi XMLTV (i pari burim fiton)
+function lidhKanaletEpg(kanalet, ids, emrat, src, harta) {
+  var perdorur = {};
+  kanalet.forEach(function (it) {
+    if (harta[it.k]) return;
+    var id = it.epg ? ids[String(it.epg).toLowerCase()] : null;
+    if (!id) { var n = epgNorm(it.emri), c = n && emrat[n]; if (c && epgVendi(it.epg, c)) id = c; }
+    if (id) { harta[it.k] = src + "|" + id; perdorur[id] = 1; }
+  });
+  return perdorur;
+}
+// lexuesi copë-copë i një skedari XMLTV
+function LexuesXmltv(src, kanalet, harta) {
+  var b = "", ids = {}, emrat = {}, gati = false, duhen = {}, lok = {}, t0 = tani() - 3 * 3600, t1 = tani() + 36 * 3600, self = this;
+  this.prog = {}; this.kanaleXml = 0; this.programe = 0;
+  function lidh() {
+    gati = true;
+    if (!self.kanaleXml) kanalet.forEach(function (it) { if (it.epg) ids[String(it.epg).toLowerCase()] = String(it.epg).toLowerCase(); });   // pa <channel>: vetëm sipas tvg-id
+    duhen = lidhKanaletEpg(kanalet.filter(function (it) { return !harta[it.k]; }), ids, emrat, src, lok);
+  }
+  function kanal(el) {
+    var id = xmlAtr(el, "id").toLowerCase(); if (!id) return;
+    self.kanaleXml++; ids[id] = id;
+    var re = /<display-name\b[^>]*>([\s\S]*?)<\/display-name>/g, m;
+    while ((m = re.exec(el))) { var n = epgNorm(xmlTekst(m[1])); if (n && !emrat[n]) emrat[n] = id; }
+  }
+  function programi(el) {
+    if (!gati) lidh();
+    var ch = xmlAtr(el, "channel").toLowerCase(); if (!duhen[ch]) return;
+    var fil = xmlKoha(xmlAtr(el, "start")), mb = xmlKoha(xmlAtr(el, "stop")) || fil + 1800;
+    if (!fil || mb < t0 || fil > t1) return;
+    var k = src + "|" + ch, l = self.prog[k] || (self.prog[k] = []);
+    if (l.length >= 80) return;
+    l.push([fil, mb, xmlFut(el, "title").slice(0, 120), xmlFut(el, "desc").slice(0, 160)]);
+    self.programe++;
+  }
+  this.shto = function (t) {
+    b += t;
+    var i = 0, p = -2, c = -2;   // -1 = s'ka më në këtë copë (mos e kërko përsëri)
+    for (;;) {
+      if (p !== -1 && p < i) p = b.indexOf("<programme", i);
+      if (c !== -1 && c < i) c = b.indexOf("<channel", i);
+      if (p < 0 && c < 0) { i = Math.max(i, b.length - 16); break; }   // ruaj bishtin: mund të jetë "<progr…" e prerë
+      var s = c >= 0 && (p < 0 || c < p) ? c : p, eKanal = s === c;
+      var fundTag = b.indexOf(">", s); if (fundTag < 0) { i = s; break; }
+      if (b.charAt(fundTag - 1) === "/") { (eKanal ? kanal : programi)(b.slice(s, fundTag + 1)); i = fundTag + 1; continue; }
+      var mbyll = eKanal ? "</channel>" : "</programme>", e = b.indexOf(mbyll, fundTag);
+      if (e < 0) { i = s; break; }
+      (eKanal ? kanal : programi)(b.slice(s, e)); i = e + mbyll.length;
+    }
+    b = b.slice(i);
+  };
+  this.mbaro = function () {
+    if (!gati) lidh();
+    for (var k in self.prog) self.prog[k].sort(function (a, z) { return a[0] - z[0]; });
+    for (var q in lok) if (self.prog[lok[q]]) harta[q] = lok[q];   // kanali lidhet vetëm me burimin që ka programe për të
+  };
+}
+
+// --- shkarkimi: fetch copë-copë (kujtesë e vogël); nëse s'lejohet, XMLHttpRequest
+function lexoRrjedhen(s, lexues) {
+  var rd = s.getReader(), dec = new TextDecoder("utf-8");
+  function hap() { return rd.read().then(function (p) { if (p.done) { lexues.shto(dec.decode()); return; } lexues.shto(dec.decode(p.value, { stream: true })); return hap(); }); }
+  return hap();
+}
+function lexoBufferin(u, lexues) {
+  if (u.length > 1 && u[0] === 0x1f && u[1] === 0x8b) {
+    if (window.DecompressionStream && window.Response) return lexoRrjedhen(new Response(u).body.pipeThrough(new DecompressionStream("gzip")), lexues);
+    if (u.length > 12e6) return Promise.reject(new Error("guida është shumë e madhe për këtë TV (provo vetëm AL)"));
+    try { u = gunzip(u); } catch (e) { return Promise.reject(e); }
+  }
+  var dec = new TextDecoder("utf-8"), i = 0, H = 1 << 20;
+  return new Promise(function (ok, jo) {
+    (function hapi() {
+      try {
+        if (i >= u.length) { lexues.shto(dec.decode()); return ok(); }
+        lexues.shto(dec.decode(u.subarray(i, i + H), { stream: true })); i += H;
+        setTimeout(hapi, 0);   // mos e ngri telekomandën
+      } catch (e) { jo(e); }
+    })();
+  });
+}
+function merrBinar(url, sek) {
+  return new Promise(function (ok, jo) {
+    var x = new XMLHttpRequest();
+    x.open("GET", url, true); x.responseType = "arraybuffer"; x.timeout = (sek || 180) * 1000;
+    x.onload = function () { if (x.status < 200 || x.status >= 300) return jo(new Error("serveri u përgjigj " + x.status)); ok(new Uint8Array(x.response)); };
+    x.onerror = function () { jo(new Error("s'u lidh dot")); };
+    x.ontimeout = function () { jo(new Error("koha mbaroi")); };
+    x.send();
+  });
+}
+function lexoBurimin(url, lexues) {
+  function meXhr() { return merrBinar(url).then(function (u) { return lexoBufferin(u, lexues); }); }
+  if (!window.fetch || !window.ReadableStream || !window.TextDecoder) return meXhr();
+  var ctl = window.AbortController ? new AbortController() : null, filloi = false;
+  var timer = setTimeout(function () { if (ctl) ctl.abort(); }, 240000);
+  return fetch(url, ctl ? { signal: ctl.signal, credentials: "omit" } : { credentials: "omit" }).then(function (r) {
+    if (!r.ok) { var e = new Error("serveri u përgjigj " + r.status); e.fund = true; throw e; }
+    if (!r.body || !r.body.getReader) throw new Error("pa stream");
+    var rd = r.body.getReader();
+    return rd.read().then(function (p) {
+      filloi = true;
+      var pare = p.value || new Uint8Array(0), gz = pare.length > 1 && pare[0] === 0x1f && pare[1] === 0x8b;
+      var rr = new ReadableStream({
+        start: function (c) { if (pare.length) c.enqueue(pare); if (p.done) c.close(); },
+        pull: function (c) { return rd.read().then(function (q) { if (q.done) c.close(); else c.enqueue(q.value); }); }
+      });
+      if (gz && !(window.DecompressionStream && rr.pipeThrough)) {   // TV i vjetër: mblidhe të gjithë dhe hape në JS
+        var copat = [], gj = 0, rd2 = rr.getReader();
+        return (function mblidh() {
+          return rd2.read().then(function (q) {
+            if (!q.done) { copat.push(q.value); gj += q.value.length; if (gj > 12e6) throw new Error("guida është shumë e madhe për këtë TV (provo vetëm AL)"); return mblidh(); }
+            var u = new Uint8Array(gj), o = 0; copat.forEach(function (c) { u.set(c, o); o += c.length; }); copat = null;
+            return lexoBufferin(u, lexues);
+          });
+        })();
+      }
+      return lexoRrjedhen(gz ? rr.pipeThrough(new DecompressionStream("gzip")) : rr, lexues);
+    });
+  }).then(function () { clearTimeout(timer); }, function (e) {
+    clearTimeout(timer);
+    if (e && e.fund) throw e;
+    if (filloi) throw e;   // u prish në mes: mos e shkarko të gjithën përsëri
+    return meXhr();       // fetch s'u lejua (p.sh. CORS në TV): provo XHR
+  });
+}
+
+// --- gunzip në JavaScript (për TV-të pa DecompressionStream, p.sh. Samsung 2020)
+function gunzip(d) {
+  var out = new Uint8Array(Math.max(65536, d.length * 8)), op = 0, pos = 0, bb = 0, bc = 0;
+  var LB = [3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 15, 17, 19, 23, 27, 31, 35, 43, 51, 59, 67, 83, 99, 115, 131, 163, 195, 227, 258];
+  var LE = [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 0];
+  var DB = [1, 2, 3, 4, 5, 7, 9, 13, 17, 25, 33, 49, 65, 97, 129, 193, 257, 385, 513, 769, 1025, 1537, 2049, 3073, 4097, 6145, 8193, 12289, 16385, 24577];
+  var DE = [0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13];
+  var RENDI = [16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15];
+  function vend(n) {
+    if (op + n <= out.length) return;
+    var nl = out.length * 2; while (nl < op + n) nl *= 2;
+    if (nl > 200e6) throw new Error("guida është shumë e madhe për këtë TV (provo vetëm AL)");
+    var o2 = new Uint8Array(nl); o2.set(out.subarray(0, op)); out = o2;
+  }
+  function bit() { if (!bc) { if (pos >= d.length) throw new Error("skedari .gz është i prerë"); bb = d[pos++]; bc = 8; } var v = bb & 1; bb >>>= 1; bc--; return v; }
+  function bite(n) { var v = 0; for (var i = 0; i < n; i++) v |= bit() << i; return v; }
+  function Pema() { this.t = new Uint16Array(16); this.s = new Uint16Array(320); }
+  function nderto(p, gj, off, n) {
+    var i, o = new Uint16Array(16), sh = 0;
+    for (i = 0; i < 16; i++) p.t[i] = 0;
+    for (i = 0; i < n; i++) p.t[gj[off + i]]++;
+    p.t[0] = 0;
+    for (i = 0; i < 16; i++) { o[i] = sh; sh += p.t[i]; }
+    for (i = 0; i < n; i++) if (gj[off + i]) p.s[o[gj[off + i]]++] = i;
+  }
+  function simboli(p) {
+    var sh = 0, cur = 0, len = 0;
+    do { cur = 2 * cur + bit(); if (++len > 15) throw new Error("skedari .gz është i dëmtuar"); sh += p.t[len]; cur -= p.t[len]; } while (cur >= 0);
+    return p.s[sh + cur];
+  }
+  var lf = new Pema(), df = new Pema(), lt = new Pema(), dt = new Pema(), kt = new Pema(), g = new Uint8Array(320), i;
+  for (i = 0; i < 144; i++) g[i] = 8; for (; i < 256; i++) g[i] = 9; for (; i < 280; i++) g[i] = 7; for (; i < 288; i++) g[i] = 8;
+  nderto(lf, g, 0, 288);
+  for (i = 0; i < 30; i++) g[i] = 5;
+  nderto(df, g, 0, 30);
+  function blloku(L, D) {
+    for (;;) {
+      var s = simboli(L);
+      if (s < 256) { vend(1); out[op++] = s; }
+      else if (s === 256) return;
+      else {
+        s -= 257; if (s > 28) throw new Error("skedari .gz është i dëmtuar");
+        var len = LB[s] + bite(LE[s]), ds = simboli(D); if (ds > 29) throw new Error("skedari .gz është i dëmtuar");
+        var dist = DB[ds] + bite(DE[ds]); if (dist > op) throw new Error("skedari .gz është i dëmtuar");
+        vend(len); for (var j = 0; j < len; j++) { out[op] = out[op - dist]; op++; }
+      }
+    }
+  }
+  function dinamik() {
+    var hlit = bite(5) + 257, hdist = bite(5) + 1, hclen = bite(4) + 4, j, gj = new Uint8Array(320);
+    for (j = 0; j < 19; j++) g[j] = 0;
+    for (j = 0; j < hclen; j++) g[RENDI[j]] = bite(3);
+    nderto(kt, g, 0, 19);
+    for (var n = 0; n < hlit + hdist;) {
+      var s = simboli(kt), para, sa;
+      if (s < 16) { gj[n++] = s; continue; }
+      if (s === 16) { if (!n) throw new Error("skedari .gz është i dëmtuar"); para = gj[n - 1]; sa = 3 + bite(2); }
+      else if (s === 17) { para = 0; sa = 3 + bite(3); }
+      else { para = 0; sa = 11 + bite(7); }
+      if (n + sa > hlit + hdist) throw new Error("skedari .gz është i dëmtuar");
+      while (sa--) gj[n++] = para;
+    }
+    nderto(lt, gj, 0, hlit); nderto(dt, gj, hlit, hdist);
+    blloku(lt, dt);
+  }
+  while (pos + 10 <= d.length && d[pos] === 0x1f && d[pos + 1] === 0x8b) {   // një ose disa pjesë gzip njëra pas tjetrës
+    if (d[pos + 2] !== 8) throw new Error("skedari .gz s'mbështetet");
+    var flg = d[pos + 3]; pos += 10;
+    if (flg & 4) pos += 2 + (d[pos] | (d[pos + 1] << 8));
+    if (flg & 8) while (pos < d.length && d[pos++]) {}
+    if (flg & 16) while (pos < d.length && d[pos++]) {}
+    if (flg & 2) pos += 2;
+    bb = 0; bc = 0;
+    var fund;
+    do {
+      fund = bit(); var tipi = bite(2);
+      if (tipi === 0) {
+        bc = 0; if (pos + 4 > d.length) throw new Error("skedari .gz është i prerë");
+        var len = d[pos] | (d[pos + 1] << 8); pos += 4;
+        if (pos + len > d.length) throw new Error("skedari .gz është i prerë");
+        vend(len); out.set(d.subarray(pos, pos + len), op); op += len; pos += len;
+      } else if (tipi === 1) blloku(lf, df);
+      else if (tipi === 2) dinamik();
+      else throw new Error("skedari .gz është i dëmtuar");
+    } while (!fund);
+    bc = 0; pos += 8;   // CRC32 + madhësia
+  }
+  if (!op) throw new Error("skedari .gz është bosh ose i dëmtuar");
+  return out.subarray(0, op);
+}
+
+// --- ngarkimi i guidës për listën aktive
+function kaGuideXml(it) { var k = it && GX.harta[it.k], p = k && GX.prog[k]; return !!(p && p.length && p[p.length - 1][1] > tani()); }
+function xmlPer(it) {
+  var k = GX.harta[it.k], p = k && GX.prog[k]; if (!p) return null;
+  var t = tani(), r = [];
+  for (var i = 0; i < p.length && r.length < 6; i++) if (p[i][1] > t) r.push({ fil: p[i][0], mb: p[i][1], tit: p[i][2], per: p[i][3] });
+  return r.length ? r : null;
+}
+function aplikoGuiden() {
+  GX.n = 0; for (var k in GX.harta) if (GX.prog[GX.harta[k]]) GX.n++;
+  if (!S.burim) return;
+  rivizato();
+  if (F.ekran === "live" && UI.lKan) infoKanali(UI.lKan.tani());
+  if (S.luan && S.luan.lloji === "live" && document.body.classList.contains("plote") && !$("#osd").classList.contains("fsh")) osdLive(false);
+  if (F.ekran === "cil") vizatoCil();
+}
+function nisGuiden(detyro) {
+  var l = S.listat[S.aktive], urls = linqetEpg(l), celes = celesListe() + "|" + urls.join(" "), nr = ++GX.nr;
+  GX.prog = {}; GX.harta = {}; GX.n = 0; GX.urls = urls; GX.gabim = ""; GX.duke = false; GX.koha = 0;
+  if (!urls.length) { GX.gjendja = ""; return; }
+  var c = LS.get("xmltv", null);
+  if (c && c.celes === celes && c.prog && c.harta) {   // guida e ruajtur: shfaqet menjëherë
+    GX.prog = c.prog; GX.harta = c.harta; GX.koha = c.t || 0; aplikoGuiden();
+    GX.gjendja = "gati";
+    if (!detyro && tani() - GX.koha < 4 * 3600) return;
+  }
+  GX.duke = true; GX.gjendja = "duke u shkarkuar…";
+  if (F.ekran === "cil") vizatoCil();
+  var kanalet = S.live.slice(), harta = {}, prog = {}, gabimet = [], i = 0;
+  (function tjetri() {
+    if (nr !== GX.nr) return;
+    if (i >= urls.length) {
+      GX.duke = false;
+      var n = 0; for (var k in harta) n++;
+      if (!n) {   // asnjë kanal s'u gjet: mbaj guidën e vjetër nëse kishte
+        GX.gabim = gabimet.length ? gabimet.join(" · ") : "asnjë kanal i listës s'u gjet në këtë guidë";
+        GX.gjendja = "gabim"; if (F.ekran === "cil") vizatoCil();
+        return;
+      }
+      GX.prog = prog; GX.harta = harta; GX.koha = tani(); GX.gabim = gabimet.join(" · "); GX.gjendja = "gati";
+      aplikoGuiden();
+      try {   // ruaje (vetëm nëse s'është shumë e madhe, që të mos zërë vendin e listave/të preferuarave)
+        localStorage.removeItem("mi_xmltv");
+        for (var niv = 0; niv < 4; niv++) {   // nëse është e madhe, ngjeshe: pa përshkrime → vetëm 24 orët e ardhshme
+          var j = JSON.stringify({ celes: celes, t: GX.koha, harta: harta, prog: niv ? ngjeshGuiden(prog, niv) : prog });
+          if (j.length < 1500000) { localStorage.setItem("mi_xmltv", j); break; }
+        }
+      } catch (e) {}
+      return;
+    }
+    var u = urls[i++], lx = new LexuesXmltv(String(i), kanalet, harta);
+    lexoBurimin(u, lx).then(function () {
+      lx.mbaro();
+      for (var k in lx.prog) prog[k] = lx.prog[k];
+      if (!lx.kanaleXml && !lx.programe) gabimet.push(emerEpg(u) + ": skedari s'duket si guidë XMLTV");
+    }).catch(function (e) { gabimet.push(emerEpg(u) + ": " + (e && e.message || e)); }).then(function () { setTimeout(tjetri, 0); });
+  })();
+}
+function ngjeshGuiden(prog, niv) {
+  var r = {}, t = tani(), deri = niv >= 3 ? t + 24 * 3600 : 1e12;
+  for (var k in prog) r[k] = prog[k].filter(function (p) { return p[1] > t && p[0] < deri; }).map(function (p, i) { return [p[0], p[1], p[2], niv === 1 && i < 3 ? p[3] : ""]; });
+  return r;
+}
+function tekstGuida() {
+  if (!GX.urls.length) return "pa link";
+  if (GX.duke && !GX.n) return "duke u shkarkuar…";
+  if (GX.n) return GX.n + (GX.n === 1 ? " kanal" : " kanale") + (GX.duke ? " · po rifreskohet…" : "");
+  return GX.gjendja === "gabim" ? "⚠️ s'u ngarkua" : "—";
+}
 
 // ------------------------------------------------------------------ ID e TV-së dhe paneli i administratorit
 function idPajisjes() {
@@ -207,7 +555,7 @@ function aplikoListatPanelit(listat) {
   if (json === LS.get("paneli_json", "[]")) return;           // asgjë e re
   LS.set("paneli_json", json);
   var aktive = S.listat[S.aktive] || null, aktiveT = aktive ? thelbiListes(aktive) : "";
-  var reja = listat.map(function (l) { return { emri: l.emri, lloji: l.lloji, host: l.host, user: l.user, pass: l.pass, m3u: l.m3u, paneli: true }; });
+  var reja = listat.map(function (l) { return { emri: l.emri, lloji: l.lloji, host: l.host, user: l.user, pass: l.pass, m3u: l.m3u, epg: l.epg || "", paneli: true }; });
   S.listat = reja.concat(S.listat.filter(function (l) { return !l.paneli; }));
   LS.set("listat", S.listat);
   var idx = -1, hoqi = !reja.length || (aktive && aktive.paneli && !reja.some(function (l) { return thelbiListes(l) === aktiveT; }));
@@ -215,6 +563,7 @@ function aplikoListatPanelit(listat) {
   if (idx >= 0 && S.burim) {   // lista që po shikon s'ndryshoi
     S.aktive = idx; LS.set("aktive", idx);
     njofto("📋 Listat u përditësuan nga administratori", 4000);
+    if ((S.listat[idx].epg || "") !== (aktive.epg || "")) nisGuiden(true);   // administratori ndryshoi vetëm guidën
     if (F.ekran === "cil") vizatoCil();
     return;
   }
@@ -336,6 +685,7 @@ function logoHtml(emri, src, klasa) {
 function epgPer(it) {
   var t = tani(), l = null;
   if (S.epgTani && S.epgTani[String(it.sid)]) l = S.epgTani[String(it.sid)].map(function (p) { return { fil: p[0], mb: p[1], tit: p[2] }; });
+  else if ((l = xmlPer(it))) {}   // guida nga linku EPG i listës
   else if (S.epgC[it.k]) l = S.epgC[it.k].l;
   if (!l) return null;
   l = l.filter(function (p) { return p.mb > t; });
@@ -572,12 +922,12 @@ function infoKanali(it) {
       h += "<div class='prog'><div class='ora-p'>" + (i === 0 && p.fil <= tani() ? "TANI · " : "") + ora(p.fil) + " – " + ora(p.mb) + "</div><div class='tit'>" + esc(p.tit) + "</div>" +
         (p.per ? "<div class='per'>" + esc(p.per) + "</div>" : "") + "</div>";
     });
-  } else h += "<div class='prog'><div class='per'>" + (S.epgC[it.k] ? "S'ka guidë për këtë kanal." : "Duke marrë guidën…") + "</div></div>";
+  } else h += "<div class='prog'><div class='per'>" + (S.epgC[it.k] && !(GX.duke && !GX.n) ? "S'ka guidë për këtë kanal." : "Duke marrë guidën…") + "</div></div>";
   h += "<div class='ndihme'>OK: shiko këtu · OK përsëri: ekran i plotë · Mbaj OK: ⭐</div>";
   el.innerHTML = h;
   clearTimeout(epgTimer);
   var c = S.epgC[it.k];
-  if (!(S.epgTani && S.epgTani[String(it.sid)]) && (!c || tani() - c.t > 600)) {
+  if (!(S.epgTani && S.epgTani[String(it.sid)]) && !kaGuideXml(it) && (!c || tani() - c.t > 600)) {
     epgTimer = setTimeout(function () {
       S.burim.epg(it).then(function (l) { S.epgC[it.k] = { t: tani(), l: l }; }).catch(function () { S.epgC[it.k] = { t: tani(), l: [] }; })
         .then(function () { if (UI.lKan.tani() === it) { infoKanali(it); UI.lKan.vizato(); } if (S.luan && S.luan.it === it) osdLive(false); });
@@ -595,7 +945,7 @@ function luajLive(it, lista, plote) {
   if (!S.epgC[it.k]) infoKanaliPaUI(it);
 }
 function infoKanaliPaUI(it) {
-  if (S.epgTani && S.epgTani[String(it.sid)]) return;
+  if ((S.epgTani && S.epgTani[String(it.sid)]) || kaGuideXml(it)) return;
   S.burim.epg(it).then(function (l) { S.epgC[it.k] = { t: tani(), l: l }; if (S.luan && S.luan.it === it) osdLive(false); }).catch(function () {});
 }
 
@@ -783,6 +1133,8 @@ function rreshtatCil() {
     { t: "✏️ Ndrysho listën aktive", f: function () { hapForme(S.aktive); } },
     { t: "🗑️ Fshi listën aktive", f: fshiListen },
     { t: "🔄 Rifresko kanalet", f: function () { ngarkoListen(); } },
+    { t: "📅 Guida (EPG)", v: tekstGuida(), d: GX.urls.length ? GX.urls.map(emerEpg).join(", ") + (GX.gabim ? " · ⚠️ " + GX.gabim : "") + " · OK: rifresko" : "Shto linkun te „Ndrysho listën aktive“ (p.sh. AL)",
+      f: function () { if (!GX.urls.length) return hapForme(S.aktive); njofto("Duke shkarkuar guidën…"); nisGuiden(true); vizatoCil(); } },
     { t: "🎚️ Formati i kanaleve live", v: { auto: "Automatik", ts: "TS", m3u8: "HLS" }[CIL.formati], d: "Nëse kanalet ngecin ose s'hapen, provo formatin tjetër",
       f: function () { CIL.formati = { auto: "ts", ts: "m3u8", m3u8: "auto" }[CIL.formati]; ruajCil(); vizatoCil(); } },
     { t: "🖼️ Formati i figurës", v: figura(CIL.figura).t, d: "Për të gjitha kanalet. Për një kanal të vetëm: shtyp ▶ kur je në ekran të plotë",
@@ -805,6 +1157,7 @@ function vizatoCil() {
     "</b><br>Çelësi: <b style='font-size:26px'>" + esc(celesiPajisjes()) + "</b><br>Paneli: " +
     (PN.lidhur ? "✅ i lidhur" + (PN.emri ? " · <b>" + esc(PN.emri) + "</b>" : "") : PN.gabimi ? "⚠️ " + esc(PN.gabimi) : "duke u lidhur…") + "</div>";
   h += "Kanale: <b>" + S.live.length + "</b> · Filma: <b>" + S.vod.length + "</b> · Seriale: <b>" + S.ser.length + "</b>";
+  if (GX.urls.length) h += "<br>Guida: <b>" + esc(tekstGuida()) + "</b>" + (GX.koha ? " · " + ora(GX.koha) : "");
   h += "<br><br><b>Telekomanda</b><br>▲▼◀▶ lëviz · OK zgjidh · Mbaj OK: ⭐<br>CH+/CH−: kanali tjetër · Numrat: shko te kanali<br>Ekran i plotë: ▶ (filmat: ▼) ndryshon figurën<br>Back: kthehu";
   $("#c-info").innerHTML = h;
 }
@@ -833,6 +1186,7 @@ function hapForme(idx) {
   $("#f-titull").textContent = l ? "Ndrysho listën" : (S.listat.length ? "Shto listë të re" : "Mirë se erdhe! Shto listën e parë");
   $("#f-emri").value = l ? l.emri : (S.listat.length ? "" : "Abonimi");
   $("#f-host").value = l && l.host || ""; $("#f-user").value = l && l.user || ""; $("#f-pass").value = l && l.pass || ""; $("#f-m3u").value = l && l.m3u || "";
+  $("#f-epg").value = l && l.epg || "";
   $("#f-gabim").textContent = "";
   $("#f-id").innerHTML = PANELI ? "📺 ID e këtij TV: <b>" + esc(idPajisjes()) + "</b> · Çelësi: <b>" + esc(celesiPajisjes()) + "</b>" +
     (S.listat.length ? "" : "<br><small>Nëse administratori ta dërgon listën, ajo hapet vetë këtu.</small>") : "";
@@ -841,7 +1195,7 @@ function hapForme(idx) {
   FM.fokus = l ? 0 : 2; vizatoForme();
 }
 function fushatForme() {
-  var f = ["emri", "lloji"].concat(FM.lloji === "xtream" ? ["host", "user", "pass"] : ["m3u"]).concat(["ruaj", "anulo"]);
+  var f = ["emri", "lloji"].concat(FM.lloji === "xtream" ? ["host", "user", "pass"] : ["m3u"]).concat(["epg", "ruaj", "anulo"]);
   if (!S.listat.length && FM.idx < 0) f.pop();
   return f;
 }
@@ -867,6 +1221,7 @@ function ndajLinkun(t) {   // "http://host:port/get.php?username=U&password=P&ty
 }
 function ruajForme() {
   var l = { emri: $("#f-emri").value.trim() || "Lista", lloji: FM.lloji };
+  var epg = $("#f-epg").value.trim(); if (epg) l.epg = epg.slice(0, 1000);
   if (FM.lloji === "xtream") {
     var host = $("#f-host").value.trim(), nd = ndajLinkun(host);
     if (nd) { host = nd.host; $("#f-user").value = nd.user; $("#f-pass").value = nd.pass; }
@@ -899,6 +1254,7 @@ function ngarkoListen() {
   $("#lista-emri").textContent = l.emri;
   S.burim = l.lloji === "xtream" ? new Xtream(l.host, l.user, l.pass) : new M3U(l.m3u);
   S.epgC = {}; S.epgTani = null;
+  GX.nr++; GX.prog = {}; GX.harta = {}; GX.n = 0; GX.urls = []; GX.duke = false; GX.gjendja = "";
   ngarkoFav();
   S.burim.hyr().then(function () { return S.burim.ngarko(); }).then(function (D) {
     if (CIL.fshihTeRritur) {
@@ -911,6 +1267,7 @@ function ngarkoListen() {
     for (var k in D) S[k] = D[k];
     $("#fillimi").classList.add("fsh");
     nisUI();
+    nisGuiden(false);
     S.burim.epgTani().then(function (m) { if (m) { S.epgTani = m; rivizato(); infoKanali(UI.lKan.tani()); } });
   }).catch(function (e) {
     $("#fillimi").classList.add("fsh");
@@ -965,6 +1322,7 @@ setInterval(function () {   // OSD-ja rifreskohet ndërsa duket
   if (S.luan.lloji === "live") osdLive(false); else osdVod(false);
 }, 1000);
 setInterval(function () { if (S.burim && !document.hidden) S.burim.epgTani().then(function (m) { if (m) { S.epgTani = m; rivizato(); } }); }, 5 * 60000);
+setInterval(function () { if (S.burim && !document.hidden && GX.urls.length && !GX.duke && tani() - GX.koha > 6 * 3600) nisGuiden(true); }, 10 * 60000);
 
 // ------------------------------------------------------------------ numrat (shko te kanali me numër)
 var NR = { t: "", timer: null };
