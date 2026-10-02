@@ -2,7 +2,7 @@
    Burimi: Xtream Codes (host + përdorues + fjalëkalim) ose link M3U.
    Videoja luhet me AVPlay të televizorit: luan .ts, HLS, MPEG-2, HEVC, MP2… direkt nga ofruesi. */
 "use strict";
-var VERSIONI = "1.4.1";
+var VERSIONI = "1.4.2";
 (function () {   // TV i vjetër pa "gap" te flex (Chromium < 84, p.sh. Samsung 2020): app.css përdor margin në vend të tij
   try {
     var d = document.createElement("div");
@@ -31,7 +31,7 @@ function kohe(ms) { var s = Math.max(0, Math.floor(ms / 1000)), h = Math.floor(s
 function b64(s) { if (!s) return ""; try { return decodeURIComponent(escape(atob(s))); } catch (e) { try { return atob(s); } catch (e2) { return s; } } }
 function tani() { return Date.now() / 1000; }
 
-var CIL = { figura: LS.get("figura", "auto"), formati: LS.get("formati", "auto"), fshihTeRritur: LS.get("fshihTeRritur", true), nisFundit: LS.get("nisFundit", true) };
+var CIL = { figura: LS.get("figura", "auto"), formati: LS.get("formati", "auto"), fshihTeRritur: LS.get("fshihTeRritur", true), nisFundit: LS.get("nisFundit", true), shkalla: LS.get("shkalla", 1) };
 function ruajCil() { for (var k in CIL) LS.set(k, CIL[k]); }
 
 // ------------------------------------------------------------------ rrjeti
@@ -829,7 +829,8 @@ var L = {
     var r = this.rect, o = $("#av");
     o.style.left = r[0] + "px"; o.style.top = r[1] + "px"; o.style.width = r[2] + "px"; o.style.height = r[3] + "px";
     try { webapis.avplay.setDisplayMethod(this.metoda()); } catch (e) {}
-    try { webapis.avplay.setDisplayRect(r[0], r[1], r[2], r[3]); } catch (e) {}
+    var k = CIL.shkalla || 1;   // disa Samsung 4K (2020) e lexojnë rect-in në 3840x2160 -> ×2
+    try { webapis.avplay.setDisplayRect(Math.round(r[0] * k), Math.round(r[1] * k), Math.round(r[2] * k), Math.round(r[3] * k)); } catch (e) {}
   },
   _rectVideo: function () {
     var r = this.rect, v = $("#vd");
@@ -1149,6 +1150,10 @@ function rreshtatCil() {
       f: function () { CIL.formati = { auto: "ts", ts: "m3u8", m3u8: "auto" }[CIL.formati]; ruajCil(); vizatoCil(); } },
     { t: "🖼️ Formati i figurës", v: figura(CIL.figura).t, d: "Për të gjitha kanalet. Për një kanal të vetëm: shtyp ▶ kur je në ekran të plotë",
       f: function () { var i = FIGURAT.indexOf(figura(CIL.figura)); CIL.figura = FIGURAT[(i + 1) % FIGURAT.length].id; ruajCil(); vizatoCil(); } },
+    { t: "📐 Shkalla e videos", v: CIL.shkalla == 2 ? "×2" : CIL.shkalla == 1.5 ? "×1.5" : "Normale",
+      d: "VETËM nëse video del gabim ose s'duket (Samsung 4K 2020): provo ×2",
+      f: function () { CIL.shkalla = CIL.shkalla == 1 ? 2 : CIL.shkalla == 2 ? 1.5 : 1; ruajCil(); if (NE_TV && L.luan()) L._rectAV(); vizatoCil();
+        njofto("📐 Shkalla e videos: " + (CIL.shkalla == 1 ? "Normale" : "×" + CIL.shkalla) + " · kthehu te Live dhe shiko kutinë", 4000); } },
     { t: "🔞 Kategoritë për të rritur", v: CIL.fshihTeRritur ? "Të fshehura" : "Të dukshme",
       f: function () { CIL.fshihTeRritur = !CIL.fshihTeRritur; ruajCil(); ngarkoListen(); } },
     { t: "⬇️ Kontrollo për përditësim", v: VERSIONI, f: kontrolloPerditesim },
