@@ -2,7 +2,7 @@
    Burimi: Xtream Codes (host + përdorues + fjalëkalim) ose link M3U.
    Videoja luhet me AVPlay të televizorit: luan .ts, HLS, MPEG-2, HEVC, MP2… direkt nga ofruesi. */
 "use strict";
-var VERSIONI = "1.4.2";
+var VERSIONI = "1.4.3";
 (function () {   // TV i vjetër pa "gap" te flex (Chromium < 84, p.sh. Samsung 2020): app.css përdor margin në vend të tij
   try {
     var d = document.createElement("div");
@@ -31,7 +31,7 @@ function kohe(ms) { var s = Math.max(0, Math.floor(ms / 1000)), h = Math.floor(s
 function b64(s) { if (!s) return ""; try { return decodeURIComponent(escape(atob(s))); } catch (e) { try { return atob(s); } catch (e2) { return s; } } }
 function tani() { return Date.now() / 1000; }
 
-var CIL = { figura: LS.get("figura", "auto"), formati: LS.get("formati", "auto"), fshihTeRritur: LS.get("fshihTeRritur", true), nisFundit: LS.get("nisFundit", true), shkalla: LS.get("shkalla", 1) };
+var CIL = { figura: LS.get("figura", "auto"), formati: LS.get("formati", "auto"), fshihTeRritur: LS.get("fshihTeRritur", true), nisFundit: LS.get("nisFundit", true), shkalla: LS.get("shkalla", 1), kutia: LS.get("kutia", null) };
 function ruajCil() { for (var k in CIL) LS.set(k, CIL[k]); }
 
 // ------------------------------------------------------------------ rrjeti
@@ -768,13 +768,14 @@ var L = {
         onerror: function (e) { if (id === self._nr) self._gabim(String(e)); },
         onevent: function () {}
       });
-      this._rectAV();
+      if (!this.kutiaVone()) this._rectAV();
       av.prepareAsync(function () {
         if (id !== self._nr) return;
         try { self.gjatesiaMs = av.getDuration() || 0; } catch (e) {}
         if (fillim > 0) { try { av.seekTo(fillim); } catch (e) {} }
         av.play(); ngarkim(false);
         self._rectAV();
+        if (CIL.kutia && !self.ePlote()) setTimeout(function () { if (id === self._nr && !self.ePlote()) self._rectAV(); }, 1200);
       }, function (e) { if (id === self._nr) self._gabim(String(e && e.name || e)); });
     } catch (e) { this._gabim(String(e && e.name || e)); }
   },
@@ -824,12 +825,17 @@ var L = {
   ePlote: function () { return this.rect[2] >= 1920 && this.rect[3] >= 1080; },
   // formati i zgjedhur (Automatik / Mbush) vetëm në ekran të plotë; kutia e vogël gjithmonë "Origjinal",
   // sepse "Automatik" i televizorit s'e respekton madhësinë e kutisë dhe del mbi menunë
-  metoda: function () { return this.ePlote() ? figura(this.figura).m : "PLAYER_DISPLAY_MODE_LETTER_BOX"; },
+  metoda: function () {
+    if (this.ePlote()) return figura(this.figura).m;
+    var kt = CIL.kutia; return kt ? (kt.m ? "PLAYER_DISPLAY_MODE_" + kt.m : "") : "PLAYER_DISPLAY_MODE_LETTER_BOX";
+  },
+  kutiaVone: function () { return !this.ePlote() && CIL.kutia && CIL.kutia.vone; },
   _rectAV: function () {
     var r = this.rect, o = $("#av");
     o.style.left = r[0] + "px"; o.style.top = r[1] + "px"; o.style.width = r[2] + "px"; o.style.height = r[3] + "px";
-    try { webapis.avplay.setDisplayMethod(this.metoda()); } catch (e) {}
-    var k = CIL.shkalla || 1;   // disa Samsung 4K (2020) e lexojnë rect-in në 3840x2160 -> ×2
+    var m = this.metoda();
+    if (m) { try { webapis.avplay.setDisplayMethod(m); } catch (e) {} }
+    var k = (!this.ePlote() && CIL.kutia ? CIL.kutia.k : CIL.shkalla) || 1;   // disa Samsung 4K (2020) e lexojnë rect-in në 3840x2160 -> ×2
     try { webapis.avplay.setDisplayRect(Math.round(r[0] * k), Math.round(r[1] * k), Math.round(r[2] * k), Math.round(r[3] * k)); } catch (e) {}
   },
   _rectVideo: function () {
@@ -858,6 +864,36 @@ function ngarkim(po) { $("#ngarkim").classList.toggle("fsh", !po); $("#ngarkim")
 function gabimVideo(po, html) {
   var g = $("#gabimV"); g.classList.toggle("fsh", !po); if (po) g.innerHTML = html;
   g.classList.toggle("i-vogel", po && !document.body.classList.contains("plote"));
+}
+// --- testi i kutisë së vogël (TV që s'e shfaqin videon në kutinë e vogël, p.sh. Samsung 2020)
+var PROVAT_KUTIA = [null,
+  { m: "LETTER_BOX", k: 2 }, { m: "FULL_SCREEN", k: 2 }, { m: "AUTO_ASPECT_RATIO", k: 2 }, { m: "", k: 2 }, { m: "LETTER_BOX", k: 2, vone: 1 },
+  { m: "LETTER_BOX", k: 1 }, { m: "FULL_SCREEN", k: 1 }, { m: "", k: 1 }];
+var TK = null;
+function provaKutiaNr(kt) { var j = JSON.stringify(kt || null); for (var i = 0; i < PROVAT_KUTIA.length; i++) if (JSON.stringify(PROVAT_KUTIA[i]) === j) return i; return 0; }
+function testoKutine() {
+  if (!S.live.length) return njofto("Hap fillimisht një listë me kanale");
+  var it = (S.luan && S.luan.lloji === "live" && S.luan.it) || UI.lKan.tani() || S.live[0];
+  TK = { i: provaKutiaNr(CIL.kutia), it: it, para: CIL.kutia };
+  F.tab = 0; shfaqEkran("live"); vendosZone("kan");
+  provaKutia();
+}
+function provaKutia() { CIL.kutia = PROVAT_KUTIA[TK.i]; luajLive(TK.it); vizatoTestin(); }
+function vizatoTestin() {
+  $("#l-info").innerHTML = "<h2>🧪 Prova " + (TK.i + 1) + " / " + PROVAT_KUTIA.length + (TK.i ? "" : " (si tani)") + "</h2><div class='kat-e'>" + esc(TK.it.emri) + "</div>" +
+    "<div class='prog'><div class='tit'>A duket figura brenda kutisë lart?</div><div class='per'>Prit 2–3 sekonda pas çdo prove.</div></div>" +
+    "<div class='prog'><div class='ora-p'>▼ prova tjetër · ▲ e mëparshmja</div><div class='tit'>OK = kjo punon (ruhet)</div><div class='per'>Back = anulo</div></div>";
+}
+function tastTest(k) {
+  var n = PROVAT_KUTIA.length;
+  if (k === K.POSHTE || k === K.DJATHTAS || k === K.CHDN) { TK.i = (TK.i + 1) % n; provaKutia(); }
+  else if (k === K.LART || k === K.MAJTAS || k === K.CHUP) { TK.i = (TK.i + n - 1) % n; provaKutia(); }
+  else if (k === K.OK) {
+    var nr = TK.i; CIL.kutia = PROVAT_KUTIA[nr]; ruajCil(); TK = null;
+    njofto(nr ? "✅ U ruajt prova " + (nr + 1) + " për kutinë e vogël" : "✅ Kutia e vogël: si më parë", 4000); infoKanali(UI.lKan.tani());
+  } else if (k === K.PRAPA) {
+    var it = TK.it; CIL.kutia = TK.para; TK = null; luajLive(it); infoKanali(UI.lKan.tani()); njofto("Testi u anulua", 2500);
+  }
 }
 function rectKutia() {   // kutia e vogël e videos te "Live" (në koordinata 1920x1080)
   var k = $("#kutia"), sk = $("#skena").getBoundingClientRect(), r = k.getBoundingClientRect(), s = sk.width / 1920;
@@ -924,6 +960,7 @@ function zgjidhKatLive(i, ruajFokus) {
 }
 var epgTimer = null;
 function infoKanali(it) {
+  if (TK) return vizatoTestin();
   var el = $("#l-info");
   if (!it) { el.innerHTML = ""; return; }
   var kat = (S.liveKat.filter(function (k) { return k.id === it.kat; })[0] || {}).emri || "";
@@ -1137,7 +1174,7 @@ function kerko(q) {
 // ---- CILËSIMET
 function rreshtatCil() {
   var l = S.listat[S.aktive] || {};
-  return [
+  var rr = [
     { t: "📺 ID e këtij TV", v: idPajisjes(), d: "Çelësi: " + celesiPajisjes() + " · jepja administratorit", f: function () { njofto("Duke pyetur panelin…"); pyetPanelin(); setTimeout(vizatoCil, 3000); } },
     { t: "📋 Lista aktive", v: (l.paneli ? "🔒 " : "") + (l.emri || "—"), f: zgjidhListen },
     { t: "➕ Shto listë të re", f: function () { hapForme(-1); } },
@@ -1150,6 +1187,8 @@ function rreshtatCil() {
       f: function () { CIL.formati = { auto: "ts", ts: "m3u8", m3u8: "auto" }[CIL.formati]; ruajCil(); vizatoCil(); } },
     { t: "🖼️ Formati i figurës", v: figura(CIL.figura).t, d: "Për të gjitha kanalet. Për një kanal të vetëm: shtyp ▶ kur je në ekran të plotë",
       f: function () { var i = FIGURAT.indexOf(figura(CIL.figura)); CIL.figura = FIGURAT[(i + 1) % FIGURAT.length].id; ruajCil(); vizatoCil(); } },
+    { t: "🧪 Testo kutinë e videos", v: CIL.kutia ? "Prova " + (provaKutiaNr(CIL.kutia) + 1) : "Standarde",
+      d: "Nëse figura s'del te kutia e vogël (zëri po): provo mënyrat një nga një", f: testoKutine },
     { t: "📐 Shkalla e videos", v: CIL.shkalla == 2 ? "×2" : CIL.shkalla == 1.5 ? "×1.5" : "Normale",
       d: "VETËM nëse video del gabim ose s'duket (Samsung 4K 2020): provo ×2",
       f: function () { CIL.shkalla = CIL.shkalla == 1 ? 2 : CIL.shkalla == 2 ? 1.5 : 1; ruajCil(); if (NE_TV && L.luan()) L._rectAV(); vizatoCil();
@@ -1159,6 +1198,8 @@ function rreshtatCil() {
     { t: "⬇️ Kontrollo për përditësim", v: VERSIONI, f: kontrolloPerditesim },
     { t: "▶️ Kur hapet: nis kanalin e fundit", v: CIL.nisFundit ? "Po" : "Jo", f: function () { CIL.nisFundit = !CIL.nisFundit; ruajCil(); vizatoCil(); } }
   ];
+  // Android (ExoPlayer) s'ka nevojë për rregullimet e AVPlay të Samsung-ut
+  return window.SNOW_ANDROID ? rr.filter(function (r) { return !/Testo kutinë|Shkalla e videos/.test(r.t); }) : rr;
 }
 function vizatoCil() {
   var i = UI.cLista.i; UI.cLista.vendos(rreshtatCil(), i);
@@ -1395,6 +1436,7 @@ function tasti(e) {
     return;
   }
   e.preventDefault();
+  if (TK) { if (!e.repeat || k !== K.OK) tastTest(k); return; }
   if (k >= 48 && k <= 57 && !DG && F.ekran !== "forma" && (F.ekran === "live" || document.body.classList.contains("plote")) && !(S.luan && S.luan.lloji !== "live" && document.body.classList.contains("plote"))) return shtypNumer(String(k - 48));
   if (DG) {
     if (k === K.MAJTAS || k === K.LART) { DG.i = Math.max(0, DG.i - 1); vizatoDialog(); }
