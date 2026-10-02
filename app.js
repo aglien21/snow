@@ -2,7 +2,17 @@
    Burimi: Xtream Codes (host + përdorues + fjalëkalim) ose link M3U.
    Videoja luhet me AVPlay të televizorit: luan .ts, HLS, MPEG-2, HEVC, MP2… direkt nga ofruesi. */
 "use strict";
-var VERSIONI = "1.4.0";
+var VERSIONI = "1.4.1";
+(function () {   // TV i vjetër pa "gap" te flex (Chromium < 84, p.sh. Samsung 2020): app.css përdor margin në vend të tij
+  try {
+    var d = document.createElement("div");
+    d.style.cssText = "display:flex;flex-direction:column;row-gap:1px;position:absolute;visibility:hidden";
+    d.appendChild(document.createElement("div")); d.appendChild(document.createElement("div"));
+    (document.body || document.documentElement).appendChild(d);
+    var ka = d.scrollHeight === 1; d.parentNode.removeChild(d);
+    if (!ka) document.documentElement.className += " pa-gap";
+  } catch (e) {}
+})();
 var PANELI = "http://130.61.238.162:8000/snow/api/pajisja";   // paneli i administratorit (Oracle)
 var $ = function (s) { return document.querySelector(s); };
 var NE_TV = !!(window.webapis && window.webapis.avplay);
