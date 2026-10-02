@@ -2,7 +2,7 @@
    Burimi: Xtream Codes (host + përdorues + fjalëkalim) ose link M3U.
    Videoja luhet me AVPlay të televizorit: luan .ts, HLS, MPEG-2, HEVC, MP2… direkt nga ofruesi. */
 "use strict";
-var VERSIONI = "1.4.3";
+var VERSIONI = "1.4.4";
 (function () {   // TV i vjetër pa "gap" te flex (Chromium < 84, p.sh. Samsung 2020): app.css përdor margin në vend të tij
   try {
     var d = document.createElement("div");
@@ -119,8 +119,8 @@ Xtream.prototype.baza = function (lloji) { return this.host + "/" + lloji + "/" 
 Xtream.prototype.urlLive = function (it) { return this.baza("live") + it.sid + "." + this.ext(); };
 Xtream.prototype.urlVod = function (it) { return this.baza("movie") + it.sid + "." + (it.ext || "mp4"); };
 Xtream.prototype.urlEp = function (ep) { return this.baza("series") + ep.id + "." + (ep.container_extension || "mp4"); };
-Xtream.prototype.epg = function (it) {
-  return this.api("get_short_epg", "&stream_id=" + it.sid + "&limit=4").then(function (d) {
+Xtream.prototype.epg = function (it, n) {
+  return this.api("get_short_epg", "&stream_id=" + it.sid + "&limit=" + (n || 4)).then(function (d) {
     return ((d && d.epg_listings) || []).map(function (p) {
       return { fil: +p.start_timestamp || Date.parse(p.start) / 1000, mb: +p.stop_timestamp || Date.parse(p.end || p.stop) / 1000,
         tit: b64(p.title), per: b64(p.description) };
@@ -167,7 +167,7 @@ M3U.prototype.ngarko = function () {
 };
 M3U.prototype.urlLive = function (it) { return it.url; };
 M3U.prototype.urlVod = function (it) { return it.url; };
-M3U.prototype.epg = function (it) { return this.xt && it.xt ? this.xt.epg(it) : Promise.resolve([]); };  // linqe Xtream brenda M3U: guida nga ofruesi
+M3U.prototype.epg = function (it, n) { return this.xt && it.xt ? this.xt.epg(it, n) : Promise.resolve([]); };  // linqe Xtream brenda M3U: guida nga ofruesi
 M3U.prototype.epgTani = function () { return Promise.resolve(null); };
 
 // ------------------------------------------------------------------ guida XMLTV (EPG nga një link — punon pa serverin/PC-në)
@@ -260,7 +260,8 @@ function LexuesXmltv(src, kanalet, harta) {
     if (!fil || mb < t0 || fil > t1) return;
     var k = src + "|" + ch, l = self.prog[k] || (self.prog[k] = []);
     if (l.length >= 80) return;
-    l.push([fil, mb, xmlFut(el, "title").slice(0, 120), xmlFut(el, "desc").slice(0, 160)]);
+    var kt = xmlFut(el, "category").slice(0, 30), pr = xmlFut(el, "desc");
+    l.push(kt ? [fil, mb, xmlFut(el, "title").slice(0, 120), pr.length > 900 ? pr.slice(0, 897) + "…" : pr, kt] : [fil, mb, xmlFut(el, "title").slice(0, 120), pr.length > 900 ? pr.slice(0, 897) + "…" : pr]);
     self.programe++;
   }
   this.shto = function (t) {
@@ -489,7 +490,7 @@ function nisGuiden(detyro) {
       aplikoGuiden();
       try {   // ruaje (vetëm nëse s'është shumë e madhe, që të mos zërë vendin e listave/të preferuarave)
         localStorage.removeItem("mi_xmltv");
-        for (var niv = 0; niv < 4; niv++) {   // nëse është e madhe, ngjeshe: pa përshkrime → vetëm 24 orët e ardhshme
+        for (var niv = 0; niv < 5; niv++) {   // nëse është e madhe, ngjeshe: pa përshkrime → vetëm 24 orët e ardhshme
           var j = JSON.stringify({ celes: celes, t: GX.koha, harta: harta, prog: niv ? ngjeshGuiden(prog, niv) : prog });
           if (j.length < 1500000) { localStorage.setItem("mi_xmltv", j); break; }
         }
@@ -505,8 +506,10 @@ function nisGuiden(detyro) {
   })();
 }
 function ngjeshGuiden(prog, niv) {
-  var r = {}, t = tani(), deri = niv >= 3 ? t + 24 * 3600 : 1e12;
-  for (var k in prog) r[k] = prog[k].filter(function (p) { return p[1] > t && p[0] < deri; }).map(function (p, i) { return [p[0], p[1], p[2], niv === 1 && i < 3 ? p[3] : ""]; });
+  var r = {}, t = tani(), deri = niv >= 4 ? t + 24 * 3600 : 1e12;
+  for (var k in prog) r[k] = prog[k].filter(function (p) { return p[1] > t && p[0] < deri; }).map(function (p, i) {
+    var per = niv === 1 ? (p[0] < t + 12 * 3600 ? p[3] : "") : niv === 2 && i < 3 ? p[3] : "";
+    return p[4] ? [p[0], p[1], p[2], per, p[4]] : [p[0], p[1], p[2], per]; });
   return r;
 }
 function tekstGuida() {
@@ -971,7 +974,7 @@ function infoKanali(it) {
         (p.per ? "<div class='per'>" + esc(p.per) + "</div>" : "") + "</div>";
     });
   } else h += "<div class='prog'><div class='per'>" + (S.epgC[it.k] && !(GX.duke && !GX.n) ? "S'ka guidë për këtë kanal." : "Duke marrë guidën…") + "</div></div>";
-  h += "<div class='ndihme'>OK: shiko këtu · OK përsëri: ekran i plotë · Mbaj OK: ⭐</div>";
+  h += "<div class='ndihme'>OK: shiko këtu · OK përsëri: ekran i plotë · Mbaj OK: ⭐<div class='ngjyrat'>" + LEGJENDA + "</div></div>";
   el.innerHTML = h;
   clearTimeout(epgTimer);
   var c = S.epgC[it.k];
@@ -1035,7 +1038,7 @@ function osdLive(shfaq) {
   $("#o-tani").textContent = e && e.tani ? ora(e.tani.fil) + " – " + ora(e.tani.mb) + "   " + e.tani.tit : "";
   $("#o-prog").style.width = e && e.tani ? Math.min(100, (tani() - e.tani.fil) / (e.tani.mb - e.tani.fil) * 100) + "%" : "0";
   $("#o-pastaj").textContent = e && e.pastaj ? "Pastaj " + ora(e.pastaj.fil) + ":  " + e.pastaj.tit : "";
-  $("#o-ndihme").innerHTML = "▲▼ / CH: kanal tjetër · OK: menuja · ◀: lista e shpejtë<br>▶: figura (" + esc(figura(L.figura).t) + ") · Back: dil";
+  $("#o-ndihme").innerHTML = "▲▼ / CH: kanal tjetër · OK: menuja · ◀: lista · Back: dil<br>" + LEGJENDA.replace(">Formati<", ">Figura (" + esc(figura(L.figura).t) + ")<");
   $("#o-ora").textContent = oraTani();
   if (shfaq) { $("#osd").classList.remove("fsh"); clearTimeout(osdTimer); osdTimer = setTimeout(function () { $("#osd").classList.add("fsh"); }, 6000); }
 }
@@ -1048,7 +1051,7 @@ function osdVod(shfaq, cak) {
   $("#o-tani").textContent = (L.pauze ? "⏸  " : "▶  ") + kohe(k) + (d ? "  /  " + kohe(d) : "") + (cak != null ? "   ⏩" : "");
   $("#o-prog").style.width = d ? Math.min(100, k / d * 100) + "%" : "0";
   $("#o-pastaj").textContent = "";
-  $("#o-ndihme").innerHTML = "OK: pauzë · ◀ ▶: 10 sek · ⏪ ⏩: 1 min<br>▼: figura (" + esc(figura(L.figura).t) + ") · Back: dil";
+  $("#o-ndihme").innerHTML = "OK: pauzë · ◀ ▶: 10 sek · ⏪ ⏩: 1 min · Back: dil<br><span class='ngj'><i class='ng ng-v'></i>/ ▼: figura (" + esc(figura(L.figura).t) + ")</span>";
   $("#o-ora").textContent = oraTani();
   if (shfaq) { $("#osd").classList.remove("fsh"); clearTimeout(osdTimer); if (!L.pauze) osdTimer = setTimeout(function () { $("#osd").classList.add("fsh"); }, 4000); }
 }
@@ -1214,11 +1217,161 @@ function vizatoCil() {
     (PN.lidhur ? "✅ i lidhur" + (PN.emri ? " · <b>" + esc(PN.emri) + "</b>" : "") : PN.gabimi ? "⚠️ " + esc(PN.gabimi) : "duke u lidhur…") + "</div>";
   h += "Kanale: <b>" + S.live.length + "</b> · Filma: <b>" + S.vod.length + "</b> · Seriale: <b>" + S.ser.length + "</b>";
   if (GX.urls.length) h += "<br>Guida: <b>" + esc(tekstGuida()) + "</b>" + (GX.koha ? " · " + ora(GX.koha) : "");
-  h += "<br><br><b>Telekomanda</b><br>▲▼◀▶ lëviz · OK zgjidh · Mbaj OK: ⭐<br>CH+/CH−: kanali tjetër · Numrat: shko te kanali<br>Ekran i plotë: ▶ (filmat: ▼) ndryshon figurën<br>Back: kthehu";
+  h += "<br><br><b>Telekomanda</b><br>▲▼◀▶ lëviz · OK zgjidh · Mbaj OK: ⭐ të preferuarat<br>CH+/CH−: kanali tjetër · Numrat: shko te kanali<br>🔴 Listat · 🟢 Guida e plotë · 🟡 Formati i figurës · 🔵 Grupet e kanaleve<br>Back: kthehu";
   $("#c-info").innerHTML = h;
 }
+// ------------------------------------------------------------------ butonat me ngjyra (🔴 listat · 🟢 guida · 🟡 formati · 🔵 grupet)
+var LEGJENDA = "<span class='ngj'><i class='ng ng-k'></i>Listat</span><span class='ngj'><i class='ng ng-j'></i>Guida</span>" +
+  "<span class='ngj'><i class='ng ng-v'></i>Formati</span><span class='ngj'><i class='ng ng-b'></i>Grupet</span>";
+function ePlote() { return document.body.classList.contains("plote"); }
+function veprimNgjyre(k) {
+  if (F.ekran === "forma" && !ePlote()) return;   // duke plotësuar formularin: mos e prish
+  if (k === K.KUQ) return ngjyraListat();
+  if (k === K.JESHIL) return hapGuiden();
+  if (k === K.VERDHE) return ngjyraFormati();
+  if (k === K.BLU) return ngjyraGrupet();
+}
+function ngjyraFormati() {
+  if (!S.luan || !L.luan()) return njofto("🟡 Formati: hap fillimisht një kanal ose film");
+  ndryshoFiguren();
+  if (ePlote()) { if (S.luan.lloji === "live") osdLive(true); else osdVod(true); }
+  else njofto("🖼️ Figura: " + figura(L.figura).t + " · duket në ekran të plotë", 3000);
+}
+function ngjyraGrupet() {
+  if (ePlote()) {
+    if (S.luan && S.luan.lloji === "live") { dilPlote(); vendosZone("kat"); }
+    else njofto("🔵 Grupet: dil fillimisht nga filmi (Back)");
+    return;
+  }
+  if (F.ekran === "live") return vendosZone(F.zona === "kat" ? "kan" : "kat");
+  if (F.ekran === "vod") return vendosZone(F.zona === "vkat" ? "vrr" : "vkat");
+  if (F.ekran === "ser") return vendosZone(F.zona === "skat" ? "srr" : "skat");
+  F.tab = 0; shfaqEkran("live"); vendosZone("kat");
+}
+function ngjyraListat() {
+  var b = S.listat.slice(0, 7).map(function (l, i) {
+    return { t: (i === S.aktive ? "✔ " : "") + (l.paneli ? "🔒 " : "") + l.emri, f: function () {
+      if (i === S.aktive) return;
+      if (ePlote()) { L.ndalo(); S.luan = null; dilPlote(); }
+      S.aktive = i; LS.set("aktive", i); ngarkoListen();
+    } };
+  });
+  b.push({ t: "➕ Shto listë të re", f: function () { if (ePlote()) { L.ndalo(); S.luan = null; dilPlote(); } hapForme(-1); } });
+  dialog("📋 Zgjidh playlistën", b, true);
+  DG.i = Math.max(0, Math.min(S.aktive, b.length - 1)); vizatoDialog();
+}
+
+// ------------------------------------------------------------------ 🟢 guida e plotë (programet + përshkrimi i plotë)
+var GP = null, DITET = ["E diel", "E hënë", "E martë", "E mërkurë", "E enjte", "E premte", "E shtunë"];
+function emerDite(t) {
+  var d = new Date(t * 1000), s = new Date(); s.setHours(0, 0, 0, 0);
+  var n = Math.round((new Date(d.getFullYear(), d.getMonth(), d.getDate()) - s) / 864e5);
+  if (n === 0) return "Sot"; if (n === 1) return "Nesër"; if (n === -1) return "Dje";
+  return DITET[d.getDay()] + " " + d.getDate() + "/" + (d.getMonth() + 1);
+}
+function kohezgjatje(s) {
+  s = Math.max(0, Math.round(s / 60)); var o = Math.floor(s / 60), m = s % 60;
+  return o ? o + " orë" + (m ? " " + m + " min" : "") : m + " min";
+}
+function programetPlote(it) {
+  var t = tani(), k = GX.harta[it.k], p = k && GX.prog[k], l = null, burim = "";
+  if (p && p.length) { l = p.map(function (x) { return { fil: x[0], mb: x[1], tit: x[2], per: x[3], kat: x[4] || "" }; }); burim = "Guida (EPG) e listës"; }
+  else if (S.epgP && S.epgP[it.k] && S.epgP[it.k].l.length) { l = S.epgP[it.k].l; burim = "Guida nga ofruesi"; }
+  else if (S.epgTani && S.epgTani[String(it.sid)]) { l = S.epgTani[String(it.sid)].map(function (x) { return { fil: x[0], mb: x[1], tit: x[2] }; }); burim = "Guida nga serveri"; }
+  else if (S.epgC[it.k] && S.epgC[it.k].l.length) { l = S.epgC[it.k].l; burim = "Guida nga ofruesi"; }
+  if (!l) return null;
+  l = l.filter(function (x) { return x.mb > t; });
+  return l.length ? { l: l, burim: burim, xml: !!(p && p.length) } : null;
+}
+function hapGuiden() {
+  var plote = ePlote(), it = null, lista = null;
+  if (plote) {
+    if (!S.luan || S.luan.lloji !== "live") return njofto("🟢 Guida është për kanalet live");
+    it = S.luan.it; lista = S.luan.lista && S.luan.lista.length ? S.luan.lista : S.live;
+  } else if (F.ekran === "live" && UI.lKan && UI.lKan.items.length) {
+    it = F.zona === "kan" ? UI.lKan.tani() : (S.luan && S.luan.lloji === "live" ? S.luan.it : UI.lKan.tani());
+    lista = UI.lKan.items.indexOf(it) >= 0 ? UI.lKan.items : S.live;
+  } else if (S.luan && S.luan.lloji === "live") { it = S.luan.it; lista = S.luan.lista || S.live; }
+  else return njofto("🟢 Guida: shko te Live dhe zgjidh një kanal");
+  if (!it) return;
+  $("#zap").classList.add("fsh"); $("#osd").classList.add("fsh");
+  GP = { it: it, lista: lista, plote: plote, i: 0, s: 0 };
+  $("#gp").classList.remove("fsh");
+  ngarkoGuidenPlote(); vizatoGuidenPlote();
+}
+function mbyllGuiden() {
+  if (!GP) return;
+  var plote = GP.plote; GP = null;
+  $("#gp").classList.add("fsh");
+  if (plote && ePlote() && S.luan && S.luan.lloji === "live") osdLive(true);
+}
+function ngarkoGuidenPlote() {
+  var it = GP.it, pp = programetPlote(it);
+  if (pp && pp.xml) return;   // guida XML i ka të gjitha
+  if (!S.burim || !S.burim.epg) return;
+  S.epgP = S.epgP || {};
+  var c = S.epgP[it.k]; if (c && tani() - c.t < 1800) return;
+  GP.duke = true;
+  S.burim.epg(it, 40).then(function (l) { S.epgP[it.k] = { t: tani(), l: l || [] }; if (l && l.length) S.epgC[it.k] = { t: tani(), l: l.slice(0, 4) }; })
+    .catch(function () { S.epgP[it.k] = { t: tani(), l: [] }; })
+    .then(function () { if (GP && GP.it === it) { GP.duke = false; vizatoGuidenPlote(); } });
+}
+function vizatoGuidenPlote() {
+  if (!GP) return;
+  var it = GP.it, pp = programetPlote(it), l = pp ? pp.l : [], t = tani();
+  GP.n = l.length; GP.i = Math.max(0, Math.min(GP.i, l.length - 1));
+  $("#gp-logo").outerHTML = logoHtml(it.emri, it.logo, "o-logo").replace('class="o-logo"', 'id="gp-logo" class="o-logo"');
+  $("#gp-emri").textContent = it.num + ". " + it.emri;
+  $("#gp-burimi").textContent = pp ? pp.burim + " · " + l.length + (l.length === 1 ? " program" : " programe") : "";
+  $("#gp-ora").textContent = oraTani();
+  // lista: dritare që mban të dukshëm programin e zgjedhur (titujt e ditëve zënë vend)
+  var H = 790, rr = function (s) { var h = 0, out = [], dita = null; for (var j = s; j < l.length; j++) {
+    var d = emerDite(l[j].fil), shto = (d !== dita ? 50 : 0) + 72; if (h + shto > H && j > s) break;
+    h += shto; out.push({ j: j, dita: d !== dita ? d : null }); dita = d; } return out; };
+  if (GP.i < GP.s) GP.s = GP.i;
+  var dr = rr(GP.s); while (dr.length && dr[dr.length - 1].j < GP.i) { GP.s++; dr = rr(GP.s); }
+  var h = "";
+  if (!l.length) h = "<div class='gp-bosh'>" + (GP.duke ? "Duke marrë guidën…" : "S'ka guidë për këtë kanal.<br><br>Shto guidën te lista: Cilësimet → 📅 Guida (p.sh. <b>AL</b>).") + "</div>";
+  dr.forEach(function (r) {
+    var p = l[r.j], eTani = p.fil <= t;
+    if (r.dita) h += "<div class='gp-dita'>" + esc(r.dita) + "</div>";
+    h += "<div class='gp-rr" + (eTani ? " tani" : "") + (r.j === GP.i ? " fokus" : "") + "'><div class='gp-o'>" + (eTani ? "TANI" : ora(p.fil)) + "</div><div class='gp-t'>" + esc(p.tit) + "</div></div>";
+  });
+  $("#gp-lista").innerHTML = h;
+  var d = "", p = l[GP.i];
+  if (p) {
+    var eT = p.fil <= t, pct = Math.min(100, Math.max(0, (t - p.fil) / (p.mb - p.fil) * 100));
+    d = "<h2>" + esc(p.tit) + "</h2><div class='gp-kur'>" + esc(emerDite(p.fil)) + " · " + ora(p.fil) + " – " + ora(p.mb) + " · " + kohezgjatje(p.mb - p.fil) + "</div>";
+    d += eT ? "<span class='gp-etiketa tani'>TANI · mbaron pas " + kohezgjatje(p.mb - t) + "</span>" : "<span class='gp-etiketa'>Fillon pas " + kohezgjatje(p.fil - t) + "</span>";
+    if (p.kat) d += "<span class='gp-etiketa'>" + esc(p.kat) + "</span>";
+    if (eT) d += "<div class='o-shirit'><i style='width:" + pct.toFixed(0) + "%'></i></div>";
+    d += p.per ? "<div class='gp-per'>" + esc(p.per) + "</div>" : "<div class='gp-per bosh'>" + (GP.duke ? "Duke marrë përshkrimin…" : "S'ka përshkrim për këtë program.") + "</div>";
+  }
+  $("#gp-det").innerHTML = d;
+  $("#gp-ndihme").innerHTML = "▲▼ programet · ◀ ▶ kanali tjetër · OK: shiko kanalin · <i class='ng ng-j'></i>/ Back: mbyll";
+}
+function tastGuida(k) {
+  if (k === K.LART || k === K.POSHTE || k === K.CHUP || k === K.CHDN || k === K.PGUP || k === K.PGDN) {
+    var d = k === K.LART ? -1 : k === K.POSHTE ? 1 : (k === K.CHUP || k === K.PGUP) ? -7 : 7;
+    GP.i = Math.max(0, Math.min((GP.n || 1) - 1, GP.i + d)); return vizatoGuidenPlote();
+  }
+  if (k === K.MAJTAS || k === K.DJATHTAS) {
+    var l = GP.lista || [], i = l.indexOf(GP.it); if (!l.length) return;
+    GP.it = l[(i + (k === K.DJATHTAS ? 1 : -1) + l.length) % l.length]; GP.i = 0; GP.s = 0; GP.duke = false;
+    ngarkoGuidenPlote(); return vizatoGuidenPlote();
+  }
+  if (k === K.OK) {
+    var it = GP.it, plote = GP.plote, lista = GP.lista; mbyllGuiden();
+    if (plote && ePlote()) { if (it !== S.luan.it) { S.luan.it = it; S.luan.lista = lista; zapKanal(0); } else osdLive(true); return; }
+    if (F.ekran === "live" && UI.lKan) { var p = UI.lKan.items.indexOf(it); if (p >= 0) { UI.lKan.i = p; UI.lKan.vizato(); vendosZone("kan"); } infoKanali(it); }
+    if (!(S.luan && S.luan.it === it && L.luan())) luajLive(it, lista, false);
+    return;
+  }
+  if (k === K.PRAPA || k === K.JESHIL || k === K.INFO) return mbyllGuiden();
+  if (k === K.KUQ || k === K.VERDHE || k === K.BLU) { mbyllGuiden(); return veprimNgjyre(k); }
+}
 function zgjidhListen() {
-  if (S.listat.length < 2) return njofto("Ke vetëm një listë. Shto një tjetër me „Shto listë të re“.");
+  if (S.listat.length) return ngjyraListat();
   dialog("Cilën listë do të hapësh?", S.listat.slice(0, 5).map(function (l, i) {
     return { t: (i === S.aktive ? "✔ " : "") + (l.paneli ? "🔒 " : "") + l.emri, f: function () { S.aktive = i; LS.set("aktive", i); ngarkoListen(); } };
   }));
@@ -1309,7 +1462,7 @@ function ngarkoListen() {
   $("#fillimi").classList.remove("fsh"); $("#fillimi-tekst").textContent = "Duke ngarkuar „" + l.emri + "“…";
   $("#lista-emri").textContent = l.emri;
   S.burim = l.lloji === "xtream" ? new Xtream(l.host, l.user, l.pass) : new M3U(l.m3u);
-  S.epgC = {}; S.epgTani = null;
+  S.epgC = {}; S.epgP = {}; S.epgTani = null;
   GX.nr++; GX.prog = {}; GX.harta = {}; GX.n = 0; GX.urls = []; GX.duke = false; GX.gjendja = "";
   ngarkoFav();
   S.burim.hyr().then(function () { return S.burim.ngarko(); }).then(function (D) {
@@ -1354,8 +1507,9 @@ function nisUI() {
 
 // ------------------------------------------------------------------ dialog, njoftim, ora
 var DG = null;
-function dialog(tekst, butonat) {
+function dialog(tekst, butonat, vertikal) {
   DG = { b: butonat && butonat.length ? butonat : [{ t: "OK" }], i: 0 };
+  if (vertikal) $("#dg-butonat").classList.add("vertikal"); else $("#dg-butonat").classList.remove("vertikal");
   $("#dg-tekst").innerHTML = tekst;
   vizatoDialog();
   $("#dialog").classList.remove("fsh");
@@ -1372,7 +1526,7 @@ function mbyllDialog(i) {
 var njTimer = null;
 function njofto(t, ms) { var n = $("#njoftim"); n.textContent = t; n.classList.remove("fsh"); clearTimeout(njTimer); njTimer = setTimeout(function () { n.classList.add("fsh"); }, ms || 2500); }
 function oraTani() { var d = new Date(); return ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2); }
-setInterval(function () { $("#ora").textContent = oraTani(); if (!$("#osd").classList.contains("fsh")) $("#o-ora").textContent = oraTani(); }, 15000);
+setInterval(function () { $("#ora").textContent = oraTani(); if (!$("#osd").classList.contains("fsh")) $("#o-ora").textContent = oraTani(); if (GP) vizatoGuidenPlote(); }, 15000);
 setInterval(function () {   // OSD-ja rifreskohet ndërsa duket
   if ($("#osd").classList.contains("fsh") || !S.luan || kerkimCak != null) return;
   if (S.luan.lloji === "live") osdLive(false); else osdVod(false);
@@ -1422,7 +1576,10 @@ function tasti(e) {
   if (!NE_TV) {   // prova në shfletues me tastierë
     if (k === 27 || (k === 8 && document.activeElement.tagName !== "INPUT")) k = K.PRAPA;
     else if (k === 32 && document.activeElement.tagName !== "INPUT") k = K.PP;
-    else if (k === 70 && document.activeElement.tagName !== "INPUT") k = K.VERDHE;
+    else if ((k === 70 || k === 89) && document.activeElement.tagName !== "INPUT") k = K.VERDHE;
+    else if (k === 82 && document.activeElement.tagName !== "INPUT") k = K.KUQ;
+    else if (k === 71 && document.activeElement.tagName !== "INPUT") k = K.JESHIL;
+    else if (k === 66 && document.activeElement.tagName !== "INPUT") k = K.BLU;
     else if (k === K.PGUP) k = K.CHUP; else if (k === K.PGDN) k = K.CHDN;
   }
   // duke shkruar në një kuti teksti
@@ -1437,6 +1594,7 @@ function tasti(e) {
   }
   e.preventDefault();
   if (TK) { if (!e.repeat || k !== K.OK) tastTest(k); return; }
+  if (GP && !DG) { if (!e.repeat || k !== K.OK) tastGuida(k); return; }
   if (k >= 48 && k <= 57 && !DG && F.ekran !== "forma" && (F.ekran === "live" || document.body.classList.contains("plote")) && !(S.luan && S.luan.lloji !== "live" && document.body.classList.contains("plote"))) return shtypNumer(String(k - 48));
   if (DG) {
     if (k === K.MAJTAS || k === K.LART) { DG.i = Math.max(0, DG.i - 1); vizatoDialog(); }
@@ -1454,6 +1612,7 @@ function tasti(e) {
   veprim(k);
 }
 function okGjateLejohet() {
+  if (GP || TK) return false;
   if (document.body.classList.contains("plote")) return S.luan && S.luan.lloji === "live" && $("#zap").classList.contains("fsh");
   return (F.ekran === "live" && F.zona === "kan") || (F.ekran === "vod" && F.zona === "vrr") || (F.ekran === "ser" && F.zona === "srr");
 }
@@ -1471,11 +1630,7 @@ function tastiLart(e) {
 
 function veprim(k) {
   var plote = document.body.classList.contains("plote");
-  if (k === K.VERDHE) {
-    if (plote && S.luan && S.luan.lloji === "live") { ndryshoFav(S.luan.it); return osdLive(true); }
-    if (okGjateLejohet()) return veprimGjate();
-    return;
-  }
+  if (k === K.KUQ || k === K.JESHIL || k === K.VERDHE || k === K.BLU) return veprimNgjyre(k);
   if (plote) return tastPlote(k);
   if (k === K.CHUP || k === K.CHDN) {
     if (F.ekran === "live" && S.luan && S.luan.lloji === "live") { var l = UI.lKan; var i = l.items.indexOf(S.luan.it); var n = l.items[i + (k === K.CHUP ? 1 : -1)];
@@ -1610,7 +1765,7 @@ function tastPlote(k) {
     else if (k === K.POSHTE || k === K.CHDN) zapKanal(-1);
     else if (k === K.OK) dilPlote();       // OK: si Back, kanali në kutinë e vogël + buqetat + kanalet
     else if (k === K.MAJTAS) hapZap();     // ◀: lista e shpejtë mbi video
-    else if (k === K.DJATHTAS || k === K.BLU) { ndryshoFiguren(); osdLive(true); }
+    else if (k === K.DJATHTAS) { ndryshoFiguren(); osdLive(true); }
     else if (k === K.INFO) { if ($("#osd").classList.contains("fsh")) osdLive(true); else $("#osd").classList.add("fsh"); }
     else if (k === K.PRAPA) dilPlote();
     else if (k === K.STOP) { L.ndalo(); S.luan = null; dilPlote(); }
@@ -1622,7 +1777,7 @@ function tastPlote(k) {
     else if (k === K.DJATHTAS) kerkoVod(10000);
     else if (k === K.RW) kerkoVod(-60000);
     else if (k === K.FF) kerkoVod(60000);
-    else if (k === K.POSHTE || k === K.BLU) { ndryshoFiguren(); osdVod(true); }
+    else if (k === K.POSHTE) { ndryshoFiguren(); osdVod(true); }
     else if (k === K.LART || k === K.INFO) osdVod(true);
     else if (k === K.PRAPA || k === K.STOP) dilPlote();
   }
