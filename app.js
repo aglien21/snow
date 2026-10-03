@@ -2,7 +2,7 @@
    Burimi: Xtream Codes (host + përdorues + fjalëkalim) ose link M3U.
    Videoja luhet me AVPlay të televizorit: luan .ts, HLS, MPEG-2, HEVC, MP2… direkt nga ofruesi. */
 "use strict";
-var VERSIONI = "1.4.4";
+var VERSIONI = "1.4.5";
 (function () {   // TV i vjetër pa "gap" te flex (Chromium < 84, p.sh. Samsung 2020): app.css përdor margin në vend të tij
   try {
     var d = document.createElement("div");
@@ -238,6 +238,8 @@ function lidhKanaletEpg(kanalet, ids, emrat, src, harta) {
   });
   return perdorur;
 }
+// buxheti i memories për guidën (TV/Android të dobët + abonime me mijëra kanale)
+var BUX = { p: 0, d: 0 };
 // lexuesi copë-copë i një skedari XMLTV
 function LexuesXmltv(src, kanalet, harta) {
   var b = "", ids = {}, emrat = {}, gati = false, duhen = {}, lok = {}, t0 = tani() - 3 * 3600, t1 = tani() + 36 * 3600, self = this;
@@ -259,9 +261,11 @@ function LexuesXmltv(src, kanalet, harta) {
     var fil = xmlKoha(xmlAtr(el, "start")), mb = xmlKoha(xmlAtr(el, "stop")) || fil + 1800;
     if (!fil || mb < t0 || fil > t1) return;
     var k = src + "|" + ch, l = self.prog[k] || (self.prog[k] = []);
-    if (l.length >= 80) return;
-    var kt = xmlFut(el, "category").slice(0, 30), pr = xmlFut(el, "desc");
-    l.push(kt ? [fil, mb, xmlFut(el, "title").slice(0, 120), pr.length > 900 ? pr.slice(0, 897) + "…" : pr, kt] : [fil, mb, xmlFut(el, "title").slice(0, 120), pr.length > 900 ? pr.slice(0, 897) + "…" : pr]);
+    if (l.length >= (BUX.p < 25000 ? 80 : BUX.p < 60000 ? 12 : 4)) return;   // pas një kufiri: më pak programe për kanalet e tjera
+    var kt = xmlFut(el, "category").slice(0, 30), pr = xmlFut(el, "desc"), lim = BUX.d < 4e6 ? 900 : BUX.d < 7e6 ? 200 : 0;
+    pr = !lim ? "" : pr.length > lim ? pr.slice(0, lim - 1) + "…" : pr;
+    BUX.p++; BUX.d += pr.length;
+    l.push(kt ? [fil, mb, xmlFut(el, "title").slice(0, 120), pr, kt] : [fil, mb, xmlFut(el, "title").slice(0, 120), pr]);
     self.programe++;
   }
   this.shto = function (t) {
@@ -314,6 +318,7 @@ function merrBinar(url, sek) {
   return new Promise(function (ok, jo) {
     var x = new XMLHttpRequest();
     x.open("GET", url, true); x.responseType = "arraybuffer"; x.timeout = (sek || 180) * 1000;
+    x.onprogress = function (e) { if (e.loaded > 60e6) { x.onload = x.onerror = x.ontimeout = null; try { x.abort(); } catch (er) {} jo(new Error("guida është shumë e madhe për këtë pajisje (provo vetëm AL)")); } };
     x.onload = function () { if (x.status < 200 || x.status >= 300) return jo(new Error("serveri u përgjigj " + x.status)); ok(new Uint8Array(x.response)); };
     x.onerror = function () { jo(new Error("s'u lidh dot")); };
     x.ontimeout = function () { jo(new Error("koha mbaroi")); };
@@ -473,7 +478,7 @@ function nisGuiden(detyro) {
     GX.gjendja = "gati";
     if (!detyro && tani() - GX.koha < 4 * 3600) return;
   }
-  GX.duke = true; GX.gjendja = "duke u shkarkuar…";
+  GX.duke = true; GX.gjendja = "duke u shkarkuar…"; BUX = { p: 0, d: 0 };
   if (F.ekran === "cil") vizatoCil();
   var kanalet = S.live.slice(), harta = {}, prog = {}, gabimet = [], i = 0;
   (function tjetri() {
@@ -490,9 +495,12 @@ function nisGuiden(detyro) {
       aplikoGuiden();
       try {   // ruaje (vetëm nëse s'është shumë e madhe, që të mos zërë vendin e listave/të preferuarave)
         localStorage.removeItem("mi_xmltv");
+        var est = vleresoGuiden(prog, harta);
         for (var niv = 0; niv < 5; niv++) {   // nëse është e madhe, ngjeshe: pa përshkrime → vetëm 24 orët e ardhshme
+          if (est[niv] > 1450000) continue;
           var j = JSON.stringify({ celes: celes, t: GX.koha, harta: harta, prog: niv ? ngjeshGuiden(prog, niv) : prog });
-          if (j.length < 1500000) { localStorage.setItem("mi_xmltv", j); break; }
+          if (j.length < 1500000) localStorage.setItem("mi_xmltv", j);
+          break;
         }
       } catch (e) {}
       return;
@@ -504,6 +512,21 @@ function nisGuiden(detyro) {
       if (!lx.kanaleXml && !lx.programe) gabimet.push(emerEpg(u) + ": skedari s'duket si guidë XMLTV");
     }).catch(function (e) { gabimet.push(emerEpg(u) + ": " + (e && e.message || e)); }).then(function () { setTimeout(tjetri, 0); });
   })();
+}
+function vleresoGuiden(prog, harta) {   // madhësia e përafërt e JSON-it për çdo nivel ngjeshjeje
+  var t = tani(), e = [0, 0, 0, 0, 0], k, h = 0;
+  for (k in harta) h += k.length + harta[k].length + 8;
+  for (k in prog) {
+    var l = prog[k], j = 0;
+    for (var i = 0; i < l.length; i++) {
+      var p = l[i], b = 30 + p[2].length + (p[4] ? p[4].length + 3 : 0), d = p[3] ? p[3].length : 0;
+      e[0] += b + d;
+      if (p[1] <= t) continue;
+      e[1] += b + (p[0] < t + 12 * 3600 ? d : 0); e[2] += b + (j < 3 ? d : 0); e[3] += b; if (p[0] < t + 24 * 3600) e[4] += b; j++;
+    }
+    for (i = 0; i < 5; i++) e[i] += k.length + 6;
+  }
+  return e.map(function (x) { return Math.round(x * 1.05) + h; });
 }
 function ngjeshGuiden(prog, niv) {
   var r = {}, t = tani(), deri = niv >= 4 ? t + 24 * 3600 : 1e12;
@@ -1198,7 +1221,7 @@ function rreshtatCil() {
         njofto("📐 Shkalla e videos: " + (CIL.shkalla == 1 ? "Normale" : "×" + CIL.shkalla) + " · kthehu te Live dhe shiko kutinë", 4000); } },
     { t: "🔞 Kategoritë për të rritur", v: CIL.fshihTeRritur ? "Të fshehura" : "Të dukshme",
       f: function () { CIL.fshihTeRritur = !CIL.fshihTeRritur; ruajCil(); ngarkoListen(); } },
-    { t: "⬇️ Kontrollo për përditësim", v: VERSIONI, f: kontrolloPerditesim },
+    { t: "⬇️ Kontrollo për përditësim", v: VERSIONI + (versioniKeq() ? " · ⚠️ " + versioniKeq() + " s'u hap" : ""), f: kontrolloPerditesim },
     { t: "▶️ Kur hapet: nis kanalin e fundit", v: CIL.nisFundit ? "Po" : "Jo", f: function () { CIL.nisFundit = !CIL.nisFundit; ruajCil(); vizatoCil(); } }
   ];
   // Android (ExoPlayer) s'ka nevojë për rregullimet e AVPlay të Samsung-ut
@@ -1208,6 +1231,8 @@ function vizatoCil() {
   var i = UI.cLista.i; UI.cLista.vendos(rreshtatCil(), i);
   var nga = window.MI_BURIMI && window.MI_BURIMI.nga === "github" ? "përditësuar nga GitHub" : "versioni i instaluar";
   var inf = S.burim && S.burim.info && S.burim.info.user_info, h = "<h2>Snow IPTV " + VERSIONI + "</h2><div style='margin:-6px 0 14px;font-size:20px'>" + nga + "</div>";
+  if (versioniKeq()) { var ars = ""; try { ars = localStorage.getItem("mi_kodi_arsye") || ""; } catch (e) {}
+    h += "<div style='margin:-4px 0 14px;font-size:20px;color:var(--theks2)'>⚠️ Versioni " + esc(versioniKeq()) + " s'u hap në këtë pajisje" + (ars ? " (" + esc(ars) + ")" : "") + ". „Kontrollo për përditësim” e provon përsëri.</div>"; }
   if (inf) {
     var exp = inf.exp_date && +inf.exp_date ? new Date(+inf.exp_date * 1000).toLocaleDateString("sq-AL") : "pa afat";
     h += "Llogaria: <b>" + esc(inf.username) + "</b><br>Statusi: <b>" + esc(inf.status || "") + "</b><br>Skadon: <b>" + esc(exp) + "</b><br>Lidhje njëkohësisht: <b>" + esc(inf.max_connections || "?") + "</b><br>";
@@ -2022,8 +2047,10 @@ function nis() {
   var m = window.MI_GATI ? window.MI_GATI() : null;   // ngarkuesit: "u hap pa gabime"
   if (m) setTimeout(function () { njofto(m, 7000); }, 2500);
 }
+function versioniKeq() { try { return localStorage.getItem("mi_kodi_keq") || ""; } catch (e) { return ""; } }
 function kontrolloPerditesim() {
   if (!window.MI_KONTROLLO) return njofto("Përditësimet s'janë aktive në këtë version");
+  try { localStorage.removeItem("mi_kodi_keq"); } catch (e) {}   // provo përsëri edhe versionin që s'u hap herën e kaluar
   njofto("Duke kontrolluar në GitHub…", 10000);
   window.MI_KONTROLLO(function (ok, info) {
     if (ok) dialog("⬇️ U shkarkua versioni i ri <b>" + esc(info) + "</b>.<br>Ta hap tani?", [{ t: "Po, rihape", f: function () { L.ndalo(); location.reload(); } }, { t: "Më vonë" }]);
