@@ -2,7 +2,7 @@
    Burimi: Xtream Codes (host + përdorues + fjalëkalim) ose link M3U.
    Videoja luhet me AVPlay të televizorit: luan .ts, HLS, MPEG-2, HEVC, MP2… direkt nga ofruesi. */
 "use strict";
-var VERSIONI = "1.4.5";
+var VERSIONI = "1.5.5";
 (function () {   // TV i vjetër pa "gap" te flex (Chromium < 84, p.sh. Samsung 2020): app.css përdor margin në vend të tij
   try {
     var d = document.createElement("div");
@@ -22,6 +22,44 @@ var LS = {
   get: function (k, d) { try { var v = localStorage.getItem("mi_" + k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
   set: function (k, v) { try { localStorage.setItem("mi_" + k, JSON.stringify(v)); } catch (e) {} }
 };
+// ------------------------------------------------------------------ gjuha (shqip / English)
+var GJ = LS.get("gjuha", "sq") === "en" ? "en" : "sq";
+var EN = {"⌨️ Tastiera në ekran": "⌨️ On-screen keyboard", "Automatike": "Automatic", "Snow (me shigjeta)": "Snow (arrow keys)", "E sistemit": "System", "Nëse tastiera e Android TV mbyllet vetë, zgjidh Snow": "If the Android TV keyboard closes by itself, choose Snow", "▲▼◀▶ zgjidh · OK shkruaj · Back mbyll": "▲▼◀▶ choose · OK type · Back close", "Ndryshon gjuhën e aplikacionit (rihapet)": "Changes the app language (the app reopens)", "Serveri u përgjigj me gabim ": "The server replied with error ","Përgjigje e pakuptueshme nga serveri": "Unreadable reply from the server","S'u lidh dot me serverin. Kontrollo adresën dhe internetin.": "Could not connect to the server. Check the address and your internet.","Serveri nuk u përgjigj (koha mbaroi).": "The server did not reply (timed out).","Emri ose fjalëkalimi është i gabuar.": "Wrong username or password.","Pa emër": "No name","Linku nuk është playlist M3U.": "The link is not an M3U playlist.","Të tjera": "Other","Playlist-a është bosh.": "The playlist is empty.","guida është shumë e madhe për këtë TV (provo vetëm AL)": "the guide is too large for this TV (try only AL)","guida është shumë e madhe për këtë pajisje (provo vetëm AL)": "the guide is too large for this device (try only AL)","serveri u përgjigj ": "the server replied ","s'u lidh dot": "could not connect","koha mbaroi": "timed out","pa stream": "no stream","skedari .gz është i prerë": "the .gz file is truncated","skedari .gz është i dëmtuar": "the .gz file is damaged","skedari .gz s'mbështetet": "the .gz file is not supported","skedari .gz është bosh ose i dëmtuar": "the .gz file is empty or damaged","duke u shkarkuar…": "downloading…","asnjë kanal i listës s'u gjet në këtë guidë": "none of the list's channels were found in this guide",": skedari s'duket si guidë XMLTV": ": the file does not look like an XMLTV guide","pa link": "no link"," kanal": " channel"," kanale": " channels"," · po rifreskohet…": " · refreshing…","⚠️ s'u ngarkua": "⚠️ not loaded","përgjigje e gabuar": "invalid reply","paneli pret që administratori të pranojë çelësin e ri": "the panel is waiting for the administrator to accept the new key","paneli s'u arrit": "panel not reachable","📋 Listat u përditësuan nga administratori": "📋 The lists were updated by the administrator","📋 Administratori e hoqi listën": "📋 The administrator removed the list","📋 Administratori të dërgoi listën": "📋 The administrator sent you the list","📢 <b>Mesazh</b><br><div style='margin-top:16px;text-align:left;white-space:pre-wrap'>": "📢 <b>Message</b><br><div style='margin-top:16px;text-align:left;white-space:pre-wrap'>","U hoq nga të preferuarat": "Removed from favourites","⭐ U shtua te të preferuarat": "⭐ Added to favourites","Automatik": "Automatic","Mbush ekranin": "Fill screen","Origjinal (me shirita)": "Original (with bars)","🖼️ Figura: ": "🖼️ Picture: ","  · ruhet për këtë kanal": "  · saved for this channel","Nuk po hapet.": "It won't open.","S'u lidh dot me serverin e kanalit.": "Could not connect to the channel's server.","Formati i këtij kanali nuk mbështetet.": "This channel's format is not supported.","<small>Mund të jetë offline, ose abonimi po përdoret në një pajisje tjetër. (": "<small>It may be offline, or the subscription is in use on another device. (","Hap fillimisht një listë me kanale": "Open a list with channels first","<h2>🧪 Prova ": "<h2>🧪 Test "," (si tani)": " (current)","<div class='prog'><div class='tit'>A duket figura brenda kutisë lart?</div><div class='per'>Prit 2–3 sekonda pas çdo prove.</div></div>": "<div class='prog'><div class='tit'>Can you see the picture in the box above?</div><div class='per'>Wait 2–3 seconds after each test.</div></div>","<div class='prog'><div class='ora-p'>▼ prova tjetër · ▲ e mëparshmja</div><div class='tit'>OK = kjo punon (ruhet)</div><div class='per'>Back = anulo</div></div>": "<div class='prog'><div class='ora-p'>▼ next test · ▲ previous</div><div class='tit'>OK = this one works (saved)</div><div class='per'>Back = cancel</div></div>","✅ U ruajt prova ": "✅ Saved test "," për kutinë e vogël": " for the small box","✅ Kutia e vogël: si më parë": "✅ Small box: as before","Testi u anulua": "Test cancelled","📺 Të gjitha": "📺 All","⭐ Të preferuarat": "⭐ Favourites","🕘 Të fundit": "🕘 Recent","Këtu dalin kanalet që ke parë së fundi.": "Channels you watched recently appear here.","Bosh": "Empty","S'ka guidë për këtë kanal.": "No guide for this channel.","Duke marrë guidën…": "Loading the guide…","TANI · ": "NOW · ","TANI": "NOW","<div class='ndihme'>OK: shiko këtu · OK përsëri: ekran i plotë · Mbaj OK: ⭐<div class='ngjyrat'>": "<div class='ndihme'>OK: watch here · OK again: full screen · Hold OK: ⭐<div class='ngjyrat'>","Pastaj ": "Next ","▲▼ / CH: kanal tjetër · OK: menuja · ◀: lista · Back: dil<br>": "▲▼ / CH: other channel · OK: menu · ◀: list · Back: exit<br>",">Figura (": ">Picture (","OK: pauzë · ◀ ▶: 10 sek · ⏪ ⏩: 1 min · Back: dil<br><span class='ngj'><i class='ng ng-v'></i>/ ▼: figura (": "OK: pause · ◀ ▶: 10 sec · ⏪ ⏩: 1 min · Back: exit<br><span class='ngj'><i class='ng ng-v'></i>/ ▼: picture (","Kanalet · ": "Channels · ","▶ Episodi tjetër": "▶ Next episode","Vazhdo nga ": "Resume from ","▶ Vazhdo": "▶ Resume","⟲ Nga fillimi": "⟲ From the start","Të gjitha": "All","Ende s'ke të preferuar. Mbaj OK të shtypur mbi një poster.": "No favourites yet. Hold OK on a poster to add one.","S'ka seriale.": "No series.","S'ka filma.": "No movies.","Duke hapur serialin…": "Opening the series…","Ky serial s'ka episode.": "This series has no episodes.","Sezoni ": "Season "," episode": " episodes","Serial-i nuk u hap: ": "The series did not open: ","Episodi ": "Episode ","Shkruaj të paktën 2 shkronja.": "Type at least 2 letters.","Kanal · ": "Channel · ","Film": "Movie","Serial": "Series","Asgjë me „": "Nothing for “","Shkruaj diçka për të kërkuar.": "Type something to search.","📺 ID e këtij TV": "📺 This TV's ID","Çelësi: ": "Key: "," · jepja administratorit": " · give it to the administrator","Duke pyetur panelin…": "Asking the panel…","📋 Lista aktive": "📋 Active list","➕ Shto listë të re": "➕ Add a new list","✏️ Ndrysho listën aktive": "✏️ Edit the active list","🗑️ Fshi listën aktive": "🗑️ Delete the active list","🔄 Rifresko kanalet": "🔄 Refresh channels","📅 Guida (EPG)": "📅 Guide (EPG)"," · OK: rifresko": " · OK: refresh","Shto linkun te „Ndrysho listën aktive“ (p.sh. AL)": "Add the link in “Edit the active list” (e.g. AL)","Duke shkarkuar guidën…": "Downloading the guide…","🎚️ Formati i kanaleve live": "🎚️ Live channel format","Nëse kanalet ngecin ose s'hapen, provo formatin tjetër": "If channels stutter or don't open, try the other format","🖼️ Formati i figurës": "🖼️ Picture format","Për të gjitha kanalet. Për një kanal të vetëm: shtyp ▶ kur je në ekran të plotë": "For all channels. For a single channel: press ▶ in full screen","🧪 Testo kutinë e videos": "🧪 Test the video box","Prova ": "Test ","Standarde": "Standard","Nëse figura s'del te kutia e vogël (zëri po): provo mënyrat një nga një": "If the small box has sound but no picture: try the modes one by one","📐 Shkalla e videos": "📐 Video scale","Normale": "Normal","VETËM nëse video del gabim ose s'duket (Samsung 4K 2020): provo ×2": "ONLY if the video is misplaced or missing (Samsung 4K 2020): try ×2","📐 Shkalla e videos: ": "📐 Video scale: "," · kthehu te Live dhe shiko kutinë": " · go back to Live and check the box","🔞 Kategoritë për të rritur": "🔞 Adult categories","Të fshehura": "Hidden","Të dukshme": "Visible","⬇️ Kontrollo për përditësim": "⬇️ Check for updates"," s'u hap": " failed to open","▶️ Kur hapet: nis kanalin e fundit": "▶️ On start: play the last channel","Po": "Yes","Jo": "No","përditësuar nga GitHub": "updated from GitHub","versioni i instaluar": "installed version","<div style='margin:-4px 0 14px;font-size:20px;color:var(--theks2)'>⚠️ Versioni ": "<div style='margin:-4px 0 14px;font-size:20px;color:var(--theks2)'>⚠️ Version "," s'u hap në këtë pajisje": " failed to open on this device",". „Kontrollo për përditësim” e provon përsëri.</div>": ". “Check for updates” will try it again.</div>","pa afat": "no expiry","Llogaria: <b>": "Account: <b>","</b><br>Statusi: <b>": "</b><br>Status: <b>","</b><br>Skadon: <b>": "</b><br>Expires: <b>","</b><br>Lidhje njëkohësisht: <b>": "</b><br>Max connections: <b>","<div style='background:#1c2333;border-radius:12px;padding:14px 18px;margin:0 0 14px'>📺 ID e TV-së: <b style='font-size:30px;letter-spacing:1px'>": "<div style='background:#1c2333;border-radius:12px;padding:14px 18px;margin:0 0 14px'>📺 TV ID: <b style='font-size:30px;letter-spacing:1px'>","</b><br>Çelësi: <b style='font-size:26px'>": "</b><br>Key: <b style='font-size:26px'>","</b><br>Paneli: ": "</b><br>Panel: ","✅ i lidhur": "✅ connected","duke u lidhur…": "connecting…","Kanale: <b>": "Channels: <b>","</b> · Filma: <b>": "</b> · Movies: <b>","</b> · Seriale: <b>": "</b> · Series: <b>","<br>Guida: <b>": "<br>Guide: <b>","<br><br><b>Telekomanda</b><br>▲▼◀▶ lëviz · OK zgjidh · Mbaj OK: ⭐ të preferuarat<br>CH+/CH−: kanali tjetër · Numrat: shko te kanali<br>🔴 Listat · 🟢 Guida e plotë · 🟡 Formati i figurës · 🔵 Grupet e kanaleve<br>Back: kthehu": "<br><br><b>Remote</b><br>▲▼◀▶ move · OK select · Hold OK: ⭐ favourites<br>CH+/CH−: other channel · Numbers: go to channel<br>🔴 Lists · 🟢 Full guide · 🟡 Picture format · 🔵 Channel groups<br>Back: go back","🟡 Formati: hap fillimisht një kanal ose film": "🟡 Format: open a channel or movie first"," · duket në ekran të plotë": " · visible in full screen","🔵 Grupet: dil fillimisht nga filmi (Back)": "🔵 Groups: exit the movie first (Back)","📋 Zgjidh playlistën": "📋 Choose a playlist","E diel": "Sunday","E hënë": "Monday","E martë": "Tuesday","E mërkurë": "Wednesday","E enjte": "Thursday","E premte": "Friday","E shtunë": "Saturday","Sot": "Today","Nesër": "Tomorrow","Dje": "Yesterday"," orë": " h","Guida (EPG) e listës": "List guide (EPG)","Guida nga ofruesi": "Provider guide","Guida nga serveri": "Server guide","🟢 Guida është për kanalet live": "🟢 The guide is for live channels","🟢 Guida: shko te Live dhe zgjidh një kanal": "🟢 Guide: go to Live and choose a channel","S'ka guidë për këtë kanal.<br><br>Shto guidën te lista: Cilësimet → 📅 Guida (p.sh. <b>AL</b>).": "No guide for this channel.<br><br>Add a guide to the list: Settings → 📅 Guide (e.g. <b>AL</b>).","<span class='gp-etiketa tani'>TANI · mbaron pas ": "<span class='gp-etiketa tani'>NOW · ends in ","<span class='gp-etiketa'>Fillon pas ": "<span class='gp-etiketa'>Starts in ","Duke marrë përshkrimin…": "Loading the description…","S'ka përshkrim për këtë program.": "No description for this programme.","▲▼ programet · ◀ ▶ kanali tjetër · OK: shiko kanalin · <i class='ng ng-j'></i>/ Back: mbyll": "▲▼ programmes · ◀ ▶ other channel · OK: watch channel · <i class='ng ng-j'></i>/ Back: close","Cilën listë do të hapësh?": "Which list do you want to open?","🔒 Këtë listë e menaxhon administratori": "🔒 This list is managed by the administrator","Ta fshij listën „": "Delete the list “","🗑️ Po, fshije": "🗑️ Yes, delete","Ndrysho listën": "Edit list","Shto listë të re": "Add a new list","Mirë se erdhe! Shto listën e parë": "Welcome! Add your first list","Abonimi": "Subscription","📺 ID e këtij TV: <b>": "📺 This TV's ID: <b>","</b> · Çelësi: <b>": "</b> · Key: <b>","<br><small>Nëse administratori ta dërgon listën, ajo hapet vetë këtu.</small>": "<br><small>If the administrator sends you a list, it opens here automatically.</small>","◀  Xtream Codes (server + përdorues + fjalëkalim)  ▶": "◀  Xtream Codes (server + username + password)  ▶","◀  Link M3U  ▶": "◀  M3U link  ▶","Lista": "List","Plotëso serverin, përdoruesin dhe fjalëkalimin.": "Fill in the server, username and password.","Linku u kthye në Xtream (me guidë, filma e seriale)": "The link was converted to Xtream (with guide, movies and series)","Shkruaj linkun M3U.": "Enter the M3U link.","Duke u lidhur…": "Connecting…","Duke ngarkuar „": "Loading “","⚠️ Lista „": "⚠️ The list “","“ nuk u ngarkua.<br><small>": "” did not load.<br><small>","↻ Provo përsëri": "↻ Try again","⚙️ Ndrysho listën": "⚙️ Edit list","📋 Listë tjetër": "📋 Another list","S'ka kanal me numrin ": "No channel with number ","Të dalësh nga Snow IPTV?": "Exit Snow IPTV?","Po, dil": "Yes, exit","(në shfletues s'mund të dalë)": "(can't exit in a browser)","⏸ Pauzë": "⏸ Paused","▶ Vazhdon": "▶ Playing","Përditësimet s'janë aktive në këtë version": "Updates are not active in this version","Duke kontrolluar në GitHub…": "Checking GitHub…","⬇️ U shkarkua versioni i ri <b>": "⬇️ Downloaded the new version <b>","</b>.<br>Ta hap tani?": "</b>.<br>Open it now?","Po, rihape": "Yes, reopen","Më vonë": "Later","Listat": "Lists","Guida": "Guide","Formati": "Format","Grupet": "Groups"," program": " programme"," programe": " programmes","gabim ": "error ","Ende s'ke të preferuar.<br>Mbaj <b>OK</b> të shtypur mbi një kanal.": "No favourites yet.<br>Hold <b>OK</b> on a channel to add one."," (abonimi)": " (subscription)","“": "”","“?": "”?","“…": "”…","📺 Live": "📺 Live","🎬 Filma": "🎬 Movies","🎞️ Seriale": "🎞️ Series","🔍 Kërko": "🔍 Search","⚙️ Cilësimet": "⚙️ Settings","Kategoritë": "Categories","Kanalet": "Channels","Zgjidh një kanal": "Choose a channel","Filma": "Movies","Seriale": "Series","Sezonat": "Seasons","Episodet": "Episodes","Shkruaj emrin e kanalit, filmit ose serialit…": "Type the name of a channel, movie or series…","Shtyp OK te kutia për tastierën · ↓ për rezultatet": "Press OK on the box for the keyboard · ↓ for results","Shto listën": "Add list","Shkruaj të dhënat që të ka dhënë ofruesi. Shtyp": "Enter the details your provider gave you. Press","te një fushë për tastierën.": "on a field for the keyboard.","Mund të ngjitësh edhe linkun e plotë": "You can also paste the full link","te „Serveri“: e ndaj vetë.": "into “Server”: it is split automatically.","Emri i listës": "List name","p.sh. Abonimi": "e.g. Subscription","Lloji": "Type","Serveri (host:porta)": "Server (host:port)","Përdoruesi": "Username","Fjalëkalimi": "Password","Linku M3U": "M3U link","Guida EPG (opsionale) – p.sh.": "EPG guide (optional) – e.g.",", ose": ", or",", ose një link .xml / .xml.gz": ", or a .xml / .xml.gz link","✔ Ruaj dhe hyr": "✔ Save and enter","Anulo": "Cancel","http://serveri.com:8080": "http://server.com:8080","Duke u hapur…": "Opening…"};
+function T(s) { return GJ === "en" && EN[s] !== undefined ? EN[s] : s; }
+function perktheNgarkuesin(s) {   // mesazhet e js/ngarkuesi.js (skedar i instaluar, mbetet shqip)
+  s = String(s == null ? "" : s);
+  if (GJ !== "en") return s;
+  var m = s.match(/^✅ Snow IPTV u përditësua në versionin (\S+)/);
+  if (m) return "✅ Snow IPTV was updated to version " + m[1];
+  m = s.match(/ke më të riun \(([^)]*)\)/); if (m) return "You have the latest version (" + m[1] + ")";
+  m = s.match(/versioni (\S+) u prish më parë/); if (m) return "version " + m[1] + " failed before";
+  var t = { "pa adresë": "no address", "shkarkimi dështoi": "download failed", "skedarët s'duken në rregull": "the files don't look right",
+    "s'ka vend për ruajtje": "not enough storage", "u mbyll gjatë hapjes": "closed while opening", "s'u hap brenda 30 sekondave": "did not open within 30 seconds" };
+  for (var k in t) if (s.indexOf(k) >= 0) return s.replace(k, t[k]);
+  return s;
+}
+function perktheDOM(rr) {   // tekstet fikse të ui.html
+  if (GJ !== "en") return;
+  rr = rr || document.body;
+  var w = document.createTreeWalker(rr, 4, null, false), n, t, k, i, f;
+  while ((n = w.nextNode())) { t = n.nodeValue; k = t.replace(/^\s+|\s+$/g, ""); if (k && EN[k] !== undefined) n.nodeValue = t.replace(k, function () { return EN[k]; }); }
+  f = rr.querySelectorAll("[placeholder]");
+  for (i = 0; i < f.length; i++) { k = f[i].getAttribute("placeholder"); if (EN[k] !== undefined) f[i].setAttribute("placeholder", EN[k]); }
+  document.documentElement.lang = "en";
+}
+function dergoGjuhen() { try { if (window.SnowAndroid && window.SnowAndroid.setLang) window.SnowAndroid.setLang(GJ); } catch (e) {} }
+function zgjidhGjuhenFillim() {   // vetëm në hapjen e parë (pa lista, gjuha s'është zgjedhur kurrë)
+  if (DG || S.listat.length) return;
+  dialog("🌐 <b>Zgjidh gjuhën</b><br>Choose your language", [
+    { t: "Shqip", f: function () { LS.set("gjuha", "sq"); dergoGjuhen(); } },
+    { t: "English", f: function () { if (GJ !== "en") ndryshoGjuhen(); } }]);
+}
+function ndryshoGjuhen() {
+  GJ = GJ === "en" ? "sq" : "en";
+  LS.set("gjuha", GJ); dergoGjuhen();
+  njofto(GJ === "en" ? "🌐 English…" : "🌐 Shqip…", 3000);
+  setTimeout(function () { try { L.ndalo(); } catch (e) {} location.reload(); }, 400);
+}
 function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
 function inicialet(e) { return String(e || "?").replace(/[^\p{L}\p{N} ]/gu, "").trim().split(/\s+/).slice(0, 2).map(function (w) { return w[0]; }).join("").toUpperCase() || "TV"; }
 function ngjyra(e) { var h = 0; e = String(e || ""); for (var i = 0; i < e.length; i++) h = (h * 31 + e.charCodeAt(i)) % 360; return "hsl(" + h + ",45%,32%)"; }
@@ -42,12 +80,12 @@ function merr(url, lloji, sek) {
     x.timeout = (sek || 25) * 1000;
     x.onload = function () {
       mbaroi = true;
-      if (x.status < 200 || x.status >= 300) return jo(new Error("Serveri u përgjigj me gabim " + x.status));
+      if (x.status < 200 || x.status >= 300) return jo(new Error(T("Serveri u përgjigj me gabim ") + x.status));
       if (lloji === "text") return ok(x.responseText);
-      try { ok(JSON.parse(x.responseText)); } catch (e) { jo(new Error("Përgjigje e pakuptueshme nga serveri")); }
+      try { ok(JSON.parse(x.responseText)); } catch (e) { jo(new Error(T("Përgjigje e pakuptueshme nga serveri"))); }
     };
-    x.onerror = function () { if (!mbaroi) jo(new Error("S'u lidh dot me serverin. Kontrollo adresën dhe internetin.")); };
-    x.ontimeout = function () { jo(new Error("Serveri nuk u përgjigj (koha mbaroi).")); };
+    x.onerror = function () { if (!mbaroi) jo(new Error(T("S'u lidh dot me serverin. Kontrollo adresën dhe internetin."))); };
+    x.ontimeout = function () { jo(new Error(T("Serveri nuk u përgjigj (koha mbaroi)."))); };
     x.send();
   });
 }
@@ -78,7 +116,7 @@ Xtream.prototype.api = function (veprimi, shtesa) {
 Xtream.prototype.hyr = function () {
   var self = this;
   return this.api("").then(function (d) {
-    if (!d || !d.user_info || String(d.user_info.auth) !== "1") throw new Error((d && d.user_info && d.user_info.message) || "Emri ose fjalëkalimi është i gabuar.");
+    if (!d || !d.user_info || String(d.user_info.auth) !== "1") throw new Error((d && d.user_info && d.user_info.message) || T("Emri ose fjalëkalimi është i gabuar."));
     self.info = d;
     var f = d.user_info.allowed_output_formats;
     if (f && f.length) self.formatet = f;
@@ -93,7 +131,7 @@ Xtream.prototype.ngarko = function () {
     this.api("get_series_categories").catch(bosh), this.api("get_series").catch(bosh)
   ]).then(function (r) {
     var D = { live: [], liveKat: [], vod: [], vodKat: [], ser: [], serKat: [] };
-    var kat = function (l) { return (Array.isArray(l) ? l : []).map(function (k) { return { id: String(k.category_id), emri: k.category_name || "Pa emër" }; }); };
+    var kat = function (l) { return (Array.isArray(l) ? l : []).map(function (k) { return { id: String(k.category_id), emri: k.category_name || T("Pa emër") }; }); };
     D.liveKat = kat(r[0]); D.vodKat = kat(r[2]); D.serKat = kat(r[4]);
     (Array.isArray(r[1]) ? r[1] : []).forEach(function (x, i) {
       D.live.push({ k: "l" + x.stream_id, sid: x.stream_id, num: +x.num || i + 1, emri: x.name || "", logo: x.stream_icon || "",
@@ -137,7 +175,7 @@ M3U.prototype.hyr = function () { return Promise.resolve(null); };
 M3U.prototype.ngarko = function () {
   var self = this;
   return merr(this.url, "text", 90).then(function (t) {
-    if (t.indexOf("#EXT") < 0) throw new Error("Linku nuk është playlist M3U.");
+    if (t.indexOf("#EXT") < 0) throw new Error(T("Linku nuk është playlist M3U."));
     var koka = t.slice(0, 2000).split(/\r?\n/)[0] || "", tvg = koka.match(/(?:url-tvg|x-tvg-url)="([^"]+)"/i);
     self.tvgUrl = tvg ? tvg[1] : "";
     var D = { live: [], liveKat: [], vod: [], vodKat: [], ser: [], serKat: [] }, katL = {}, katV = {}, info = null, n = 0;
@@ -146,7 +184,7 @@ M3U.prototype.ngarko = function () {
       if (l.indexOf("#EXTINF") === 0) { info = l; return; }
       if (!l || l[0] === "#" || !info) return;
       var a = function (e) { var m = info.match(new RegExp(e + '="([^"]*)"')); return m ? m[1] : ""; };
-      var emri = info.slice(info.lastIndexOf(",") + 1).trim(), g = a("group-title") || "Të tjera";
+      var emri = info.slice(info.lastIndexOf(",") + 1).trim(), g = a("group-title") || T("Të tjera");
       var rr = l.split("?")[0].toLowerCase(), film = /\.(mp4|mkv|avi|mov|m4v|webm)$/.test(rr) || rr.indexOf("/movie/") >= 0 || rr.indexOf("/series/") >= 0;
       n++;
       if (film) {
@@ -161,7 +199,7 @@ M3U.prototype.ngarko = function () {
       }
       info = null;
     });
-    if (!D.live.length && !D.vod.length) throw new Error("Playlist-a është bosh.");
+    if (!D.live.length && !D.vod.length) throw new Error(T("Playlist-a është bosh."));
     return D;
   });
 };
@@ -193,7 +231,7 @@ function emerEpg(u) {   // për ekranin: "epgshare01 · AL" / "serveri.com (abon
   var m = u.match(/epg_ripper_([A-Z0-9_]+)\.xml/i);
   if (m) return m[1].replace(/1$/, "");
   m = u.match(/^https?:\/\/([^\/:?#]+)/i);
-  return (m ? m[1] : u) + (/xmltv\.php/i.test(u) ? " (abonimi)" : "");
+  return (m ? m[1] : u) + (/xmltv\.php/i.test(u) ? T(" (abonimi)") : "");
 }
 function epgNorm(emri) {   // "AL: Top Channel HD" == "Top Channel" == "top.channel" (si në serverin Mini IPTV)
   var e = String(emri || "");
@@ -300,7 +338,7 @@ function lexoRrjedhen(s, lexues) {
 function lexoBufferin(u, lexues) {
   if (u.length > 1 && u[0] === 0x1f && u[1] === 0x8b) {
     if (window.DecompressionStream && window.Response) return lexoRrjedhen(new Response(u).body.pipeThrough(new DecompressionStream("gzip")), lexues);
-    if (u.length > 12e6) return Promise.reject(new Error("guida është shumë e madhe për këtë TV (provo vetëm AL)"));
+    if (u.length > 12e6) return Promise.reject(new Error(T("guida është shumë e madhe për këtë TV (provo vetëm AL)")));
     try { u = gunzip(u); } catch (e) { return Promise.reject(e); }
   }
   var dec = new TextDecoder("utf-8"), i = 0, H = 1 << 20;
@@ -318,10 +356,10 @@ function merrBinar(url, sek) {
   return new Promise(function (ok, jo) {
     var x = new XMLHttpRequest();
     x.open("GET", url, true); x.responseType = "arraybuffer"; x.timeout = (sek || 180) * 1000;
-    x.onprogress = function (e) { if (e.loaded > 60e6) { x.onload = x.onerror = x.ontimeout = null; try { x.abort(); } catch (er) {} jo(new Error("guida është shumë e madhe për këtë pajisje (provo vetëm AL)")); } };
-    x.onload = function () { if (x.status < 200 || x.status >= 300) return jo(new Error("serveri u përgjigj " + x.status)); ok(new Uint8Array(x.response)); };
-    x.onerror = function () { jo(new Error("s'u lidh dot")); };
-    x.ontimeout = function () { jo(new Error("koha mbaroi")); };
+    x.onprogress = function (e) { if (e.loaded > 60e6) { x.onload = x.onerror = x.ontimeout = null; try { x.abort(); } catch (er) {} jo(new Error(T("guida është shumë e madhe për këtë pajisje (provo vetëm AL)"))); } };
+    x.onload = function () { if (x.status < 200 || x.status >= 300) return jo(new Error(T("serveri u përgjigj ") + x.status)); ok(new Uint8Array(x.response)); };
+    x.onerror = function () { jo(new Error(T("s'u lidh dot"))); };
+    x.ontimeout = function () { jo(new Error(T("koha mbaroi"))); };
     x.send();
   });
 }
@@ -331,8 +369,8 @@ function lexoBurimin(url, lexues) {
   var ctl = window.AbortController ? new AbortController() : null, filloi = false;
   var timer = setTimeout(function () { if (ctl) ctl.abort(); }, 240000);
   return fetch(url, ctl ? { signal: ctl.signal, credentials: "omit" } : { credentials: "omit" }).then(function (r) {
-    if (!r.ok) { var e = new Error("serveri u përgjigj " + r.status); e.fund = true; throw e; }
-    if (!r.body || !r.body.getReader) throw new Error("pa stream");
+    if (!r.ok) { var e = new Error(T("serveri u përgjigj ") + r.status); e.fund = true; throw e; }
+    if (!r.body || !r.body.getReader) throw new Error(T("pa stream"));
     var rd = r.body.getReader();
     return rd.read().then(function (p) {
       filloi = true;
@@ -345,7 +383,7 @@ function lexoBurimin(url, lexues) {
         var copat = [], gj = 0, rd2 = rr.getReader();
         return (function mblidh() {
           return rd2.read().then(function (q) {
-            if (!q.done) { copat.push(q.value); gj += q.value.length; if (gj > 12e6) throw new Error("guida është shumë e madhe për këtë TV (provo vetëm AL)"); return mblidh(); }
+            if (!q.done) { copat.push(q.value); gj += q.value.length; if (gj > 12e6) throw new Error(T("guida është shumë e madhe për këtë TV (provo vetëm AL)")); return mblidh(); }
             var u = new Uint8Array(gj), o = 0; copat.forEach(function (c) { u.set(c, o); o += c.length; }); copat = null;
             return lexoBufferin(u, lexues);
           });
@@ -372,10 +410,10 @@ function gunzip(d) {
   function vend(n) {
     if (op + n <= out.length) return;
     var nl = out.length * 2; while (nl < op + n) nl *= 2;
-    if (nl > 200e6) throw new Error("guida është shumë e madhe për këtë TV (provo vetëm AL)");
+    if (nl > 200e6) throw new Error(T("guida është shumë e madhe për këtë TV (provo vetëm AL)"));
     var o2 = new Uint8Array(nl); o2.set(out.subarray(0, op)); out = o2;
   }
-  function bit() { if (!bc) { if (pos >= d.length) throw new Error("skedari .gz është i prerë"); bb = d[pos++]; bc = 8; } var v = bb & 1; bb >>>= 1; bc--; return v; }
+  function bit() { if (!bc) { if (pos >= d.length) throw new Error(T("skedari .gz është i prerë")); bb = d[pos++]; bc = 8; } var v = bb & 1; bb >>>= 1; bc--; return v; }
   function bite(n) { var v = 0; for (var i = 0; i < n; i++) v |= bit() << i; return v; }
   function Pema() { this.t = new Uint16Array(16); this.s = new Uint16Array(320); }
   function nderto(p, gj, off, n) {
@@ -388,7 +426,7 @@ function gunzip(d) {
   }
   function simboli(p) {
     var sh = 0, cur = 0, len = 0;
-    do { cur = 2 * cur + bit(); if (++len > 15) throw new Error("skedari .gz është i dëmtuar"); sh += p.t[len]; cur -= p.t[len]; } while (cur >= 0);
+    do { cur = 2 * cur + bit(); if (++len > 15) throw new Error(T("skedari .gz është i dëmtuar")); sh += p.t[len]; cur -= p.t[len]; } while (cur >= 0);
     return p.s[sh + cur];
   }
   var lf = new Pema(), df = new Pema(), lt = new Pema(), dt = new Pema(), kt = new Pema(), g = new Uint8Array(320), i;
@@ -402,9 +440,9 @@ function gunzip(d) {
       if (s < 256) { vend(1); out[op++] = s; }
       else if (s === 256) return;
       else {
-        s -= 257; if (s > 28) throw new Error("skedari .gz është i dëmtuar");
-        var len = LB[s] + bite(LE[s]), ds = simboli(D); if (ds > 29) throw new Error("skedari .gz është i dëmtuar");
-        var dist = DB[ds] + bite(DE[ds]); if (dist > op) throw new Error("skedari .gz është i dëmtuar");
+        s -= 257; if (s > 28) throw new Error(T("skedari .gz është i dëmtuar"));
+        var len = LB[s] + bite(LE[s]), ds = simboli(D); if (ds > 29) throw new Error(T("skedari .gz është i dëmtuar"));
+        var dist = DB[ds] + bite(DE[ds]); if (dist > op) throw new Error(T("skedari .gz është i dëmtuar"));
         vend(len); for (var j = 0; j < len; j++) { out[op] = out[op - dist]; op++; }
       }
     }
@@ -417,17 +455,17 @@ function gunzip(d) {
     for (var n = 0; n < hlit + hdist;) {
       var s = simboli(kt), para, sa;
       if (s < 16) { gj[n++] = s; continue; }
-      if (s === 16) { if (!n) throw new Error("skedari .gz është i dëmtuar"); para = gj[n - 1]; sa = 3 + bite(2); }
+      if (s === 16) { if (!n) throw new Error(T("skedari .gz është i dëmtuar")); para = gj[n - 1]; sa = 3 + bite(2); }
       else if (s === 17) { para = 0; sa = 3 + bite(3); }
       else { para = 0; sa = 11 + bite(7); }
-      if (n + sa > hlit + hdist) throw new Error("skedari .gz është i dëmtuar");
+      if (n + sa > hlit + hdist) throw new Error(T("skedari .gz është i dëmtuar"));
       while (sa--) gj[n++] = para;
     }
     nderto(lt, gj, 0, hlit); nderto(dt, gj, hlit, hdist);
     blloku(lt, dt);
   }
   while (pos + 10 <= d.length && d[pos] === 0x1f && d[pos + 1] === 0x8b) {   // një ose disa pjesë gzip njëra pas tjetrës
-    if (d[pos + 2] !== 8) throw new Error("skedari .gz s'mbështetet");
+    if (d[pos + 2] !== 8) throw new Error(T("skedari .gz s'mbështetet"));
     var flg = d[pos + 3]; pos += 10;
     if (flg & 4) pos += 2 + (d[pos] | (d[pos + 1] << 8));
     if (flg & 8) while (pos < d.length && d[pos++]) {}
@@ -438,17 +476,17 @@ function gunzip(d) {
     do {
       fund = bit(); var tipi = bite(2);
       if (tipi === 0) {
-        bc = 0; if (pos + 4 > d.length) throw new Error("skedari .gz është i prerë");
+        bc = 0; if (pos + 4 > d.length) throw new Error(T("skedari .gz është i prerë"));
         var len = d[pos] | (d[pos + 1] << 8); pos += 4;
-        if (pos + len > d.length) throw new Error("skedari .gz është i prerë");
+        if (pos + len > d.length) throw new Error(T("skedari .gz është i prerë"));
         vend(len); out.set(d.subarray(pos, pos + len), op); op += len; pos += len;
       } else if (tipi === 1) blloku(lf, df);
       else if (tipi === 2) dinamik();
-      else throw new Error("skedari .gz është i dëmtuar");
+      else throw new Error(T("skedari .gz është i dëmtuar"));
     } while (!fund);
     bc = 0; pos += 8;   // CRC32 + madhësia
   }
-  if (!op) throw new Error("skedari .gz është bosh ose i dëmtuar");
+  if (!op) throw new Error(T("skedari .gz është bosh ose i dëmtuar"));
   return out.subarray(0, op);
 }
 
@@ -478,7 +516,7 @@ function nisGuiden(detyro) {
     GX.gjendja = "gati";
     if (!detyro && tani() - GX.koha < 4 * 3600) return;
   }
-  GX.duke = true; GX.gjendja = "duke u shkarkuar…"; BUX = { p: 0, d: 0 };
+  GX.duke = true; GX.gjendja = T("duke u shkarkuar…"); BUX = { p: 0, d: 0 };
   if (F.ekran === "cil") vizatoCil();
   var kanalet = S.live.slice(), harta = {}, prog = {}, gabimet = [], i = 0;
   (function tjetri() {
@@ -487,7 +525,7 @@ function nisGuiden(detyro) {
       GX.duke = false;
       var n = 0; for (var k in harta) n++;
       if (!n) {   // asnjë kanal s'u gjet: mbaj guidën e vjetër nëse kishte
-        GX.gabim = gabimet.length ? gabimet.join(" · ") : "asnjë kanal i listës s'u gjet në këtë guidë";
+        GX.gabim = gabimet.length ? gabimet.join(" · ") : T("asnjë kanal i listës s'u gjet në këtë guidë");
         GX.gjendja = "gabim"; if (F.ekran === "cil") vizatoCil();
         return;
       }
@@ -509,7 +547,7 @@ function nisGuiden(detyro) {
     lexoBurimin(u, lx).then(function () {
       lx.mbaro();
       for (var k in lx.prog) prog[k] = lx.prog[k];
-      if (!lx.kanaleXml && !lx.programe) gabimet.push(emerEpg(u) + ": skedari s'duket si guidë XMLTV");
+      if (!lx.kanaleXml && !lx.programe) gabimet.push(emerEpg(u) + T(": skedari s'duket si guidë XMLTV"));
     }).catch(function (e) { gabimet.push(emerEpg(u) + ": " + (e && e.message || e)); }).then(function () { setTimeout(tjetri, 0); });
   })();
 }
@@ -536,10 +574,10 @@ function ngjeshGuiden(prog, niv) {
   return r;
 }
 function tekstGuida() {
-  if (!GX.urls.length) return "pa link";
-  if (GX.duke && !GX.n) return "duke u shkarkuar…";
-  if (GX.n) return GX.n + (GX.n === 1 ? " kanal" : " kanale") + (GX.duke ? " · po rifreskohet…" : "");
-  return GX.gjendja === "gabim" ? "⚠️ s'u ngarkua" : "—";
+  if (!GX.urls.length) return T("pa link");
+  if (GX.duke && !GX.n) return T("duke u shkarkuar…");
+  if (GX.n) return GX.n + (GX.n === 1 ? T(" kanal") : T(" kanale")) + (GX.duke ? T(" · po rifreskohet…") : "");
+  return GX.gjendja === "gabim" ? T("⚠️ s'u ngarkua") : "—";
 }
 
 // ------------------------------------------------------------------ ID e TV-së dhe paneli i administratorit
@@ -574,15 +612,15 @@ function pyetPanelin() {
   x.onload = function () {
     PN.duke = false;
     var d = null; try { d = JSON.parse(x.responseText); } catch (e) {}
-    if (!d) { PN.gabimi = "përgjigje e gabuar"; return; }
-    if (x.status === 403 && d.gabim === "celesi") { PN.gabimi = "paneli pret që administratori të pranojë çelësin e ri"; return; }
-    if (!d.ok) { PN.gabimi = d.gabim || ("gabim " + x.status); return; }
+    if (!d) { PN.gabimi = T("përgjigje e gabuar"); return; }
+    if (x.status === 403 && d.gabim === "celesi") { PN.gabimi = T("paneli pret që administratori të pranojë çelësin e ri"); return; }
+    if (!d.ok) { PN.gabimi = d.gabim || (T("gabim ") + x.status); return; }
     PN.gabimi = ""; PN.lidhur = Date.now(); PN.emri = d.emri || "";
     aplikoListatPanelit(d.listat || []);
     (d.mesazhe || []).forEach(shtoMesazh);
     if (F.ekran === "cil") vizatoCil();
   };
-  x.onerror = x.ontimeout = function () { PN.duke = false; PN.gabimi = "paneli s'u arrit"; };
+  x.onerror = x.ontimeout = function () { PN.duke = false; PN.gabimi = T("paneli s'u arrit"); };
   x.send(JSON.stringify({ id: idPajisjes(), celesi: celesiPajisjes(), v: VERSIONI, modeli: modeliTV() }));
 }
 function thelbiListes(l) { return JSON.stringify([l.lloji || "xtream", l.host || "", l.user || "", l.pass || "", l.m3u || ""]); }
@@ -598,13 +636,13 @@ function aplikoListatPanelit(listat) {
   S.listat.forEach(function (l, i) { if (idx < 0 && thelbiListes(l) === aktiveT) idx = i; });
   if (idx >= 0 && S.burim) {   // lista që po shikon s'ndryshoi
     S.aktive = idx; LS.set("aktive", idx);
-    njofto("📋 Listat u përditësuan nga administratori", 4000);
+    njofto(T("📋 Listat u përditësuan nga administratori"), 4000);
     if ((S.listat[idx].epg || "") !== (aktive.epg || "")) nisGuiden(true);   // administratori ndryshoi vetëm guidën
     if (F.ekran === "cil") vizatoCil();
     return;
   }
   S.aktive = 0; LS.set("aktive", 0);
-  if (S.listat.length) { njofto(hoqi && !reja.length ? "📋 Administratori e hoqi listën" : "📋 Administratori të dërgoi listën", 4000); ngarkoListen(); }
+  if (S.listat.length) { njofto(hoqi && !reja.length ? T("📋 Administratori e hoqi listën") : T("📋 Administratori të dërgoi listën"), 4000); ngarkoListen(); }
   else if (S.burim) { S.burim = null; hapForme(-1); }
 }
 var MQ = [];
@@ -619,7 +657,7 @@ function shfaqMesazhet() {
   if (DG || !$("#fillimi").classList.contains("fsh") || (document.activeElement && document.activeElement.tagName === "INPUT")) { setTimeout(shfaqMesazhet, 2000); return; }
   var m = MQ.shift(), pare = LS.get("mesazhe_pare", []);
   pare.push(m.id); LS.set("mesazhe_pare", pare.slice(-200));
-  dialog("📢 <b>Mesazh</b><br><div style='margin-top:16px;text-align:left;white-space:pre-wrap'>" + esc(m.tekst) + "</div>", [{ t: "OK" }]);
+  dialog(T("📢 <b>Mesazh</b><br><div style='margin-top:16px;text-align:left;white-space:pre-wrap'>") + esc(m.tekst) + "</div>", [{ t: "OK" }]);
 }
 
 // ------------------------------------------------------------------ gjendja
@@ -635,7 +673,7 @@ function ngarkoFav() {
 }
 function ndryshoFav(it) {
   if (!it) return;
-  if (S.fav[it.k]) { delete S.fav[it.k]; njofto("U hoq nga të preferuarat"); } else { S.fav[it.k] = 1; njofto("⭐ U shtua te të preferuarat"); }
+  if (S.fav[it.k]) { delete S.fav[it.k]; njofto(T("U hoq nga të preferuarat")); } else { S.fav[it.k] = 1; njofto(T("⭐ U shtua te të preferuarat")); }
   LS.set("fav_" + celesListe(), Object.keys(S.fav));
   rivizato();
 }
@@ -704,7 +742,14 @@ Rrjet.prototype.vizato = function () {
     var r = Math.floor(k / this.kol) - this.top, c = k % this.kol;
     h += '<div class="karte' + (this.aktiv && k === this.i ? " fokus" : "") + '" style="left:' + (c * this.w + 10) + "px;top:" + (r * this.h) + 'px">' + this.render(this.items[k], k) + "</div>";
   }
-  this.inner.innerHTML = h;
+  var vj = this.inner.getElementsByTagName("img");   // anulo shkarkimet e posterave që s'duken më
+  for (var q = 0; q < vj.length; q++) { try { vj[q].removeAttribute("src"); } catch (e) {} }
+  this.inner.innerHTML = h.replace(/<img src=/g, '<img decoding="async" data-src=');
+  var self = this; clearTimeout(this._tImg);
+  this._tImg = setTimeout(function () {   // posterat: pasi ndalon lëvizja
+    var im = self.inner.querySelectorAll("img[data-src]");
+    for (var q = 0; q < im.length; q++) { im[q].src = im[q].getAttribute("data-src"); im[q].removeAttribute("data-src"); }
+  }, 180);
   var rreshta = Math.ceil(n / this.kol);
   if (rreshta > v) {
     var H = this.el.clientHeight || 850;
@@ -713,7 +758,11 @@ Rrjet.prototype.vizato = function () {
 };
 
 // ------------------------------------------------------------------ vizatimi i rreshtave
+function posterUrl(u) {   // TMDB: madhësi e vogël në vend të "original" (më pak memorie në TV)
+  return u ? String(u).replace(/(image\.tmdb\.org\/t\/p\/)(original|w\d+(?:_and_h\d+[^\/]*)?)\//i, "$1w342/") : u;
+}
 function logoHtml(emri, src, klasa) {
+  if (klasa === "poster") src = posterUrl(src);
   var ini = esc(inicialet(emri));
   return '<div class="' + klasa + '" style="background:' + ngjyra(emri) + '">' +
     (src ? '<img src="' + esc(src) + '" onerror="this.parentNode.textContent=\'' + ini + '\'">' : ini) + "</div>";
@@ -753,9 +802,9 @@ function rreshtThjeshte(r, i, fokus) {
 
 // ------------------------------------------------------------------ formati i figurës (si butoni "stretch" te IBO)
 var FIGURAT = [
-  { id: "auto", m: "PLAYER_DISPLAY_MODE_AUTO_ASPECT_RATIO", t: "Automatik" },
-  { id: "mbush", m: "PLAYER_DISPLAY_MODE_FULL_SCREEN", t: "Mbush ekranin" },
-  { id: "origjinal", m: "PLAYER_DISPLAY_MODE_LETTER_BOX", t: "Origjinal (me shirita)" }
+  { id: "auto", m: "PLAYER_DISPLAY_MODE_AUTO_ASPECT_RATIO", t: T("Automatik") },
+  { id: "mbush", m: "PLAYER_DISPLAY_MODE_FULL_SCREEN", t: T("Mbush ekranin") },
+  { id: "origjinal", m: "PLAYER_DISPLAY_MODE_LETTER_BOX", t: T("Origjinal (me shirita)") }
 ];
 function figura(id) { return FIGURAT.filter(function (f) { return f.id === id; })[0] || FIGURAT[0]; }
 function figuraPer(it) { var m = LS.get("figuraK_" + celesListe(), {}); return (it && m[it.k]) || CIL.figura; }
@@ -766,7 +815,7 @@ function ndryshoFiguren() {
   if (f.id === CIL.figura) delete m[it.k]; else m[it.k] = f.id;
   LS.set("figuraK_" + celesListe(), m);
   L.vendosFiguren(f.id);
-  njofto("🖼️ Figura: " + f.t + (S.luan.lloji === "live" ? "  · ruhet për këtë kanal" : ""), 3000);
+  njofto(T("🖼️ Figura: ") + f.t + (S.luan.lloji === "live" ? T("  · ruhet për këtë kanal") : ""), 3000);
 }
 
 // ------------------------------------------------------------------ lojtari (AVPlay në TV, <video> në shfletues)
@@ -831,10 +880,10 @@ var L = {
       return;
     }
     ngarkim(false);
-    var tekst = "Nuk po hapet.";
-    if (/CONNECTION|NETWORK|TIMEOUT/i.test(arsyeja)) tekst = "S'u lidh dot me serverin e kanalit.";
-    else if (/UNSUPPORTED|FORMAT|CODEC/i.test(arsyeja)) tekst = "Formati i këtij kanali nuk mbështetet.";
-    gabimVideo(true, "⚠️ " + tekst + "<small>Mund të jetë offline, ose abonimi po përdoret në një pajisje tjetër. (" + esc(arsyeja).slice(0, 60) + ")</small>");
+    var tekst = T("Nuk po hapet.");
+    if (/CONNECTION|NETWORK|TIMEOUT/i.test(arsyeja)) tekst = T("S'u lidh dot me serverin e kanalit.");
+    else if (/UNSUPPORTED|FORMAT|CODEC/i.test(arsyeja)) tekst = T("Formati i këtij kanali nuk mbështetet.");
+    gabimVideo(true, "⚠️ " + tekst + T("<small>Mund të jetë offline, ose abonimi po përdoret në një pajisje tjetër. (") + esc(arsyeja).slice(0, 60) + ")</small>");
   },
   ndalo: function () {
     this._nr++;
@@ -898,7 +947,7 @@ var PROVAT_KUTIA = [null,
 var TK = null;
 function provaKutiaNr(kt) { var j = JSON.stringify(kt || null); for (var i = 0; i < PROVAT_KUTIA.length; i++) if (JSON.stringify(PROVAT_KUTIA[i]) === j) return i; return 0; }
 function testoKutine() {
-  if (!S.live.length) return njofto("Hap fillimisht një listë me kanale");
+  if (!S.live.length) return njofto(T("Hap fillimisht një listë me kanale"));
   var it = (S.luan && S.luan.lloji === "live" && S.luan.it) || UI.lKan.tani() || S.live[0];
   TK = { i: provaKutiaNr(CIL.kutia), it: it, para: CIL.kutia };
   F.tab = 0; shfaqEkran("live"); vendosZone("kan");
@@ -906,9 +955,9 @@ function testoKutine() {
 }
 function provaKutia() { CIL.kutia = PROVAT_KUTIA[TK.i]; luajLive(TK.it); vizatoTestin(); }
 function vizatoTestin() {
-  $("#l-info").innerHTML = "<h2>🧪 Prova " + (TK.i + 1) + " / " + PROVAT_KUTIA.length + (TK.i ? "" : " (si tani)") + "</h2><div class='kat-e'>" + esc(TK.it.emri) + "</div>" +
-    "<div class='prog'><div class='tit'>A duket figura brenda kutisë lart?</div><div class='per'>Prit 2–3 sekonda pas çdo prove.</div></div>" +
-    "<div class='prog'><div class='ora-p'>▼ prova tjetër · ▲ e mëparshmja</div><div class='tit'>OK = kjo punon (ruhet)</div><div class='per'>Back = anulo</div></div>";
+  $("#l-info").innerHTML = T("<h2>🧪 Prova ") + (TK.i + 1) + " / " + PROVAT_KUTIA.length + (TK.i ? "" : T(" (si tani)")) + "</h2><div class='kat-e'>" + esc(TK.it.emri) + "</div>" +
+    T("<div class='prog'><div class='tit'>A duket figura brenda kutisë lart?</div><div class='per'>Prit 2–3 sekonda pas çdo prove.</div></div>") +
+    T("<div class='prog'><div class='ora-p'>▼ prova tjetër · ▲ e mëparshmja</div><div class='tit'>OK = kjo punon (ruhet)</div><div class='per'>Back = anulo</div></div>");
 }
 function tastTest(k) {
   var n = PROVAT_KUTIA.length;
@@ -916,9 +965,9 @@ function tastTest(k) {
   else if (k === K.LART || k === K.MAJTAS || k === K.CHUP) { TK.i = (TK.i + n - 1) % n; provaKutia(); }
   else if (k === K.OK) {
     var nr = TK.i; CIL.kutia = PROVAT_KUTIA[nr]; ruajCil(); TK = null;
-    njofto(nr ? "✅ U ruajt prova " + (nr + 1) + " për kutinë e vogël" : "✅ Kutia e vogël: si më parë", 4000); infoKanali(UI.lKan.tani());
+    njofto(nr ? T("✅ U ruajt prova ") + (nr + 1) + T(" për kutinë e vogël") : T("✅ Kutia e vogël: si më parë"), 4000); infoKanali(UI.lKan.tani());
   } else if (k === K.PRAPA) {
-    var it = TK.it; CIL.kutia = TK.para; TK = null; luajLive(it); infoKanali(UI.lKan.tani()); njofto("Testi u anulua", 2500);
+    var it = TK.it; CIL.kutia = TK.para; TK = null; luajLive(it); infoKanali(UI.lKan.tani()); njofto(T("Testi u anulua"), 2500);
   }
 }
 function rectKutia() {   // kutia e vogël e videos te "Live" (në koordinata 1920x1080)
@@ -943,6 +992,7 @@ function shfaqEkran(e) {
   $("#kutia-bosh").style.display = L.luan() ? "none" : "";
 }
 function vendosZone(z) {
+  if (TS && z !== F.zona) { TS = null; var tsd = $("#tastiera"); if (tsd) tsd.classList.add("fsh"); }
   F.zona = z;
   var zonat = { kat: UI.lKat, kan: UI.lKan, vkat: UI.vKat, vrr: UI.vRr, skat: UI.sKat, srr: UI.sRr, sez: UI.dSez, ep: UI.dEp, klista: UI.kLista, clista: UI.cLista };
   for (var k in zonat) zonat[k].aktivizo(k === z);
@@ -957,12 +1007,12 @@ function rivizato() {
 function kategoriteLive() {
   var n = {}, rez = [];
   S.live.forEach(function (x) { n[x.kat] = (n[x.kat] || 0) + 1; });
-  rez.push({ id: "*", emri: "📺 Të gjitha", n: S.live.length });
-  rez.push({ id: "fav", emri: "⭐ Të preferuarat", n: S.live.filter(function (x) { return S.fav[x.k]; }).length });
-  rez.push({ id: "hist", emri: "🕘 Të fundit" });
+  rez.push({ id: "*", emri: T("📺 Të gjitha"), n: S.live.length });
+  rez.push({ id: "fav", emri: T("⭐ Të preferuarat"), n: S.live.filter(function (x) { return S.fav[x.k]; }).length });
+  rez.push({ id: "hist", emri: T("🕘 Të fundit") });
   S.liveKat.forEach(function (k) { if (n[k.id]) rez.push({ id: k.id, emri: k.emri, n: n[k.id] }); });
   var pa = S.live.filter(function (x) { return !S.liveKat.some(function (k) { return k.id === x.kat; }); });
-  if (pa.length && S.liveKat.length) rez.push({ id: "_", emri: "Të tjera", n: pa.length });
+  if (pa.length && S.liveKat.length) rez.push({ id: "_", emri: T("Të tjera"), n: pa.length });
   return rez;
 }
 function kanaletE(katId) {
@@ -976,7 +1026,7 @@ function zgjidhKatLive(i, ruajFokus) {
   var k = UI.lKat.items[i]; if (!k) return;
   UI.lKat.zgjedhur = i; UI.lKat.vizato();
   var l = kanaletE(k.id);
-  UI.lKan.bosh = k.id === "fav" ? "Ende s'ke të preferuar.<br>Mbaj <b>OK</b> të shtypur mbi një kanal (ose shtyp butonin e verdhë)." : k.id === "hist" ? "Këtu dalin kanalet që ke parë së fundi." : "Bosh";
+  UI.lKan.bosh = k.id === "fav" ? T("Ende s'ke të preferuar.<br>Mbaj <b>OK</b> të shtypur mbi një kanal.") : k.id === "hist" ? T("Këtu dalin kanalet që ke parë së fundi.") : T("Bosh");
   var j = 0;
   if (ruajFokus && S.luan && S.luan.lloji === "live") { var p = l.indexOf(S.luan.it); if (p >= 0) j = p; }
   UI.lKan.vendos(l, j);
@@ -993,11 +1043,11 @@ function infoKanali(it) {
   var e = epgPer(it), h = "<h2>" + esc(it.num + ". " + it.emri) + "</h2><div class='kat-e'>" + esc(kat) + (S.fav[it.k] ? " · ⭐" : "") + "</div>";
   if (e && e.lista.length) {
     e.lista.slice(0, 2).forEach(function (p, i) {
-      h += "<div class='prog'><div class='ora-p'>" + (i === 0 && p.fil <= tani() ? "TANI · " : "") + ora(p.fil) + " – " + ora(p.mb) + "</div><div class='tit'>" + esc(p.tit) + "</div>" +
+      h += "<div class='prog'><div class='ora-p'>" + (i === 0 && p.fil <= tani() ? T("TANI · ") : "") + ora(p.fil) + " – " + ora(p.mb) + "</div><div class='tit'>" + esc(p.tit) + "</div>" +
         (p.per ? "<div class='per'>" + esc(p.per) + "</div>" : "") + "</div>";
     });
-  } else h += "<div class='prog'><div class='per'>" + (S.epgC[it.k] && !(GX.duke && !GX.n) ? "S'ka guidë për këtë kanal." : "Duke marrë guidën…") + "</div></div>";
-  h += "<div class='ndihme'>OK: shiko këtu · OK përsëri: ekran i plotë · Mbaj OK: ⭐<div class='ngjyrat'>" + LEGJENDA + "</div></div>";
+  } else h += "<div class='prog'><div class='per'>" + (S.epgC[it.k] && !(GX.duke && !GX.n) ? T("S'ka guidë për këtë kanal.") : T("Duke marrë guidën…")) + "</div></div>";
+  h += T("<div class='ndihme'>OK: shiko këtu · OK përsëri: ekran i plotë · Mbaj OK: ⭐<div class='ngjyrat'>") + LEGJENDA + "</div></div>";
   el.innerHTML = h;
   clearTimeout(epgTimer);
   var c = S.epgC[it.k];
@@ -1060,8 +1110,8 @@ function osdLive(shfaq) {
   $("#o-emri").textContent = it.emri + (S.fav[it.k] ? "  ⭐" : "");
   $("#o-tani").textContent = e && e.tani ? ora(e.tani.fil) + " – " + ora(e.tani.mb) + "   " + e.tani.tit : "";
   $("#o-prog").style.width = e && e.tani ? Math.min(100, (tani() - e.tani.fil) / (e.tani.mb - e.tani.fil) * 100) + "%" : "0";
-  $("#o-pastaj").textContent = e && e.pastaj ? "Pastaj " + ora(e.pastaj.fil) + ":  " + e.pastaj.tit : "";
-  $("#o-ndihme").innerHTML = "▲▼ / CH: kanal tjetër · OK: menuja · ◀: lista · Back: dil<br>" + LEGJENDA.replace(">Formati<", ">Figura (" + esc(figura(L.figura).t) + ")<");
+  $("#o-pastaj").textContent = e && e.pastaj ? T("Pastaj ") + ora(e.pastaj.fil) + ":  " + e.pastaj.tit : "";
+  $("#o-ndihme").innerHTML = T("▲▼ / CH: kanal tjetër · OK: menuja · ◀: lista · Back: dil<br>") + LEGJENDA.replace(">" + T("Formati") + "<", T(">Figura (") + esc(figura(L.figura).t) + ")<");
   $("#o-ora").textContent = oraTani();
   if (shfaq) { $("#osd").classList.remove("fsh"); clearTimeout(osdTimer); osdTimer = setTimeout(function () { $("#osd").classList.add("fsh"); }, 6000); }
 }
@@ -1074,7 +1124,7 @@ function osdVod(shfaq, cak) {
   $("#o-tani").textContent = (L.pauze ? "⏸  " : "▶  ") + kohe(k) + (d ? "  /  " + kohe(d) : "") + (cak != null ? "   ⏩" : "");
   $("#o-prog").style.width = d ? Math.min(100, k / d * 100) + "%" : "0";
   $("#o-pastaj").textContent = "";
-  $("#o-ndihme").innerHTML = "OK: pauzë · ◀ ▶: 10 sek · ⏪ ⏩: 1 min · Back: dil<br><span class='ngj'><i class='ng ng-v'></i>/ ▼: figura (" + esc(figura(L.figura).t) + ")</span>";
+  $("#o-ndihme").innerHTML = T("OK: pauzë · ◀ ▶: 10 sek · ⏪ ⏩: 1 min · Back: dil<br><span class='ngj'><i class='ng ng-v'></i>/ ▼: figura (") + esc(figura(L.figura).t) + ")</span>";
   $("#o-ora").textContent = oraTani();
   if (shfaq) { $("#osd").classList.remove("fsh"); clearTimeout(osdTimer); if (!L.pauze) osdTimer = setTimeout(function () { $("#osd").classList.add("fsh"); }, 4000); }
 }
@@ -1091,7 +1141,7 @@ function zapKanal(d) {
 function hapZap() {
   var l = S.luan.lista && S.luan.lista.length ? S.luan.lista : S.live;
   $("#zap").classList.remove("fsh"); $("#osd").classList.add("fsh");
-  $("#z-titull").textContent = "Kanalet · " + l.length;
+  $("#z-titull").textContent = T("Kanalet · ") + l.length;
   UI.zLista.aktiv = true; UI.zLista.vendos(l, Math.max(0, l.indexOf(S.luan.it)));
 }
 
@@ -1111,12 +1161,12 @@ function luajVod(it, url, titull, celes, pas) {
     S.luan = { lloji: "vod", it: it, titull: titull, celes: celes, pas: pas };
     L.hap(url, { live: false, fillim: fillim, rect: [0, 0, 1920, 1080], onFund: function () {
       var p2 = LS.get("poz_" + celesListe(), {}); delete p2[celes]; LS.set("poz_" + celesListe(), p2);
-      if (pas) { njofto("▶ Episodi tjetër"); pas(); } else dilPlote();
+      if (pas) { njofto(T("▶ Episodi tjetër")); pas(); } else dilPlote();
     } });
     hyrPlote();
     clearInterval(pozTimer); pozTimer = setInterval(ruajPozicionin, 15000);
   };
-  if (p) dialog("Vazhdo nga " + kohe(p) + "?", [{ t: "▶ Vazhdo", f: function () { nis(p); } }, { t: "⟲ Nga fillimi", f: function () { nis(0); } }]);
+  if (p) dialog(T("Vazhdo nga ") + kohe(p) + "?", [{ t: T("▶ Vazhdo"), f: function () { nis(p); } }, { t: T("⟲ Nga fillimi"), f: function () { nis(0); } }]);
   else nis(0);
 }
 var kerkimTimer = null, kerkimCak = null;
@@ -1130,7 +1180,7 @@ function kerkoVod(delta) {
 }
 
 function kategoriteVod(lista, kat) {
-  var n = {}, rez = [{ id: "*", emri: "Të gjitha", n: lista.length }, { id: "fav", emri: "⭐ Të preferuarat", n: lista.filter(function (x) { return S.fav[x.k]; }).length }];
+  var n = {}, rez = [{ id: "*", emri: T("Të gjitha"), n: lista.length }, { id: "fav", emri: T("⭐ Të preferuarat"), n: lista.filter(function (x) { return S.fav[x.k]; }).length }];
   lista.forEach(function (x) { n[x.kat] = (n[x.kat] || 0) + 1; });
   kat.forEach(function (k) { if (n[k.id]) rez.push({ id: k.id, emri: k.emri, n: n[k.id] }); });
   return rez;
@@ -1140,20 +1190,20 @@ function zgjidhKatVod(lloji, i) {
   var k = lk.items[i]; if (!k) return;
   lk.zgjedhur = i; lk.vizato();
   var l = k.id === "*" ? lista : k.id === "fav" ? lista.filter(function (x) { return S.fav[x.k]; }) : lista.filter(function (x) { return x.kat === k.id; });
-  rr.bosh = k.id === "fav" ? "Ende s'ke të preferuar. Mbaj OK të shtypur mbi një poster." : (ser ? "S'ka seriale." : "S'ka filma.");
+  rr.bosh = k.id === "fav" ? T("Ende s'ke të preferuar. Mbaj OK të shtypur mbi një poster.") : (ser ? T("S'ka seriale.") : T("S'ka filma."));
   rr.vendos(l, 0);
   $(ser ? "#s-titull" : "#v-titull").textContent = k.emri + " · " + l.length;
 }
 function hapSerial(it) {
-  $("#fillimi-tekst").textContent = "Duke hapur serialin…";
+  $("#fillimi-tekst").textContent = T("Duke hapur serialin…");
   ngarkim(true);
   S.burim.serial(it).then(function (d) {
     ngarkim(false);
     var ep = (d && d.episodes) || {}, sez = Object.keys(ep).sort(function (a, b) { return a - b; });
-    if (!sez.length) return njofto("Ky serial s'ka episode.");
+    if (!sez.length) return njofto(T("Ky serial s'ka episode."));
     S.serTani = { it: it, info: (d && d.info) || {}, ep: ep, sez: sez };
     shfaqEkran("serdet");
-    UI.dSez.vendos(sez.map(function (s) { return { t: "Sezoni " + s, v: ep[s].length, s: s }; }), 0);
+    UI.dSez.vendos(sez.map(function (s) { return { t: T("Sezoni ") + s, v: ep[s].length, s: s }; }), 0);
     UI.dSez.zgjedhur = 0;
     zgjidhSezonin(0);
     vendosZone("ep");
@@ -1161,7 +1211,7 @@ function hapSerial(it) {
     $("#d-info").innerHTML = (it.logo ? '<img src="' + esc(it.logo) + '">' : "") + "<h2>" + esc(it.emri) + "</h2>" +
       "<div class='kat-e'>" + esc([inf.genre, inf.releaseDate || inf.year, inf.rating ? "★ " + inf.rating : ""].filter(Boolean).join(" · ")) + "</div>" +
       "<div class='per'>" + esc(inf.plot || it.per || "") + "</div>";
-  }).catch(function (e) { ngarkim(false); dialog("Serial-i nuk u hap: " + esc(e.message), [{ t: "OK" }]); });
+  }).catch(function (e) { ngarkim(false); dialog(T("Serial-i nuk u hap: ") + esc(e.message), [{ t: "OK" }]); });
 }
 function zgjidhSezonin(i) {
   var s = UI.dSez.items[i]; if (!s) return;
@@ -1169,9 +1219,9 @@ function zgjidhSezonin(i) {
   var poz = LS.get("poz_" + celesListe(), {});
   UI.dEp.vendos(S.serTani.ep[s.s].map(function (e, j) {
     var inf = e.info || {};
-    return { t: (e.episode_num || j + 1) + ". " + (e.title || "Episodi " + (j + 1)), d: [inf.duration, poz["e" + e.id] ? "⏸ " + kohe(poz["e" + e.id]) : ""].filter(Boolean).join(" · "), e: e, s: s.s };
+    return { t: (e.episode_num || j + 1) + ". " + (e.title || T("Episodi ") + (j + 1)), d: [inf.duration, poz["e" + e.id] ? "⏸ " + kohe(poz["e" + e.id]) : ""].filter(Boolean).join(" · "), e: e, s: s.s };
   }), 0);
-  $("#d-titull").textContent = "Sezoni " + s.s + " · " + UI.dEp.items.length + " episode";
+  $("#d-titull").textContent = T("Sezoni ") + s.s + " · " + UI.dEp.items.length + (GJ === "en" && UI.dEp.items.length === 1 ? " episode" : T(" episode"));
 }
 function luajEpisod(sIdx, eIdx) {
   var s = UI.dSez.items[sIdx], ser = S.serTani; if (!s) return;
@@ -1188,12 +1238,12 @@ function luajEpisod(sIdx, eIdx) {
 // ---- KËRKO
 function kerko(q) {
   q = q.trim().toLowerCase();
-  if (q.length < 2) { UI.kLista.bosh = "Shkruaj të paktën 2 shkronja."; UI.kLista.vendos([], 0); return; }
+  if (q.length < 2) { UI.kLista.bosh = T("Shkruaj të paktën 2 shkronja."); UI.kLista.vendos([], 0); return; }
   var r = [];
-  S.live.forEach(function (x) { if (x.emri.toLowerCase().indexOf(q) >= 0) r.push({ t: "📺 " + x.emri, d: "Kanal · " + x.num, it: x, l: "live" }); });
-  S.vod.forEach(function (x) { if (x.emri.toLowerCase().indexOf(q) >= 0) r.push({ t: "🎬 " + x.emri, d: "Film", it: x, l: "vod" }); });
-  S.ser.forEach(function (x) { if (x.emri.toLowerCase().indexOf(q) >= 0) r.push({ t: "🎞️ " + x.emri, d: "Serial", it: x, l: "ser" }); });
-  UI.kLista.bosh = "Asgjë me „" + esc(q) + "“";
+  S.live.forEach(function (x) { if (x.emri.toLowerCase().indexOf(q) >= 0) r.push({ t: "📺 " + x.emri, d: T("Kanal · ") + x.num, it: x, l: "live" }); });
+  S.vod.forEach(function (x) { if (x.emri.toLowerCase().indexOf(q) >= 0) r.push({ t: "🎬 " + x.emri, d: T("Film"), it: x, l: "vod" }); });
+  S.ser.forEach(function (x) { if (x.emri.toLowerCase().indexOf(q) >= 0) r.push({ t: "🎞️ " + x.emri, d: T("Serial"), it: x, l: "ser" }); });
+  UI.kLista.bosh = T("Asgjë me „") + esc(q) + T("“");
   UI.kLista.vendos(r.slice(0, 500), 0);
 }
 
@@ -1201,53 +1251,56 @@ function kerko(q) {
 function rreshtatCil() {
   var l = S.listat[S.aktive] || {};
   var rr = [
-    { t: "📺 ID e këtij TV", v: idPajisjes(), d: "Çelësi: " + celesiPajisjes() + " · jepja administratorit", f: function () { njofto("Duke pyetur panelin…"); pyetPanelin(); setTimeout(vizatoCil, 3000); } },
-    { t: "📋 Lista aktive", v: (l.paneli ? "🔒 " : "") + (l.emri || "—"), f: zgjidhListen },
-    { t: "➕ Shto listë të re", f: function () { hapForme(-1); } },
-    { t: "✏️ Ndrysho listën aktive", f: function () { hapForme(S.aktive); } },
-    { t: "🗑️ Fshi listën aktive", f: fshiListen },
-    { t: "🔄 Rifresko kanalet", f: function () { ngarkoListen(); } },
-    { t: "📅 Guida (EPG)", v: tekstGuida(), d: GX.urls.length ? GX.urls.map(emerEpg).join(", ") + (GX.gabim ? " · ⚠️ " + GX.gabim : "") + " · OK: rifresko" : "Shto linkun te „Ndrysho listën aktive“ (p.sh. AL)",
-      f: function () { if (!GX.urls.length) return hapForme(S.aktive); njofto("Duke shkarkuar guidën…"); nisGuiden(true); vizatoCil(); } },
-    { t: "🎚️ Formati i kanaleve live", v: { auto: "Automatik", ts: "TS", m3u8: "HLS" }[CIL.formati], d: "Nëse kanalet ngecin ose s'hapen, provo formatin tjetër",
+    { t: T("📺 ID e këtij TV"), v: idPajisjes(), d: T("Çelësi: ") + celesiPajisjes() + T(" · jepja administratorit"), f: function () { njofto(T("Duke pyetur panelin…")); pyetPanelin(); setTimeout(vizatoCil, 3000); } },
+    { t: T("📋 Lista aktive"), v: (l.paneli ? "🔒 " : "") + (l.emri || "—"), f: zgjidhListen },
+    { t: T("➕ Shto listë të re"), f: function () { hapForme(-1); } },
+    { t: T("✏️ Ndrysho listën aktive"), f: function () { hapForme(S.aktive); } },
+    { t: T("🗑️ Fshi listën aktive"), f: fshiListen },
+    { t: T("🔄 Rifresko kanalet"), f: function () { ngarkoListen(); } },
+    { t: T("📅 Guida (EPG)"), v: tekstGuida(), d: GX.urls.length ? GX.urls.map(emerEpg).join(", ") + (GX.gabim ? " · ⚠️ " + GX.gabim : "") + T(" · OK: rifresko") : T("Shto linkun te „Ndrysho listën aktive“ (p.sh. AL)"),
+      f: function () { if (!GX.urls.length) return hapForme(S.aktive); njofto(T("Duke shkarkuar guidën…")); nisGuiden(true); vizatoCil(); } },
+    { t: T("🎚️ Formati i kanaleve live"), v: { auto: T("Automatik"), ts: "TS", m3u8: "HLS" }[CIL.formati], d: T("Nëse kanalet ngecin ose s'hapen, provo formatin tjetër"),
       f: function () { CIL.formati = { auto: "ts", ts: "m3u8", m3u8: "auto" }[CIL.formati]; ruajCil(); vizatoCil(); } },
-    { t: "🖼️ Formati i figurës", v: figura(CIL.figura).t, d: "Për të gjitha kanalet. Për një kanal të vetëm: shtyp ▶ kur je në ekran të plotë",
+    { t: T("🖼️ Formati i figurës"), v: figura(CIL.figura).t, d: T("Për të gjitha kanalet. Për një kanal të vetëm: shtyp ▶ kur je në ekran të plotë"),
       f: function () { var i = FIGURAT.indexOf(figura(CIL.figura)); CIL.figura = FIGURAT[(i + 1) % FIGURAT.length].id; ruajCil(); vizatoCil(); } },
-    { t: "🧪 Testo kutinë e videos", v: CIL.kutia ? "Prova " + (provaKutiaNr(CIL.kutia) + 1) : "Standarde",
-      d: "Nëse figura s'del te kutia e vogël (zëri po): provo mënyrat një nga një", f: testoKutine },
-    { t: "📐 Shkalla e videos", v: CIL.shkalla == 2 ? "×2" : CIL.shkalla == 1.5 ? "×1.5" : "Normale",
-      d: "VETËM nëse video del gabim ose s'duket (Samsung 4K 2020): provo ×2",
+    { t: T("🧪 Testo kutinë e videos"), samsung: 1, v: CIL.kutia ? T("Prova ") + (provaKutiaNr(CIL.kutia) + 1) : T("Standarde"),
+      d: T("Nëse figura s'del te kutia e vogël (zëri po): provo mënyrat një nga një"), f: testoKutine },
+    { t: T("📐 Shkalla e videos"), samsung: 1, v: CIL.shkalla == 2 ? "×2" : CIL.shkalla == 1.5 ? "×1.5" : T("Normale"),
+      d: T("VETËM nëse video del gabim ose s'duket (Samsung 4K 2020): provo ×2"),
       f: function () { CIL.shkalla = CIL.shkalla == 1 ? 2 : CIL.shkalla == 2 ? 1.5 : 1; ruajCil(); if (NE_TV && L.luan()) L._rectAV(); vizatoCil();
-        njofto("📐 Shkalla e videos: " + (CIL.shkalla == 1 ? "Normale" : "×" + CIL.shkalla) + " · kthehu te Live dhe shiko kutinë", 4000); } },
-    { t: "🔞 Kategoritë për të rritur", v: CIL.fshihTeRritur ? "Të fshehura" : "Të dukshme",
+        njofto(T("📐 Shkalla e videos: ") + (CIL.shkalla == 1 ? T("Normale") : "×" + CIL.shkalla) + T(" · kthehu te Live dhe shiko kutinë"), 4000); } },
+    { t: T("🔞 Kategoritë për të rritur"), v: CIL.fshihTeRritur ? T("Të fshehura") : T("Të dukshme"),
       f: function () { CIL.fshihTeRritur = !CIL.fshihTeRritur; ruajCil(); ngarkoListen(); } },
-    { t: "⬇️ Kontrollo për përditësim", v: VERSIONI + (versioniKeq() ? " · ⚠️ " + versioniKeq() + " s'u hap" : ""), f: kontrolloPerditesim },
-    { t: "▶️ Kur hapet: nis kanalin e fundit", v: CIL.nisFundit ? "Po" : "Jo", f: function () { CIL.nisFundit = !CIL.nisFundit; ruajCil(); vizatoCil(); } }
+    { t: T("⬇️ Kontrollo për përditësim"), v: VERSIONI + (versioniKeq() ? " · ⚠️ " + versioniKeq() + T(" s'u hap") : ""), f: kontrolloPerditesim },
+    { t: T("▶️ Kur hapet: nis kanalin e fundit"), v: CIL.nisFundit ? T("Po") : T("Jo"), f: function () { CIL.nisFundit = !CIL.nisFundit; ruajCil(); vizatoCil(); } },
+    { t: "🌐 Gjuha / Language", v: GJ === "en" ? "English" : "Shqip", d: T("Ndryshon gjuhën e aplikacionit (rihapet)"), f: ndryshoGjuhen }
   ];
+  if (window.SNOW_ANDROID) rr.splice(rr.length - 1, 0, { t: T("⌨️ Tastiera në ekran"), v: T(TS_EMRAT[LS.get("tastiera", "auto")] || TS_EMRAT.auto), d: T("Nëse tastiera e Android TV mbyllet vetë, zgjidh Snow"),
+    f: function () { var r = ["auto", "snow", "sistemi"]; LS.set("tastiera", r[(r.indexOf(LS.get("tastiera", "auto")) + 1) % 3]); vizatoCil(); } });
   // Android (ExoPlayer) s'ka nevojë për rregullimet e AVPlay të Samsung-ut
-  return window.SNOW_ANDROID ? rr.filter(function (r) { return !/Testo kutinë|Shkalla e videos/.test(r.t); }) : rr;
+  return window.SNOW_ANDROID ? rr.filter(function (r) { return !r.samsung; }) : rr;
 }
 function vizatoCil() {
   var i = UI.cLista.i; UI.cLista.vendos(rreshtatCil(), i);
-  var nga = window.MI_BURIMI && window.MI_BURIMI.nga === "github" ? "përditësuar nga GitHub" : "versioni i instaluar";
+  var nga = window.MI_BURIMI && window.MI_BURIMI.nga === "github" ? T("përditësuar nga GitHub") : T("versioni i instaluar");
   var inf = S.burim && S.burim.info && S.burim.info.user_info, h = "<h2>Snow IPTV " + VERSIONI + "</h2><div style='margin:-6px 0 14px;font-size:20px'>" + nga + "</div>";
   if (versioniKeq()) { var ars = ""; try { ars = localStorage.getItem("mi_kodi_arsye") || ""; } catch (e) {}
-    h += "<div style='margin:-4px 0 14px;font-size:20px;color:var(--theks2)'>⚠️ Versioni " + esc(versioniKeq()) + " s'u hap në këtë pajisje" + (ars ? " (" + esc(ars) + ")" : "") + ". „Kontrollo për përditësim” e provon përsëri.</div>"; }
+    h += T("<div style='margin:-4px 0 14px;font-size:20px;color:var(--theks2)'>⚠️ Versioni ") + esc(versioniKeq()) + T(" s'u hap në këtë pajisje") + (ars ? " (" + esc(perktheNgarkuesin(ars)) + ")" : "") + T(". „Kontrollo për përditësim” e provon përsëri.</div>"); }
   if (inf) {
-    var exp = inf.exp_date && +inf.exp_date ? new Date(+inf.exp_date * 1000).toLocaleDateString("sq-AL") : "pa afat";
-    h += "Llogaria: <b>" + esc(inf.username) + "</b><br>Statusi: <b>" + esc(inf.status || "") + "</b><br>Skadon: <b>" + esc(exp) + "</b><br>Lidhje njëkohësisht: <b>" + esc(inf.max_connections || "?") + "</b><br>";
+    var exp = inf.exp_date && +inf.exp_date ? new Date(+inf.exp_date * 1000).toLocaleDateString(GJ === "en" ? "en-GB" : "sq-AL") : T("pa afat");
+    h += T("Llogaria: <b>") + esc(inf.username) + T("</b><br>Statusi: <b>") + esc(inf.status || "") + T("</b><br>Skadon: <b>") + esc(exp) + T("</b><br>Lidhje njëkohësisht: <b>") + esc(inf.max_connections || "?") + "</b><br>";
   }
-  h += "<div style='background:#1c2333;border-radius:12px;padding:14px 18px;margin:0 0 14px'>📺 ID e TV-së: <b style='font-size:30px;letter-spacing:1px'>" + esc(idPajisjes()) +
-    "</b><br>Çelësi: <b style='font-size:26px'>" + esc(celesiPajisjes()) + "</b><br>Paneli: " +
-    (PN.lidhur ? "✅ i lidhur" + (PN.emri ? " · <b>" + esc(PN.emri) + "</b>" : "") : PN.gabimi ? "⚠️ " + esc(PN.gabimi) : "duke u lidhur…") + "</div>";
-  h += "Kanale: <b>" + S.live.length + "</b> · Filma: <b>" + S.vod.length + "</b> · Seriale: <b>" + S.ser.length + "</b>";
-  if (GX.urls.length) h += "<br>Guida: <b>" + esc(tekstGuida()) + "</b>" + (GX.koha ? " · " + ora(GX.koha) : "");
-  h += "<br><br><b>Telekomanda</b><br>▲▼◀▶ lëviz · OK zgjidh · Mbaj OK: ⭐ të preferuarat<br>CH+/CH−: kanali tjetër · Numrat: shko te kanali<br>🔴 Listat · 🟢 Guida e plotë · 🟡 Formati i figurës · 🔵 Grupet e kanaleve<br>Back: kthehu";
+  h += T("<div style='background:#1c2333;border-radius:12px;padding:14px 18px;margin:0 0 14px'>📺 ID e TV-së: <b style='font-size:30px;letter-spacing:1px'>") + esc(idPajisjes()) +
+    T("</b><br>Çelësi: <b style='font-size:26px'>") + esc(celesiPajisjes()) + T("</b><br>Paneli: ") +
+    (PN.lidhur ? T("✅ i lidhur") + (PN.emri ? " · <b>" + esc(PN.emri) + "</b>" : "") : PN.gabimi ? "⚠️ " + esc(PN.gabimi) : T("duke u lidhur…")) + "</div>";
+  h += T("Kanale: <b>") + S.live.length + T("</b> · Filma: <b>") + S.vod.length + T("</b> · Seriale: <b>") + S.ser.length + "</b>";
+  if (GX.urls.length) h += T("<br>Guida: <b>") + esc(tekstGuida()) + "</b>" + (GX.koha ? " · " + ora(GX.koha) : "");
+  h += T("<br><br><b>Telekomanda</b><br>▲▼◀▶ lëviz · OK zgjidh · Mbaj OK: ⭐ të preferuarat<br>CH+/CH−: kanali tjetër · Numrat: shko te kanali<br>🔴 Listat · 🟢 Guida e plotë · 🟡 Formati i figurës · 🔵 Grupet e kanaleve<br>Back: kthehu");
   $("#c-info").innerHTML = h;
 }
 // ------------------------------------------------------------------ butonat me ngjyra (🔴 listat · 🟢 guida · 🟡 formati · 🔵 grupet)
-var LEGJENDA = "<span class='ngj'><i class='ng ng-k'></i>Listat</span><span class='ngj'><i class='ng ng-j'></i>Guida</span>" +
-  "<span class='ngj'><i class='ng ng-v'></i>Formati</span><span class='ngj'><i class='ng ng-b'></i>Grupet</span>";
+var LEGJENDA = "<span class='ngj'><i class='ng ng-k'></i>" + T("Listat") + "</span><span class='ngj'><i class='ng ng-j'></i>" + T("Guida") + "</span>" +
+  "<span class='ngj'><i class='ng ng-v'></i>" + T("Formati") + "</span><span class='ngj'><i class='ng ng-b'></i>" + T("Grupet") + "</span>";
 function ePlote() { return document.body.classList.contains("plote"); }
 function veprimNgjyre(k) {
   if (F.ekran === "forma" && !ePlote()) return;   // duke plotësuar formularin: mos e prish
@@ -1257,15 +1310,15 @@ function veprimNgjyre(k) {
   if (k === K.BLU) return ngjyraGrupet();
 }
 function ngjyraFormati() {
-  if (!S.luan || !L.luan()) return njofto("🟡 Formati: hap fillimisht një kanal ose film");
+  if (!S.luan || !L.luan()) return njofto(T("🟡 Formati: hap fillimisht një kanal ose film"));
   ndryshoFiguren();
   if (ePlote()) { if (S.luan.lloji === "live") osdLive(true); else osdVod(true); }
-  else njofto("🖼️ Figura: " + figura(L.figura).t + " · duket në ekran të plotë", 3000);
+  else njofto(T("🖼️ Figura: ") + figura(L.figura).t + T(" · duket në ekran të plotë"), 3000);
 }
 function ngjyraGrupet() {
   if (ePlote()) {
     if (S.luan && S.luan.lloji === "live") { dilPlote(); vendosZone("kat"); }
-    else njofto("🔵 Grupet: dil fillimisht nga filmi (Back)");
+    else njofto(T("🔵 Grupet: dil fillimisht nga filmi (Back)"));
     return;
   }
   if (F.ekran === "live") return vendosZone(F.zona === "kat" ? "kan" : "kat");
@@ -1281,29 +1334,29 @@ function ngjyraListat() {
       S.aktive = i; LS.set("aktive", i); ngarkoListen();
     } };
   });
-  b.push({ t: "➕ Shto listë të re", f: function () { if (ePlote()) { L.ndalo(); S.luan = null; dilPlote(); } hapForme(-1); } });
-  dialog("📋 Zgjidh playlistën", b, true);
+  b.push({ t: T("➕ Shto listë të re"), f: function () { if (ePlote()) { L.ndalo(); S.luan = null; dilPlote(); } hapForme(-1); } });
+  dialog(T("📋 Zgjidh playlistën"), b, true);
   DG.i = Math.max(0, Math.min(S.aktive, b.length - 1)); vizatoDialog();
 }
 
 // ------------------------------------------------------------------ 🟢 guida e plotë (programet + përshkrimi i plotë)
-var GP = null, DITET = ["E diel", "E hënë", "E martë", "E mërkurë", "E enjte", "E premte", "E shtunë"];
+var GP = null, DITET = [T("E diel"), T("E hënë"), T("E martë"), T("E mërkurë"), T("E enjte"), T("E premte"), T("E shtunë")];
 function emerDite(t) {
   var d = new Date(t * 1000), s = new Date(); s.setHours(0, 0, 0, 0);
   var n = Math.round((new Date(d.getFullYear(), d.getMonth(), d.getDate()) - s) / 864e5);
-  if (n === 0) return "Sot"; if (n === 1) return "Nesër"; if (n === -1) return "Dje";
+  if (n === 0) return T("Sot"); if (n === 1) return T("Nesër"); if (n === -1) return T("Dje");
   return DITET[d.getDay()] + " " + d.getDate() + "/" + (d.getMonth() + 1);
 }
 function kohezgjatje(s) {
   s = Math.max(0, Math.round(s / 60)); var o = Math.floor(s / 60), m = s % 60;
-  return o ? o + " orë" + (m ? " " + m + " min" : "") : m + " min";
+  return o ? o + T(" orë") + (m ? " " + m + " min" : "") : m + " min";
 }
 function programetPlote(it) {
   var t = tani(), k = GX.harta[it.k], p = k && GX.prog[k], l = null, burim = "";
-  if (p && p.length) { l = p.map(function (x) { return { fil: x[0], mb: x[1], tit: x[2], per: x[3], kat: x[4] || "" }; }); burim = "Guida (EPG) e listës"; }
-  else if (S.epgP && S.epgP[it.k] && S.epgP[it.k].l.length) { l = S.epgP[it.k].l; burim = "Guida nga ofruesi"; }
-  else if (S.epgTani && S.epgTani[String(it.sid)]) { l = S.epgTani[String(it.sid)].map(function (x) { return { fil: x[0], mb: x[1], tit: x[2] }; }); burim = "Guida nga serveri"; }
-  else if (S.epgC[it.k] && S.epgC[it.k].l.length) { l = S.epgC[it.k].l; burim = "Guida nga ofruesi"; }
+  if (p && p.length) { l = p.map(function (x) { return { fil: x[0], mb: x[1], tit: x[2], per: x[3], kat: x[4] || "" }; }); burim = T("Guida (EPG) e listës"); }
+  else if (S.epgP && S.epgP[it.k] && S.epgP[it.k].l.length) { l = S.epgP[it.k].l; burim = T("Guida nga ofruesi"); }
+  else if (S.epgTani && S.epgTani[String(it.sid)]) { l = S.epgTani[String(it.sid)].map(function (x) { return { fil: x[0], mb: x[1], tit: x[2] }; }); burim = T("Guida nga serveri"); }
+  else if (S.epgC[it.k] && S.epgC[it.k].l.length) { l = S.epgC[it.k].l; burim = T("Guida nga ofruesi"); }
   if (!l) return null;
   l = l.filter(function (x) { return x.mb > t; });
   return l.length ? { l: l, burim: burim, xml: !!(p && p.length) } : null;
@@ -1311,13 +1364,13 @@ function programetPlote(it) {
 function hapGuiden() {
   var plote = ePlote(), it = null, lista = null;
   if (plote) {
-    if (!S.luan || S.luan.lloji !== "live") return njofto("🟢 Guida është për kanalet live");
+    if (!S.luan || S.luan.lloji !== "live") return njofto(T("🟢 Guida është për kanalet live"));
     it = S.luan.it; lista = S.luan.lista && S.luan.lista.length ? S.luan.lista : S.live;
   } else if (F.ekran === "live" && UI.lKan && UI.lKan.items.length) {
     it = F.zona === "kan" ? UI.lKan.tani() : (S.luan && S.luan.lloji === "live" ? S.luan.it : UI.lKan.tani());
     lista = UI.lKan.items.indexOf(it) >= 0 ? UI.lKan.items : S.live;
   } else if (S.luan && S.luan.lloji === "live") { it = S.luan.it; lista = S.luan.lista || S.live; }
-  else return njofto("🟢 Guida: shko te Live dhe zgjidh një kanal");
+  else return njofto(T("🟢 Guida: shko te Live dhe zgjidh një kanal"));
   if (!it) return;
   $("#zap").classList.add("fsh"); $("#osd").classList.add("fsh");
   GP = { it: it, lista: lista, plote: plote, i: 0, s: 0 };
@@ -1347,7 +1400,7 @@ function vizatoGuidenPlote() {
   GP.n = l.length; GP.i = Math.max(0, Math.min(GP.i, l.length - 1));
   $("#gp-logo").outerHTML = logoHtml(it.emri, it.logo, "o-logo").replace('class="o-logo"', 'id="gp-logo" class="o-logo"');
   $("#gp-emri").textContent = it.num + ". " + it.emri;
-  $("#gp-burimi").textContent = pp ? pp.burim + " · " + l.length + (l.length === 1 ? " program" : " programe") : "";
+  $("#gp-burimi").textContent = pp ? pp.burim + " · " + l.length + (l.length === 1 ? T(" program") : T(" programe")) : "";
   $("#gp-ora").textContent = oraTani();
   // lista: dritare që mban të dukshëm programin e zgjedhur (titujt e ditëve zënë vend)
   var H = 790, rr = function (s) { var h = 0, out = [], dita = null; for (var j = s; j < l.length; j++) {
@@ -1356,24 +1409,24 @@ function vizatoGuidenPlote() {
   if (GP.i < GP.s) GP.s = GP.i;
   var dr = rr(GP.s); while (dr.length && dr[dr.length - 1].j < GP.i) { GP.s++; dr = rr(GP.s); }
   var h = "";
-  if (!l.length) h = "<div class='gp-bosh'>" + (GP.duke ? "Duke marrë guidën…" : "S'ka guidë për këtë kanal.<br><br>Shto guidën te lista: Cilësimet → 📅 Guida (p.sh. <b>AL</b>).") + "</div>";
+  if (!l.length) h = "<div class='gp-bosh'>" + (GP.duke ? T("Duke marrë guidën…") : T("S'ka guidë për këtë kanal.<br><br>Shto guidën te lista: Cilësimet → 📅 Guida (p.sh. <b>AL</b>).")) + "</div>";
   dr.forEach(function (r) {
     var p = l[r.j], eTani = p.fil <= t;
     if (r.dita) h += "<div class='gp-dita'>" + esc(r.dita) + "</div>";
-    h += "<div class='gp-rr" + (eTani ? " tani" : "") + (r.j === GP.i ? " fokus" : "") + "'><div class='gp-o'>" + (eTani ? "TANI" : ora(p.fil)) + "</div><div class='gp-t'>" + esc(p.tit) + "</div></div>";
+    h += "<div class='gp-rr" + (eTani ? " tani" : "") + (r.j === GP.i ? " fokus" : "") + "'><div class='gp-o'>" + (eTani ? T("TANI") : ora(p.fil)) + "</div><div class='gp-t'>" + esc(p.tit) + "</div></div>";
   });
   $("#gp-lista").innerHTML = h;
   var d = "", p = l[GP.i];
   if (p) {
     var eT = p.fil <= t, pct = Math.min(100, Math.max(0, (t - p.fil) / (p.mb - p.fil) * 100));
     d = "<h2>" + esc(p.tit) + "</h2><div class='gp-kur'>" + esc(emerDite(p.fil)) + " · " + ora(p.fil) + " – " + ora(p.mb) + " · " + kohezgjatje(p.mb - p.fil) + "</div>";
-    d += eT ? "<span class='gp-etiketa tani'>TANI · mbaron pas " + kohezgjatje(p.mb - t) + "</span>" : "<span class='gp-etiketa'>Fillon pas " + kohezgjatje(p.fil - t) + "</span>";
+    d += eT ? T("<span class='gp-etiketa tani'>TANI · mbaron pas ") + kohezgjatje(p.mb - t) + "</span>" : T("<span class='gp-etiketa'>Fillon pas ") + kohezgjatje(p.fil - t) + "</span>";
     if (p.kat) d += "<span class='gp-etiketa'>" + esc(p.kat) + "</span>";
     if (eT) d += "<div class='o-shirit'><i style='width:" + pct.toFixed(0) + "%'></i></div>";
-    d += p.per ? "<div class='gp-per'>" + esc(p.per) + "</div>" : "<div class='gp-per bosh'>" + (GP.duke ? "Duke marrë përshkrimin…" : "S'ka përshkrim për këtë program.") + "</div>";
+    d += p.per ? "<div class='gp-per'>" + esc(p.per) + "</div>" : "<div class='gp-per bosh'>" + (GP.duke ? T("Duke marrë përshkrimin…") : T("S'ka përshkrim për këtë program.")) + "</div>";
   }
   $("#gp-det").innerHTML = d;
-  $("#gp-ndihme").innerHTML = "▲▼ programet · ◀ ▶ kanali tjetër · OK: shiko kanalin · <i class='ng ng-j'></i>/ Back: mbyll";
+  $("#gp-ndihme").innerHTML = T("▲▼ programet · ◀ ▶ kanali tjetër · OK: shiko kanalin · <i class='ng ng-j'></i>/ Back: mbyll");
 }
 function tastGuida(k) {
   if (k === K.LART || k === K.POSHTE || k === K.CHUP || k === K.CHDN || k === K.PGUP || k === K.PGDN) {
@@ -1397,50 +1450,51 @@ function tastGuida(k) {
 }
 function zgjidhListen() {
   if (S.listat.length) return ngjyraListat();
-  dialog("Cilën listë do të hapësh?", S.listat.slice(0, 5).map(function (l, i) {
+  dialog(T("Cilën listë do të hapësh?"), S.listat.slice(0, 5).map(function (l, i) {
     return { t: (i === S.aktive ? "✔ " : "") + (l.paneli ? "🔒 " : "") + l.emri, f: function () { S.aktive = i; LS.set("aktive", i); ngarkoListen(); } };
   }));
 }
 function fshiListen() {
   var l = S.listat[S.aktive]; if (!l) return;
-  if (l.paneli) return njofto("🔒 Këtë listë e menaxhon administratori", 3500);
-  dialog("Ta fshij listën „" + esc(l.emri) + "“?", [{ t: "🗑️ Po, fshije", f: function () {
+  if (l.paneli) return njofto(T("🔒 Këtë listë e menaxhon administratori"), 3500);
+  dialog(T("Ta fshij listën „") + esc(l.emri) + T("“?"), [{ t: T("🗑️ Po, fshije"), f: function () {
     S.listat.splice(S.aktive, 1); S.aktive = 0; LS.set("listat", S.listat); LS.set("aktive", 0);
     if (S.listat.length) ngarkoListen(); else hapForme(-1);
-  } }, { t: "Jo" }]);
+  } }, { t: T("Jo") }]);
 }
 
 // ---- FORMA (shto/ndrysho listë)
 var FM = { idx: -1, lloji: "xtream", fokus: 0 };
 function hapForme(idx) {
-  if (idx >= 0 && S.listat[idx] && S.listat[idx].paneli) return njofto("🔒 Këtë listë e menaxhon administratori", 3500);
+  if (idx >= 0 && S.listat[idx] && S.listat[idx].paneli) return njofto(T("🔒 Këtë listë e menaxhon administratori"), 3500);
   FM.idx = idx;
   var l = idx >= 0 ? S.listat[idx] : null;
   FM.lloji = l ? l.lloji : "xtream";
-  $("#f-titull").textContent = l ? "Ndrysho listën" : (S.listat.length ? "Shto listë të re" : "Mirë se erdhe! Shto listën e parë");
-  $("#f-emri").value = l ? l.emri : (S.listat.length ? "" : "Abonimi");
+  $("#f-titull").textContent = l ? T("Ndrysho listën") : (S.listat.length ? T("Shto listë të re") : T("Mirë se erdhe! Shto listën e parë"));
+  $("#f-emri").value = l ? l.emri : (S.listat.length ? "" : T("Abonimi"));
   $("#f-host").value = l && l.host || ""; $("#f-user").value = l && l.user || ""; $("#f-pass").value = l && l.pass || ""; $("#f-m3u").value = l && l.m3u || "";
   $("#f-epg").value = l && l.epg || "";
   $("#f-gabim").textContent = "";
-  $("#f-id").innerHTML = PANELI ? "📺 ID e këtij TV: <b>" + esc(idPajisjes()) + "</b> · Çelësi: <b>" + esc(celesiPajisjes()) + "</b>" +
-    (S.listat.length ? "" : "<br><small>Nëse administratori ta dërgon listën, ajo hapet vetë këtu.</small>") : "";
+  $("#f-id").innerHTML = PANELI ? T("📺 ID e këtij TV: <b>") + esc(idPajisjes()) + T("</b> · Çelësi: <b>") + esc(celesiPajisjes()) + "</b>" +
+    (S.listat.length ? "" : T("<br><small>Nëse administratori ta dërgon listën, ajo hapet vetë këtu.</small>")) : "";
   $("#fillimi").classList.add("fsh");
   shfaqEkran("forma"); vendosZone("forma");
   FM.fokus = l ? 0 : 2; vizatoForme();
 }
 function fushatForme() {
   var f = ["emri", "lloji"].concat(FM.lloji === "xtream" ? ["host", "user", "pass"] : ["m3u"]).concat(["epg", "ruaj", "anulo"]);
-  if (!S.listat.length && FM.idx < 0) f.pop();
+  if (!S.listat.length && FM.idx < 0) { f.pop(); f.push("gjuha"); }   // lista e parë: pa "Anulo", me 🌐
   return f;
 }
 function vizatoForme() {
   var f = fushatForme(), z = f[FM.fokus];
-  $("#f-lloji").textContent = FM.lloji === "xtream" ? "◀  Xtream Codes (server + përdorues + fjalëkalim)  ▶" : "◀  Link M3U  ▶";
+  $("#f-lloji").textContent = FM.lloji === "xtream" ? T("◀  Xtream Codes (server + përdorues + fjalëkalim)  ▶") : T("◀  Link M3U  ▶");
   document.querySelectorAll("#m-forma .fusha").forEach(function (el) {
     var k = el.dataset.f;
     el.style.display = (el.classList.contains("x") && FM.lloji !== "xtream") || (el.classList.contains("m") && FM.lloji !== "m3u") ? "none" : "";
     el.classList.toggle("fokus", k === z);
   });
+  var bg = $("#m-forma .buton[data-f='gjuha']"); if (bg) bg.textContent = GJ === "en" ? "🌐 Shqip" : "🌐 English";
   document.querySelectorAll("#m-forma .buton").forEach(function (el) {
     el.style.display = f.indexOf(el.dataset.f) >= 0 ? "" : "none";
     el.classList.toggle("fokus", el.dataset.f === z);
@@ -1454,7 +1508,7 @@ function ndajLinkun(t) {   // "http://host:port/get.php?username=U&password=P&ty
   return null;
 }
 function ruajForme() {
-  var l = { emri: $("#f-emri").value.trim() || "Lista", lloji: FM.lloji };
+  var l = { emri: $("#f-emri").value.trim() || T("Lista"), lloji: FM.lloji };
   var epg = $("#f-epg").value.trim(); if (epg) l.epg = epg.slice(0, 1000);
   if (FM.lloji === "xtream") {
     var host = $("#f-host").value.trim(), nd = ndajLinkun(host);
@@ -1462,15 +1516,15 @@ function ruajForme() {
     if (host && !/^https?:\/\//i.test(host)) host = "http://" + host;
     host = host.replace(/\/(player_api\.php|get\.php|c)?\/?(\?.*)?$/i, "").replace(/\/+$/, "");
     l.host = host; l.user = $("#f-user").value.trim(); l.pass = $("#f-pass").value.trim();
-    if (!l.host || !l.user || !l.pass) { $("#f-gabim").textContent = "Plotëso serverin, përdoruesin dhe fjalëkalimin."; return; }
+    if (!l.host || !l.user || !l.pass) { $("#f-gabim").textContent = T("Plotëso serverin, përdoruesin dhe fjalëkalimin."); return; }
   } else {
     var m = $("#f-m3u").value.trim();
     if (m && !/^https?:\/\//i.test(m)) m = "http://" + m;
     var nd2 = ndajLinkun(m);
-    if (nd2 && /get\.php/i.test(m)) { l.lloji = "xtream"; l.host = nd2.host; l.user = nd2.user; l.pass = nd2.pass; njofto("Linku u kthye në Xtream (me guidë, filma e seriale)"); }
-    else { l.m3u = m; if (!m) { $("#f-gabim").textContent = "Shkruaj linkun M3U."; return; } }
+    if (nd2 && /get\.php/i.test(m)) { l.lloji = "xtream"; l.host = nd2.host; l.user = nd2.user; l.pass = nd2.pass; njofto(T("Linku u kthye në Xtream (me guidë, filma e seriale)")); }
+    else { l.m3u = m; if (!m) { $("#f-gabim").textContent = T("Shkruaj linkun M3U."); return; } }
   }
-  $("#f-gabim").textContent = "Duke u lidhur…";
+  $("#f-gabim").textContent = T("Duke u lidhur…");
   var b = l.lloji === "xtream" ? new Xtream(l.host, l.user, l.pass) : new M3U(l.m3u);
   b.hyr().then(function () {
     if (FM.idx >= 0) S.listat[FM.idx] = l; else { S.listat.push(l); FM.idx = S.listat.length - 1; }
@@ -1484,7 +1538,7 @@ function ngarkoListen() {
   var l = S.listat[S.aktive];
   if (!l) return hapForme(-1);
   L.ndalo(); S.luan = null; document.body.classList.remove("plote");
-  $("#fillimi").classList.remove("fsh"); $("#fillimi-tekst").textContent = "Duke ngarkuar „" + l.emri + "“…";
+  $("#fillimi").classList.remove("fsh"); $("#fillimi-tekst").textContent = T("Duke ngarkuar „") + l.emri + T("“…");
   $("#lista-emri").textContent = l.emri;
   S.burim = l.lloji === "xtream" ? new Xtream(l.host, l.user, l.pass) : new M3U(l.m3u);
   S.epgC = {}; S.epgP = {}; S.epgTani = null;
@@ -1505,9 +1559,9 @@ function ngarkoListen() {
     S.burim.epgTani().then(function (m) { if (m) { S.epgTani = m; rivizato(); infoKanali(UI.lKan.tani()); } });
   }).catch(function (e) {
     $("#fillimi").classList.add("fsh");
-    dialog("⚠️ Lista „" + esc(l.emri) + "“ nuk u ngarkua.<br><small>" + esc(e.message) + "</small>",
-      [{ t: "↻ Provo përsëri", f: ngarkoListen }, { t: "⚙️ Ndrysho listën", f: function () { hapForme(S.aktive); } }]
-        .concat(S.listat.length > 1 ? [{ t: "📋 Listë tjetër", f: zgjidhListen }] : []));
+    dialog(T("⚠️ Lista „") + esc(l.emri) + T("“ nuk u ngarkua.<br><small>") + esc(e.message) + "</small>",
+      [{ t: T("↻ Provo përsëri"), f: ngarkoListen }, { t: T("⚙️ Ndrysho listën"), f: function () { hapForme(S.aktive); } }]
+        .concat(S.listat.length > 1 ? [{ t: T("📋 Listë tjetër"), f: zgjidhListen }] : []));
   });
 }
 function nisUI() {
@@ -1569,7 +1623,7 @@ function shtypNumer(d) {
   NR.timer = setTimeout(function () {
     var n = +NR.t; NR.t = ""; $("#numri").classList.add("fsh");
     var it = S.live.filter(function (x) { return x.num === n; })[0];
-    if (!it) return njofto("S'ka kanal me numrin " + n);
+    if (!it) return njofto(T("S'ka kanal me numrin ") + n);
     if (document.body.classList.contains("plote")) { S.luan.lista = S.live; S.luan.it = it; zapKanal(0); return; }
     shfaqEkran("live"); F.tab = 0; UI.lKat.i = 0; zgjidhKatLive(0);
     UI.lKan.i = S.live.indexOf(it); UI.lKan.vizato(); vendosZone("kan"); infoKanali(it);
@@ -1587,14 +1641,105 @@ function regjistroTastet() {
     .forEach(function (k) { try { tizen.tvinputdevice.registerKey(k); } catch (e) {} });
 }
 function dilNgaApp() {
-  dialog("Të dalësh nga Snow IPTV?", [{ t: "Po, dil", f: function () {
+  dialog(T("Të dalësh nga Snow IPTV?"), [{ t: T("Po, dil"), f: function () {
     L.ndalo();
-    try { tizen.application.getCurrentApplication().exit(); } catch (e) { njofto("(në shfletues s'mund të dalë)"); }
-  } }, { t: "Jo" }]);
+    try { tizen.application.getCurrentApplication().exit(); } catch (e) { njofto(T("(në shfletues s'mund të dalë)")); }
+  } }, { t: T("Jo") }]);
 }
 
 // OK i mbajtur gjatë = ⭐ (vetëm kur televizori dërgon edhe "keyup")
 var OKG = { kaKeyup: false, timer: null, gjate: false };
+
+// ------------------------------------------------------------------ tastiera Snow (Android TV pa ekran me prekje)
+var TS = null;   // { inp, sht (0/1), shenja (0/1), r, c }
+var TS_EMRAT = { auto: "Automatike", snow: "Snow (me shigjeta)", sistemi: "E sistemit" };
+function tastieraJone() {
+  if (!window.SNOW_ANDROID) return false;
+  var m = LS.get("tastiera", "auto");
+  if (m === "snow") return true; if (m === "sistemi") return false;
+  return !(navigator.maxTouchPoints > 0);   // Android TV: pa ekran me prekje
+}
+function hapFushen(inp) {   // OK mbi një kuti teksti
+  if (!inp) return;
+  if (tastieraJone()) return hapTastieren(inp);
+  inp.focus(); try { inp.setSelectionRange(inp.value.length, inp.value.length); } catch (e) {}
+}
+var TS_SHKRONJA = [["1","2","3","4","5","6","7","8","9","0"], ["q","w","e","r","t","y","u","i","o","p"], ["a","s","d","f","g","h","j","k","l","ë"],
+  ["⇧","z","x","c","v","b","n","m","ç","⌫"], ["?123","␣",".","/",":","✔"]];
+var TS_SHENJA = [["1","2","3","4","5","6","7","8","9","0"], ["@","#","&","_","-","+","=","%","!","?"], [";",",","'","\"","(",")","*","$","~","|"],
+  ["<",">","[","]","{","}","\\","^","`","⌫"], ["abc","␣",".","/",":","✔"]];
+var TS_GJERESI = { "?123": 2, "abc": 2, "␣": 3, "✔": 2 };
+function tsRreshtat() { return TS.shenja ? TS_SHENJA : TS_SHKRONJA; }
+function tsQendra(r, c) { var x = 0, rr = tsRreshtat()[r]; for (var i = 0; i < c; i++) x += TS_GJERESI[rr[i]] || 1; return x + (TS_GJERESI[rr[c]] || 1) / 2; }
+function tsEtiketa(t) { return t === "␣" ? "␣" : (TS.sht && t.length === 1 ? t.toUpperCase() : t); }
+function hapTastieren(inp) {
+  if (!$("#tastiera")) {
+    var st = document.createElement("style");
+    st.textContent = "#tastiera{position:absolute;left:990px;top:110px;width:884px;padding:16px 20px 12px;background:#121826;border:3px solid #2c3550;border-radius:18px;box-shadow:0 10px 40px #000c;z-index:60;box-sizing:border-box}" +
+      "#tastiera.fsh{display:none}#ts-vlera{font-size:28px;background:#0b0f19;border-radius:10px;padding:8px 16px;margin-bottom:10px;min-height:40px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#fff}" +
+      "#ts-etiketa{font-size:18px;color:#8b93a7;margin:0 0 4px 4px}#ts-vlera i{display:inline-block;width:3px;height:30px;background:#4fc3f7;vertical-align:middle;margin-left:2px}" +
+      ".ts-r{height:66px;margin-bottom:8px;white-space:nowrap}.ts-t{display:inline-block;vertical-align:top;height:66px;line-height:60px;margin-right:8px;text-align:center;font-size:28px;font-weight:600;" +
+      "background:#1e2638;border-radius:10px;color:#e8ecf4;border:3px solid transparent;box-sizing:border-box}.ts-t.fokus{background:#4fc3f7;color:#000;border-color:#fff}" +
+      ".ts-t.aktiv{color:#4fc3f7}.ts-t.fokus.aktiv{color:#000}#ts-ndihme{font-size:20px;color:#8b93a7;margin-top:4px;text-align:center}";
+    document.head.appendChild(st);
+    var d = document.createElement("div"); d.id = "tastiera"; d.className = "fsh"; $("#skena").appendChild(d);
+    d.addEventListener("click", function (e) { var b = e.target.closest ? e.target.closest("[data-ts]") : null; if (!b || !TS) return; var p = b.getAttribute("data-ts").split(","); TS.r = +p[0]; TS.c = +p[1]; tsShtyp(); });
+  }
+  var a = document.activeElement; if (a && a.tagName === "INPUT") a.blur();
+  TS = { inp: inp, sht: 0, shenja: 0, r: 1, c: 0 };
+  var tsd = $("#tastiera"); tsd.style.left = inp.id === "k-input" ? "990px" : "518px"; tsd.style.top = inp.id === "k-input" ? "110px" : "500px";
+  tsd.classList.remove("fsh"); vizatoTastieren();
+}
+function vizatoTastieren() {
+  if (!TS) return;
+  var fu = TS.inp.closest ? TS.inp.closest(".fusha") : null, lb = fu && fu.querySelector("label");
+  var rr = tsRreshtat(), h = (lb ? '<div id="ts-etiketa">' + esc(lb.textContent) + "</div>" : "") + '<div id="ts-vlera">' + esc(TS.inp.value) + "<i></i></div>", nj = 84;   // 1 njësi = 84px (76 + 8)
+  for (var r = 0; r < rr.length; r++) {
+    h += '<div class="ts-r">';
+    for (var c = 0; c < rr[r].length; c++) {
+      var t = rr[r][c], w = (TS_GJERESI[t] || 1) * nj - 8;
+      h += '<div class="ts-t' + (r === TS.r && c === TS.c ? " fokus" : "") + (t === "⇧" && TS.sht ? " aktiv" : "") + '" data-ts="' + r + "," + c + '" style="width:' + w + 'px">' + esc(tsEtiketa(t)) + "</div>";
+    }
+    h += "</div>";
+  }
+  $("#tastiera").innerHTML = h + '<div id="ts-ndihme">' + T("▲▼◀▶ zgjidh · OK shkruaj · Back mbyll") + "</div>";
+}
+function tsNdrysho(v) {
+  TS.inp.value = v;
+  try { TS.inp.dispatchEvent(new Event("input", { bubbles: true })); } catch (e) { try { var ev = document.createEvent("Event"); ev.initEvent("input", true, true); TS.inp.dispatchEvent(ev); } catch (e2) {} }
+}
+function tsShtyp() {
+  var t = tsRreshtat()[TS.r][TS.c], v = TS.inp.value;
+  if (t === "⌫") tsNdrysho(v.slice(0, -1));
+  else if (t === "⇧") TS.sht = TS.sht ? 0 : 1;
+  else if (t === "?123" || t === "abc") { TS.shenja = TS.shenja ? 0 : 1; TS.c = Math.min(TS.c, tsRreshtat()[TS.r].length - 1); }
+  else if (t === "✔") return mbyllTastieren(true);
+  else tsNdrysho(v + (t === "␣" ? " " : tsEtiketa(t)));
+  vizatoTastieren();
+}
+function mbyllTastieren(perfundo) {
+  if (!TS) return;
+  var inp = TS.inp; TS = null; $("#tastiera").classList.add("fsh");
+  if (inp.id === "k-input") { kerko(inp.value); if (perfundo && UI.kLista.items.length) vendosZone("klista"); }
+  else if (F.ekran === "forma") { if (perfundo) FM.fokus = Math.min(FM.fokus + 1, fushatForme().length - 1); vizatoForme(); }
+}
+function tastTastiere(k) {
+  var rr = tsRreshtat();
+  if (k === K.MAJTAS) TS.c = TS.c > 0 ? TS.c - 1 : rr[TS.r].length - 1;
+  else if (k === K.DJATHTAS) TS.c = TS.c < rr[TS.r].length - 1 ? TS.c + 1 : 0;
+  else if (k === K.LART || k === K.POSHTE) {
+    var r2 = TS.r + (k === K.LART ? -1 : 1); if (r2 < 0 || r2 >= rr.length) return;
+    var x = tsQendra(TS.r, TS.c), mir = 0, dist = 1e9;
+    for (var c = 0; c < rr[r2].length; c++) { var d = Math.abs(tsQendra(r2, c) - x); if (d < dist - 0.01) { dist = d; mir = c; } }
+    TS.r = r2; TS.c = mir;
+  }
+  else if (k === K.OK) return tsShtyp();
+  else if (k >= 48 && k <= 57) { tsNdrysho(TS.inp.value + String(k - 48)); }
+  else if (k === K.PRAPA || k === K.CANCEL) return mbyllTastieren(false);
+  else if (k === K.DONE) return mbyllTastieren(true);
+  else return;
+  vizatoTastieren();
+}
 
 function tasti(e) {
   var k = e.keyCode;
@@ -1618,6 +1763,7 @@ function tasti(e) {
     return;
   }
   e.preventDefault();
+  if (TS) { tastTastiere(k); return; }
   if (TK) { if (!e.repeat || k !== K.OK) tastTest(k); return; }
   if (GP && !DG) { if (!e.repeat || k !== K.OK) tastGuida(k); return; }
   if (k >= 48 && k <= 57 && !DG && F.ekran !== "forma" && (F.ekran === "live" || document.body.classList.contains("plote")) && !(S.luan && S.luan.lloji !== "live" && document.body.classList.contains("plote"))) return shtypNumer(String(k - 48));
@@ -1731,7 +1877,7 @@ function tastSerdet(k) {
 }
 function tastKerko(k) {
   if (F.zona === "kinput") {
-    if (k === K.OK) { $("#k-input").focus(); }
+    if (k === K.OK) { hapFushen($("#k-input")); }
     else if (k === K.LART) vendosZone("tabet");
     else if (k === K.POSHTE) { if (UI.kLista.items.length) vendosZone("klista"); }
     else if (k === K.PRAPA) vendosZone("tabet");
@@ -1755,18 +1901,20 @@ function tastCil(k) {
 }
 function tastForme(k) {
   var f = fushatForme(), z = f[FM.fokus];
-  if (k === K.LART) FM.fokus = Math.max(0, (z === "ruaj" || z === "anulo" ? f.indexOf("ruaj") : FM.fokus) - 1);
-  else if (k === K.POSHTE) { if (z !== "ruaj" && z !== "anulo") FM.fokus = Math.min(f.indexOf("ruaj"), FM.fokus + 1); }
+  if (k === K.LART) FM.fokus = Math.max(0, (z === "ruaj" || z === "anulo" || z === "gjuha" ? f.indexOf("ruaj") : FM.fokus) - 1);
+  else if (k === K.POSHTE) { if (z !== "ruaj" && z !== "anulo" && z !== "gjuha") FM.fokus = Math.min(f.indexOf("ruaj"), FM.fokus + 1); }
   else if (k === K.MAJTAS || k === K.DJATHTAS) {
     if (z === "lloji") FM.lloji = FM.lloji === "xtream" ? "m3u" : "xtream";
     else if (z === "ruaj" && k === K.DJATHTAS && f.indexOf("anulo") >= 0) FM.fokus = f.indexOf("anulo");
-    else if (z === "anulo" && k === K.MAJTAS) FM.fokus = f.indexOf("ruaj");
+    else if (z === "ruaj" && k === K.DJATHTAS && f.indexOf("gjuha") >= 0) FM.fokus = f.indexOf("gjuha");
+    else if ((z === "anulo" || z === "gjuha") && k === K.MAJTAS) FM.fokus = f.indexOf("ruaj");
   }
   else if (k === K.OK) {
     if (z === "lloji") FM.lloji = FM.lloji === "xtream" ? "m3u" : "xtream";
     else if (z === "ruaj") return ruajForme();
     else if (z === "anulo") return mbyllForme();
-    else { var inp = $("#f-" + z); if (inp) { inp.focus(); try { inp.setSelectionRange(inp.value.length, inp.value.length); } catch (e) {} } }
+    else if (z === "gjuha") return ndryshoGjuhen();
+    else hapFushen($("#f-" + z));
   }
   else if (k === K.PRAPA) return mbyllForme();
   vizatoForme();
@@ -1794,7 +1942,7 @@ function tastPlote(k) {
     else if (k === K.INFO) { if ($("#osd").classList.contains("fsh")) osdLive(true); else $("#osd").classList.add("fsh"); }
     else if (k === K.PRAPA) dilPlote();
     else if (k === K.STOP) { L.ndalo(); S.luan = null; dilPlote(); }
-    else if (k === K.PP || k === K.PAUZE || k === K.PLAY) { L.ndrysho(); njofto(L.pauze ? "⏸ Pauzë" : "▶ Vazhdon"); }
+    else if (k === K.PP || k === K.PAUZE || k === K.PLAY) { L.ndrysho(); njofto(L.pauze ? T("⏸ Pauzë") : T("▶ Vazhdon")); }
     else if (!$("#gabimV").classList.contains("fsh") && k === K.OK) zapKanal(0);
   } else {
     if (k === K.OK || k === K.PP || k === K.PLAY || k === K.PAUZE) { L.ndrysho(); osdVod(true); }
@@ -1936,6 +2084,7 @@ function zgjidhNePrekje(lp, j) {
 }
 function prekje(cak) {
   if (!cak || !cak.closest) return;
+  if (TS) { var tb = cak.closest("[data-ts]"); if (tb) { var tp = tb.getAttribute("data-ts").split(","); TS.r = +tp[0]; TS.c = +tp[1]; tsShtyp(); } return; }
   if (DG) {   // butonat e dialogut
     var b = cak.closest("#dg-butonat .buton");
     if (b) { var bi = Array.prototype.indexOf.call(b.parentNode.children, b); DG.i = bi; vizatoDialog(); mbyllDialog(bi); }
@@ -1998,6 +2147,7 @@ function rreshqitjePlote(dx, dy) {
   else veprim(dx < 0 ? K.MAJTAS : K.DJATHTAS);        // live: lista e shpejtë / figura · film: −10 s / +10 s
 }
 function nis() {
+  perktheDOM(); dergoGjuhen();
   if (window.SNOW_ANDROID) {   // Android: videoja (ExoPlayer) luan poshtë faqes; <object> i Samsung-ut zëvendësohet me div bosh
     var avO = $("#av");
     if (avO && avO.tagName === "OBJECT") { var avD = document.createElement("div"); avD.id = "av"; avO.parentNode.replaceChild(avD, avO); }
@@ -2014,7 +2164,7 @@ function nis() {
   UI.sRr = new Rrjet($("#s-rrjet"), { h: 420, w: 250, kol: 5, render: karte });
   UI.dSez = new Lista($("#d-sez"), { h: 64, render: rreshtThjeshte });
   UI.dEp = new Lista($("#d-ep"), { h: 76, render: rreshtThjeshte });
-  UI.kLista = new Lista($("#k-lista"), { h: 76, render: rreshtThjeshte, bosh: "Shkruaj diçka për të kërkuar." });
+  UI.kLista = new Lista($("#k-lista"), { h: 76, render: rreshtThjeshte, bosh: T("Shkruaj diçka për të kërkuar.") });
   UI.cLista = new Lista($("#c-lista"), { h: 76, render: rreshtThjeshte });
   UI.zLista = new Lista($("#z-lista"), { h: 76, render: rreshtKanal });
   document.addEventListener("keydown", tasti);
@@ -2040,21 +2190,21 @@ function nis() {
     }
   });
   $("#ora").textContent = oraTani();
-  if (S.listat.length) ngarkoListen(); else hapForme(-1);
+  if (S.listat.length) ngarkoListen(); else { hapForme(-1); if (LS.get("gjuha", null) === null) setTimeout(zgjidhGjuhenFillim, 400); }
   setTimeout(pyetPanelin, 1500);
   setInterval(function () { if (!document.hidden) pyetPanelin(); }, 5 * 60000);
   setInterval(function () { if (!document.hidden && !S.listat.length && F.ekran === "forma") pyetPanelin(); }, 20000);   // TV i ri: pret listën nga administratori
   var m = window.MI_GATI ? window.MI_GATI() : null;   // ngarkuesit: "u hap pa gabime"
-  if (m) setTimeout(function () { njofto(m, 7000); }, 2500);
+  if (m) setTimeout(function () { njofto(perktheNgarkuesin(m), 7000); }, 2500);
 }
 function versioniKeq() { try { return localStorage.getItem("mi_kodi_keq") || ""; } catch (e) { return ""; } }
 function kontrolloPerditesim() {
-  if (!window.MI_KONTROLLO) return njofto("Përditësimet s'janë aktive në këtë version");
+  if (!window.MI_KONTROLLO) return njofto(T("Përditësimet s'janë aktive në këtë version"));
   try { localStorage.removeItem("mi_kodi_keq"); } catch (e) {}   // provo përsëri edhe versionin që s'u hap herën e kaluar
-  njofto("Duke kontrolluar në GitHub…", 10000);
+  njofto(T("Duke kontrolluar në GitHub…"), 10000);
   window.MI_KONTROLLO(function (ok, info) {
-    if (ok) dialog("⬇️ U shkarkua versioni i ri <b>" + esc(info) + "</b>.<br>Ta hap tani?", [{ t: "Po, rihape", f: function () { L.ndalo(); location.reload(); } }, { t: "Më vonë" }]);
-    else njofto("ℹ️ " + info, 4000);
+    if (ok) dialog(T("⬇️ U shkarkua versioni i ri <b>") + esc(info) + T("</b>.<br>Ta hap tani?"), [{ t: T("Po, rihape"), f: function () { L.ndalo(); location.reload(); } }, { t: T("Më vonë") }]);
+    else njofto("ℹ️ " + perktheNgarkuesin(info), 4000);
   });
 }
 var kerkimTimer2 = null;
