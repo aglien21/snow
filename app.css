@@ -26,7 +26,7 @@ body.plote #ui { display: none; }
 .logo b { color: var(--theks); }
 .logo img { height: 58px; width: 58px; vertical-align: middle; margin: -6px 14px 0 0; border-radius: 13px; }
 .logo.madh { display: flex; flex-direction: column; align-items: center; gap: 26px; }
-.logo.madh img { height: 220px; width: 220px; margin: 0; border-radius: 48px; box-shadow: 0 0 60px #33b5f055; }
+.logo.madh img { height: 400px; width: 400px; margin: 0; border-radius: 82px; box-shadow: 0 0 80px #33b5f066; }
 .logo.madh { font-size: 96px; }
 #tabet { display: flex; gap: 10px; }
 .tab { font-size: 28px; padding: 12px 26px; border-radius: 40px; color: var(--zbehte); border: 3px solid transparent; }
