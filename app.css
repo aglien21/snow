@@ -107,6 +107,10 @@ body.plote #ui { display: none; }
 .forma { width: 1100px; background: var(--bg); border-radius: var(--r); padding: 24px 50px; overflow: hidden; }
 .forma h1 { margin: 0 0 6px; font-size: 38px; }
 .forma-shpjeg { color: var(--zbehte); font-size: 21px; margin: 0 0 10px; line-height: 1.35; }
+body.pritje .forma-shpjeg { display: none; }
+body.pritje .forma-id { font-size: 30px; line-height: 1.6; padding: 26px 30px; margin: 30px 0; }
+body.pritje .forma-id b { font-size: 40px; letter-spacing: 1px; }
+body.pritje .forma-id small { font-size: 24px; }
 .fusha { margin-bottom: 8px; }
 .fusha label { display: block; font-size: 21px; color: var(--zbehte); margin-bottom: 4px; }
 .fusha input { padding: 10px 20px; font-size: 27px; }
