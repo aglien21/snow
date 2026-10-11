@@ -2,7 +2,7 @@
    Burimi: Xtream Codes (host + përdorues + fjalëkalim) ose link M3U.
    Videoja luhet me AVPlay të televizorit: luan .ts, HLS, MPEG-2, HEVC, MP2… direkt nga ofruesi. */
 "use strict";
-var VERSIONI = "1.6.4";
+var VERSIONI = "1.6.5";
 (function () {   // TV i vjetër pa "gap" te flex (Chromium < 84, p.sh. Samsung 2020): app.css përdor margin në vend të tij
   try {
     var d = document.createElement("div");
@@ -64,7 +64,9 @@ function ndryshoGjuhen() {
   setTimeout(function () { try { L.ndalo(); } catch (e) {} location.reload(); }, 400);
 }
 function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
-function inicialet(e) { return String(e || "?").replace(/[^\p{L}\p{N} ]/gu, "").trim().split(/\s+/).slice(0, 2).map(function (w) { return w[0]; }).join("").toUpperCase() || "TV"; }
+// \p{L} (Unicode) s'njihet nga WebView-të e vjetra (Android TV të vjetër, Chrome < 64): aty përdoret një listë shkronjash e thjeshtë
+var RE_INICIALET = (function () { try { return new RegExp("[^\\p{L}\\p{N} ]", "gu"); } catch (e) { return /[^0-9A-Za-z\u00AA\u00B5\u00BA\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u024F\u0370-\u03FF\u0400-\u04FF\u0590-\u05FF\u0600-\u06FF ]/g; } })();
+function inicialet(e) { return String(e || "?").replace(RE_INICIALET, "").trim().split(/\s+/).slice(0, 2).map(function (w) { return w[0]; }).join("").toUpperCase() || "TV"; }
 function ngjyra(e) { var h = 0; e = String(e || ""); for (var i = 0; i < e.length; i++) h = (h * 31 + e.charCodeAt(i)) % 360; return "hsl(" + h + ",45%,32%)"; }
 function ora(t) { var d = new Date(t * 1000); return ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2); }
 function kohe(ms) { var s = Math.max(0, Math.floor(ms / 1000)), h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60); s = s % 60;
