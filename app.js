@@ -17,7 +17,7 @@
    Burimi: Xtream Codes (host + përdorues + fjalëkalim) ose link M3U.
    Videoja luhet me AVPlay të televizorit: luan .ts, HLS, MPEG-2, HEVC, MP2… direkt nga ofruesi. */
 "use strict";
-var VERSIONI = "1.6.7";
+var VERSIONI = "1.6.8";
 (function () {   // TV i vjetër pa "gap" te flex (Chromium < 84, p.sh. Samsung 2020): app.css përdor margin në vend të tij
   try {
     var d = document.createElement("div");
@@ -621,7 +621,14 @@ function celesiPajisjes() {
 function modeliTV() {
   try { return webapis.productinfo.getRealModel() || webapis.productinfo.getModel() || "Samsung"; } catch (e) { return NE_TV ? "Samsung" : "Shfletues"; }
 }
-var PN = { duke: false, gabimi: "", lidhur: 0 };
+var PN = { duke: false, gabimi: "", lidhur: 0, dergua: 0, shehK: "", shehKoha: 0, shehRaport: "" };
+// Çfarë po shikon TV-ja tani (për panelin e administratorit): null kur s'luan asgjë
+function shehTani() {
+  if (!S.luan || !S.luan.it || !L.luan()) return null;
+  if (S.luan.lloji === "live") return { l: "live", e: String(S.luan.it.emri || "").slice(0, 80) };
+  return { l: /^e/.test(String(S.luan.celes || "")) ? "serial" : "film", e: String(S.luan.titull || S.luan.it.emri || "").slice(0, 80) };
+}
+function celesShehje(sh) { return sh ? sh.l + "|" + sh.e : ""; }
 // skadimi i abonimit të listës që po përdoret (nga ofruesi) -> paneli, që administratori të dërgojë mesazhin automatik
 function skadimiListes() {
   var b = S.burim, inf = b && ((b.info && b.info.user_info) || (b.xt && b.xt.info && b.xt.info.user_info));
@@ -649,6 +656,8 @@ function pyetPanelin() {
   };
   x.onerror = x.ontimeout = function () { PN.duke = false; PN.gabimi = T("paneli s'u arrit"); };
   var trupi = { id: idPajisjes(), celesi: celesiPajisjes(), v: VERSIONI, modeli: modeliTV() }, sk = skadimiListes();
+  var sh = shehTani(); trupi.sheh = sh; PN.shehRaport = celesShehje(sh); PN.dergua = Date.now();
+  if (sh) { if (PN.shehK !== PN.shehRaport) { PN.shehK = PN.shehRaport; PN.shehKoha = Date.now(); } sh.s = Math.max(0, Math.round((Date.now() - PN.shehKoha) / 1000)); }
   if (sk) { trupi.skadon = sk.skadon; trupi.skadon_lista = sk.lista; PN.skRaport = sk.skadon; }
   x.send(JSON.stringify(trupi));
 }
@@ -2417,6 +2426,12 @@ function nis() {
   if (S.listat.length) ngarkoListen(); else { hapForme(-1); if (LS.get("gjuha", null) === null) setTimeout(zgjidhGjuhenFillim, 400); }
   setTimeout(pyetPanelin, 1500);
   setInterval(function () { if (!document.hidden) pyetPanelin(); }, 5 * 60000);
+  setInterval(function () {   // paneli mëson se ç'po shikon TV-ja: pas 8 s në të njëjtin kanal/film (jo gjatë zapping-ut), pastaj çdo 2 min
+    if (document.hidden) return;
+    var k = celesShehje(shehTani());
+    if (k !== PN.shehK) { PN.shehK = k; PN.shehKoha = Date.now(); return; }
+    if (k !== PN.shehRaport ? Date.now() - PN.shehKoha >= 7500 : (k && Date.now() - PN.dergua >= 2 * 60000)) pyetPanelin();
+  }, 4000);
   setInterval(function () { if (!document.hidden && !S.listat.length && F.ekran === "forma") pyetPanelin(); }, 20000);   // TV i ri: pret listën nga administratori
   var m = window.MI_GATI ? window.MI_GATI() : null;   // ngarkuesit: "u hap pa gabime"
   if (m) setTimeout(function () { njofto(perktheNgarkuesin(m), 7000); }, 2500);
