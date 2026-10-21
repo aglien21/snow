@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="sq">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Snow IPTV – Prova TVIP</title>
+<style>
+  /* përmasat ndjekin gjerësinë e ekranit: e gjithë faqja hyn në një foto si në 1280×720 ashtu edhe në 1920×1080 */
+  html { font-size: 1.18vw; }
+  html, body { margin: 0; padding: 0; background: #0b1a2b; color: #e8f1ff; font-family: Arial, Helvetica, sans-serif; overflow: hidden; }
+  body { font-size: 1rem; line-height: 1.25; padding: 0.6rem 1.2rem; box-sizing: border-box; height: 100vh; }
+  h1 { font-size: 1.45rem; margin: 0 0 0.35rem 0; color: #9fd3ff; }
+  h1 small { font-size: 0.85rem; color: #7f9bb8; font-weight: normal; }
+  .kolona { display: -webkit-box; display: -webkit-flex; display: flex; }
+  .majtas { width: 48%; margin-right: 2%; }
+  .djathtas { width: 50%; }
+  .kuti { background: #12263d; border: 1px solid #24476b; border-radius: 0.4rem; padding: 0.35rem 0.7rem; margin-bottom: 0.45rem; }
+  .kuti h2 { font-size: 1.05rem; margin: 0 0 0.25rem 0; color: #ffd76a; }
+  table { border-collapse: collapse; width: 100%; }
+  td { padding: 0.06rem 0.25rem; vertical-align: top; border-bottom: 1px solid #1d3a58; font-size: 0.92rem; }
+  td.e { color: #8fb0d0; white-space: nowrap; width: 34%; }
+  .po { color: #6dff8e; font-weight: bold; }
+  .jo { color: #ff7a7a; font-weight: bold; }
+  .ua { font-size: 0.72rem; color: #c9d8ea; word-break: break-all; }
+  #tastet { font-size: 1rem; font-family: "Courier New", monospace; height: 8.85rem; overflow: hidden; }
+  #tastet div { padding: 0; }
+  #tastet div:first-child { color: #6dff8e; font-weight: bold; }
+  .butonat { margin: 0.2rem 0; }
+  .btn { display: inline-block; padding: 0.25rem 0.55rem; margin: 0 0.3rem 0.3rem 0; border: 2px solid #3b6c9c; border-radius: 0.3rem; background: #1a3552; color: #fff; font-size: 0.9rem; }
+  .btn.fokus { background: #ffd76a; color: #000; border-color: #fff; }
+  #kutiaVideo { position: relative; width: 100%; height: 22vh; background: #000; border: 1px solid #24476b; }
+  #vd { width: 100%; height: 100%; background: #000; }
+  #gjendja { font-size: 0.9rem; font-family: "Courier New", monospace; height: 2.4rem; overflow: hidden; color: #ffe9a8; margin-top: 0.25rem; }
+  #permbledhja { font-size: 1.1rem; font-weight: bold; color: #fff; background: #2d1f4d; border: 2px solid #8a6bff; border-radius: 0.4rem; padding: 0.25rem 0.7rem; margin-bottom: 0.45rem; }
+  .shenim { font-size: 0.75rem; color: #7f9bb8; }
+</style>
+</head>
+<body>
+<h1>Snow IPTV – Prova TVIP <small>versioni i provës p1 · bëj FOTO të gjithë ekranit</small></h1>
+<div id="permbledhja">Duke kontrolluar…</div>
+
+<div class="kolona">
+  <div class="majtas">
+    <div class="kuti">
+      <h2>1. Kutia</h2>
+      <table id="info"></table>
+      <div class="ua" id="ua"></div>
+    </div>
+    <div class="kuti">
+      <h2>2. Çfarë luan videoja (sipas kutisë)</h2>
+      <table id="formatet"></table>
+    </div>
+  </div>
+
+  <div class="djathtas">
+    <div class="kuti">
+      <h2>3. Shtyp butonat e telekomandës një nga një</h2>
+      <div class="shenim">Back · E kuqe · E gjelbër · E verdhë · Blu · CH+ · CH− · Info · Menu · 0–9 · Play/Pauzë · Stop · Vol+ · Vol−</div>
+      <div id="tastet"><div>(asnjë buton ende)</div></div>
+    </div>
+    <div class="kuti">
+      <h2>4. Prova e videos (◄ ► zgjidh, OK nis)</h2>
+      <div class="butonat" id="butonat">
+        <span class="btn" data-v="hls">1 HLS</span>
+        <span class="btn" data-v="live">2 HLS live</span>
+        <span class="btn" data-v="http">3 HLS http</span>
+        <span class="btn" data-v="mp4">4 MP4</span>
+        <span class="btn" data-v="tvip">5 TvipPlayer</span>
+        <span class="btn" data-v="ndalo">■ Ndalo</span>
+        <span class="btn" data-v="dil">✕ Dil</span>
+      </div>
+      <div id="kutiaVideo"><video id="vd" playsinline disableremoteplayback></video></div>
+      <div id="gjendja">Zgjidh një provë dhe shtyp OK.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* Faqe vetëm për diagnostikim: s'dërgon asgjë askund, s'ruan asgjë. ES5 që të hapet edhe në motorët e vjetër. */
+(function () {
+  "use strict";
+  var ua = navigator.userAgent || "";
+  var VIDEOT = {
+    hls:  "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8",
+    live: "https://cph-p2p-msl.akamaized.net/hls/live/2000341/test/master.m3u8",
+    http: "http://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8",
+    mp4:  "https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/720/Big_Buck_Bunny_720_10s_1MB.mp4"
+  };
+  var rezultatet = {};   // provë -> "OK"/"GABIM"
+  var tastet = [], nrTasteve = 0;
+
+  function $(id) { return document.getElementById(id); }
+  function esc(t) { return String(t).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+  function poJo(b) { return b ? '<span class="po">PO</span>' : '<span class="jo">JO</span>'; }
+  function thirr(obj, emri) {
+    try { if (obj && typeof obj[emri] === "function") { var r = obj[emri](); return (r === undefined || r === null || r === "") ? "(bosh)" : String(r); } }
+    catch (e) { return "gabim: " + e.message; }
+    return "—";
+  }
+  function rresht(tab, e, v) { tab.innerHTML += '<tr><td class="e">' + esc(e) + "</td><td>" + v + "</td></tr>"; }
+
+  // ---------------------------------------------------------------- 1. kutia
+  var chrome = /Chrome\/(\d+)/.exec(ua), webkit = /AppleWebKit\/([\d.]+)/.exec(ua);
+  var motori = chrome ? "Chromium " + chrome[1] : (webkit ? "WebKit " + webkit[1] : "i panjohur");
+  var S = window.TvipStb, kaTvip = !!S;
+  var info = $("info");
+  rresht(info, "Motori", "<b>" + esc(motori) + "</b>");
+  rresht(info, "TvipStb", poJo(kaTvip));
+  if (kaTvip) {
+    rresht(info, "Modeli (deviceId)", esc(thirr(S, "getDeviceId")));
+    rresht(info, "Softueri", esc(thirr(S, "getSoftwareVersion")));
+    rresht(info, "MAC", esc(thirr(S, "getMainMacAddress")));
+    rresht(info, "Gjuha", esc(thirr(S, "getCurrentLanguageCode")));
+    rresht(info, "Ekrani", esc(thirr(S, "getDisplayMode")));
+    try { var f = []; for (var k in S) { if (typeof S[k] === "function") f.push(k); } rresht(info, "Funksionet", '<span class="ua">' + esc(f.slice(0, 40).join(" ")) + "</span>"); } catch (e) {}
+  }
+  rresht(info, "TvipPlayer", poJo(!!window.TvipPlayer));
+  rresht(info, "TvipEvent", poJo(!!window.TvipEvent));
+  rresht(info, "gSTB (MAG)", poJo(!!window.gSTB));
+  rresht(info, "stbPlayerManager", poJo(!!window.stbPlayerManager));
+  rresht(info, "Madhësia", (window.innerWidth || 0) + "×" + (window.innerHeight || 0) + " · ekran " + (screen.width || 0) + "×" + (screen.height || 0) + " · dpr " + (window.devicePixelRatio || 1));
+  var ls = false; try { localStorage.setItem("snow_prove", "1"); ls = localStorage.getItem("snow_prove") === "1"; localStorage.removeItem("snow_prove"); } catch (e) {}
+  rresht(info, "localStorage", poJo(ls));
+  rresht(info, "Faqja", esc(location.protocol + "//" + location.host));
+  $("ua").innerHTML = "UA: " + esc(ua);
+
+  // ---------------------------------------------------------------- 2. formatet
+  var vd = $("vd"), fm = $("formatet");
+  try { vd.disableRemotePlayback = true; } catch (e) {}
+  function cp(t) { try { var r = vd.canPlayType(t); return r ? '<span class="po">' + r + "</span>" : '<span class="jo">jo</span>'; } catch (e) { return "gabim"; } }
+  rresht(fm, "HLS (.m3u8)", cp("application/vnd.apple.mpegurl") + " / " + cp("application/x-mpegURL"));
+  rresht(fm, "MPEG-TS (.ts)", cp("video/mp2t"));
+  rresht(fm, "MP4 H.264", cp('video/mp4; codecs="avc1.42E01E, mp4a.40.2"'));
+  rresht(fm, "HEVC", cp('video/mp4; codecs="hvc1.1.6.L93.B0"'));
+  rresht(fm, "MKV", cp("video/x-matroska"));
+  rresht(fm, "MediaSource", poJo(!!window.MediaSource) + (window.MediaSource && MediaSource.isTypeSupported ? " · ts:" + (MediaSource.isTypeSupported('video/mp2t; codecs="avc1.42E01E,mp4a.40.2"') ? "po" : "jo") : ""));
+
+  // ---------------------------------------------------------------- 3. tastet
+  function emriTastit(e) {
+    var n = [];
+    if (e.key && e.key !== "Unidentified") n.push(e.key);
+    if (e.code) n.push(e.code);
+    return n.join(" / ") || "?";
+  }
+  function shenoTastin(burimi, kodi, emri) {
+    nrTasteve++;
+    tastet.unshift(burimi + "  kodi " + kodi + "  " + emri);
+    if (tastet.length > 7) tastet.length = 7;
+    var h = ""; for (var i = 0; i < tastet.length; i++) h += "<div>" + esc(tastet[i]) + "</div>";
+    $("tastet").innerHTML = h;
+  }
+
+  // Back: në disa kuti shfletuesi kthehet "pas" në histori – e kapim që faqja të mos mbyllet
+  try { history.pushState({ snow: 1 }, "", location.href); } catch (e) {}
+  window.addEventListener("popstate", function () {
+    shenoTastin("histori", "-", "BACK (popstate)");
+    try { history.pushState({ snow: 1 }, "", location.href); } catch (e) {}
+  });
+
+  // ---------------------------------------------------------------- 4. butonat dhe video
+  var btns = $("butonat").getElementsByTagName("span"), fokus = 0;
+  function vendosFokus(i) {
+    fokus = (i + btns.length) % btns.length;
+    for (var j = 0; j < btns.length; j++) btns[j].className = j === fokus ? "btn fokus" : "btn";
+  }
+  vendosFokus(0);
+
+  var gj = $("gjendja"), prova = "", t0 = 0, kohematesi = null, tvipAktiv = false;
+  function gjendja(t) { gj.innerHTML = esc(t); }
+  function permbledhja() {
+    var p = [motori, kaTvip ? "TvipStb PO" : "TvipStb JO"];
+    for (var k in rezultatet) p.push(k + ":" + rezultatet[k]);
+    p.push("taste:" + nrTasteve);
+    $("permbledhja").innerHTML = esc(p.join(" · "));
+  }
+  function ndalo() {
+    if (kohematesi) { clearInterval(kohematesi); kohematesi = null; }
+    try { vd.pause(); vd.removeAttribute("src"); vd.load(); } catch (e) {}
+    if (tvipAktiv) { try { window.TvipPlayer.stop(); } catch (e) {} tvipAktiv = false; }
+  }
+  function sukses(cfare) {
+    if (rezultatet[prova] !== "OK") { rezultatet[prova] = "OK"; permbledhja(); }
+    gjendja("✔ " + prova + " LUAN · " + cfare);
+  }
+
+  ["loadstart", "loadedmetadata", "playing", "waiting", "stalled", "error", "ended"].forEach(function (ev) {
+    vd.addEventListener(ev, function () {
+      if (!prova || tvipAktiv) return;
+      var s = Math.round((Date.now() - t0) / 100) / 10;
+      if (ev === "error") {
+        var c = vd.error ? vd.error.code : "?", m = vd.error && vd.error.message ? " " + vd.error.message : "";
+        rezultatet[prova] = "GABIM" + c; permbledhja();
+        gjendja("✘ " + prova + " GABIM kodi " + c + m + " (pas " + s + " s)");
+      } else if (ev === "playing" || ev === "loadedmetadata") {
+        gjendja(prova + ": " + ev + " · " + (vd.videoWidth ? vd.videoWidth + "×" + vd.videoHeight : "pa figurë ende") + " · " + s + " s");
+      } else if (ev === "ended" && prova === "mp4") {
+        try { vd.currentTime = 0; vd.play(); } catch (e) {}
+      } else {
+        gjendja(prova + ": " + ev + " · " + s + " s");
+      }
+    });
+  });
+
+  function nisVideo(lloji) {
+    ndalo();
+    prova = lloji; t0 = Date.now();
+    if (lloji === "tvip") return nisTvip();
+    gjendja(lloji + ": duke hapur…");
+    try {
+      vd.src = VIDEOT[lloji];
+      var r = vd.play();
+      if (r && r["catch"]) r["catch"](function (e) { gjendja(lloji + ": play() u refuzua: " + (e && e.message)); });
+    } catch (e) { gjendja(lloji + ": gabim " + e.message); }
+    var t = 0;
+    kohematesi = setInterval(function () {
+      t++;
+      if (vd.currentTime > 1.5 && vd.videoWidth > 0) sukses(vd.videoWidth + "×" + vd.videoHeight + " · koha " + Math.round(vd.currentTime) + " s");
+      if (t >= 25 && rezultatet[prova] !== "OK" && !/^GABIM/.test(rezultatet[prova] || "")) {
+        rezultatet[prova] = "S'NISI"; permbledhja();
+        gjendja("✘ " + prova + " s'nisi për 25 s (gjendja " + vd.readyState + "/" + vd.networkState + ")");
+        clearInterval(kohematesi); kohematesi = null;
+      }
+    }, 1000);
+  }
+
+  // Lojtari i sistemit TVIP (vetëm në modalitetin API "tvip"): videoja del në dritaren e kutisë së zezë
+  function nisTvip() {
+    var P = window.TvipPlayer;
+    if (!P || typeof P.playUrl !== "function") { rezultatet.tvip = "MUNGON"; permbledhja(); gjendja("TvipPlayer mungon (normale në modalitetin blink)."); return; }
+    tvipAktiv = true;
+    try {
+      var r = $("kutiaVideo").getBoundingClientRect(), d = window.devicePixelRatio || 1;
+      if (typeof P.setVideoWindow === "function") P.setVideoWindow(Math.round(r.left * d), Math.round(r.top * d), Math.round(r.width * d), Math.round(r.height * d), true);
+      P.playUrl(VIDEOT.live, "live");
+      gjendja("tvip: playUrl u thirr…");
+    } catch (e) { rezultatet.tvip = "GABIM"; permbledhja(); gjendja("tvip: gabim " + e.message); return; }
+    var t = 0, poz0 = -1;
+    kohematesi = setInterval(function () {
+      t++;
+      var poz = -1; try { poz = P.getCurrentPositionMsec(); } catch (e) {}
+      if (poz0 >= 0 && poz > poz0) sukses("pozicioni " + Math.round(poz / 1000) + " s");
+      else gjendja("tvip: pozicioni " + poz + " · " + t + " s");
+      poz0 = poz;
+      if (t >= 25 && rezultatet.tvip !== "OK") { rezultatet.tvip = "S'NISI"; permbledhja(); clearInterval(kohematesi); kohematesi = null; }
+    }, 1000);
+  }
+
+  function veproj() {
+    var v = btns[fokus].getAttribute("data-v");
+    if (v === "ndalo") { ndalo(); prova = ""; gjendja("U ndal."); return; }
+    if (v === "dil") { ndalo(); try { window.close(); } catch (e) {} setTimeout(function () { gjendja("window.close() s'mbylli faqen – përdor butonin Home/Menu."); }, 800); return; }
+    nisVideo(v);
+  }
+
+  document.addEventListener("keydown", function (e) {
+    var k = e.keyCode || e.which || 0;
+    shenoTastin("tast", k, emriTastit(e));
+    permbledhja();
+    if (k === 37 || k === 38) vendosFokus(fokus - 1);
+    else if (k === 39 || k === 40) vendosFokus(fokus + 1);
+    else if (k === 13) veproj();
+    // asnjë tast s'i lihet sistemit (që Back të mos e mbyllë faqen); daljet: butoni "✕ Dil" ose Home/Menu i kutisë
+    try { e.preventDefault(); } catch (x) {}
+  }, true);
+
+  for (var b = 0; b < btns.length; b++) (function (i) {
+    btns[i].addEventListener("click", function () { vendosFokus(i); veproj(); });
+  })(b);
+
+  window.onerror = function (m, u, l) { gjendja("Gabim JS: " + m + " (rr. " + l + ")"); };
+  permbledhja();
+})();
+</script>
+</body>
+</html>
