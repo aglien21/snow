@@ -17,7 +17,7 @@
    Burimi: Xtream Codes (host + përdorues + fjalëkalim) ose link M3U.
    Videoja luhet me AVPlay të televizorit: luan .ts, HLS, MPEG-2, HEVC, MP2… direkt nga ofruesi. */
 "use strict";
-var VERSIONI = "1.7.3";
+var VERSIONI = "1.7.5";
 (function () {   // TV i vjetër pa "gap" te flex (Chromium < 84, p.sh. Samsung 2020): app.css përdor margin në vend të tij
   try {
     var d = document.createElement("div");
@@ -264,7 +264,8 @@ function epgNorm(emri) {   // "AL: Top Channel HD" == "Top Channel" == "top.chan
 }
 // i njëjti kanal me emër tjetër te ofruesi dhe te guida (si te paneli)
 var EPG_ALIAS = { skycalcio: "skysportcalcio", skysportseriea: "skysportcalcio", skysportfootball: "skysportcalcio", skysportcalcio1: "skysportcalcio",
-  skysport1: "skysportuno", skysport24news: "skysport24", skysportnews: "skysport24", skysportbasket: "skysportnba" };
+  skysport1: "skysportuno", skysport24news: "skysport24", skysportnews: "skysport24", skysportbasket: "skysportnba",
+  tringnovelas: "novelas", tringclassic: "tringclassics" };
 function epgAlias(e) {
   if (EPG_ALIAS[e]) return EPG_ALIAS[e];
   var m = /^skycalcio([1-9]|1[01])$/.exec(e);   // Sky Calcio 1…11 = Sky Sport 251…261
@@ -546,7 +547,7 @@ function aplikoGuiden() {
   if (F.ekran === "cil") vizatoCil();
 }
 function nisGuiden(detyro) {
-  var l = S.listat[S.aktive], urls = linqetEpg(l), celes = celesListe() + "|" + urls.join(" ") + "|e2", nr = ++GX.nr;
+  var l = S.listat[S.aktive], urls = linqetEpg(l), celes = celesListe() + "|" + urls.join(" ") + "|e3", nr = ++GX.nr;
   GX.prog = {}; GX.harta = {}; GX.n = 0; GX.urls = urls; GX.gabim = ""; GX.duke = false; GX.koha = 0;
   if (!urls.length) { GX.gjendja = ""; return; }
   var c = LS.get("xmltv", null);
@@ -678,6 +679,7 @@ function pyetPanelin() {
     aplikoListatPanelit(d.listat || []);
     (d.mesazhe || []).forEach(shtoMesazh);
     merrNdeshjet(d);
+    merrPaketat(d); merrLogot(d);
     if (F.ekran === "cil") vizatoCil();
   };
   x.onerror = x.ontimeout = function () { PN.duke = false; PN.gabimi = T("paneli s'u arrit"); };
@@ -1079,6 +1081,7 @@ function kategoriteLive() {
   rez.push({ id: "fav", emri: T("⭐ Të preferuarat"), n: S.live.filter(function (x) { return S.fav[x.k]; }).length });
   rez.push({ id: "hist", emri: T("🕘 Të fundit") });
   var ng = ngjarjetLive(); if (ng) rez.push({ id: "nd", emri: T("🏆 Eventet sportive"), n: ng.length });
+  ["t", "d"].forEach(function (p) { var l = PK[p] ? kanaletPaketes(p) : []; if (l.length) rez.push({ id: "pk_" + p, emri: PK_EMRAT[p], n: l.length }); });
   S.liveKat.forEach(function (k) { if (n[k.id]) rez.push({ id: k.id, emri: k.emri, n: n[k.id] }); });
   var pa = S.live.filter(function (x) { return !S.liveKat.some(function (k) { return k.id === x.kat; }); });
   if (pa.length && S.liveKat.length) rez.push({ id: "_", emri: T("Të tjera"), n: pa.length });
@@ -1088,6 +1091,7 @@ function kanaletE(katId) {
   if (katId === "*") return S.live;
   if (katId === "fav") return S.live.filter(function (x) { return S.fav[x.k]; });
   if (katId === "nd") return ngjarjetLive() || [];
+  if (katId === "pk_t" || katId === "pk_d") return kanaletPaketes(katId.slice(3));
   if (katId === "hist") { var m = {}; S.live.forEach(function (x) { m[x.k] = x; }); return S.hist.map(function (k) { return m[k]; }).filter(Boolean); }
   if (katId === "_") return S.live.filter(function (x) { return !S.liveKat.some(function (k) { return k.id === x.kat; }); });
   return S.live.filter(function (x) { return x.kat === katId; });
@@ -1623,6 +1627,77 @@ function rifreskoKatLive() {
   if (UI.lKat.i >= r.length) UI.lKat.i = Math.max(0, r.length - 1);
   UI.lKat.vizato();
 }
+// ---- 📡 kategoritë „Tring” / „DigitAlb” (vetëm te klientët që zgjedh administratori) dhe 🖼 logot nga paneli
+// Paneli dërgon emrat e kanaleve të çdo pakete (si epgNorm: „AL| Tring Sport 1 FHD” = „Tring Sport 1 HD”). Kategoritë e ofruesit
+// s'preken; kur një kanal është disa herë (HD, FHD, backup…), del vetëm një herë. Logot: ato të administratorit zëvendësojnë
+// logon e ofruesit; ato nga guida plotësojnë vetëm kanalet pa logo.
+var PK = { t: null, d: null, rev: 0, cache: {}, logo: LS.get("logot", null), logoDuke: false };
+var PK_EMRAT = { t: "📡 Tring", d: "📡 DigitAlb" };
+function pkBashkesi(l) { if (!Array.isArray(l)) return null; var s = {}; l.forEach(function (c) { s[String(c)] = 1; }); return s; }
+function pkVendos(p) { PK.t = p ? pkBashkesi(p.t) : null; PK.d = p ? pkBashkesi(p.d) : null; PK.rev++; PK.cache = {}; }
+pkVendos(LS.get("paketat", null));
+function merrPaketat(d) {
+  if (!d || !d.hasOwnProperty("paketat")) return;   // paneli i vjetër
+  var p = d.paketat && typeof d.paketat === "object" ? d.paketat : null;
+  if (JSON.stringify(p) === JSON.stringify(LS.get("paketat", null))) return;
+  LS.set("paketat", p); pkVendos(p);
+  rifreskoKatLive();
+}
+function pkCelesi(it) { return it.nk !== undefined ? it.nk : (it.nk = epgNorm(it.emri)); }
+function pkPiket(e) {   // cili nga kopjet e të njëjtit kanal mbahet: HD > FHD > pa shenjë > SD > 4K > backup
+  e = String(e || "").toUpperCase();
+  if (/\b(BACKUP|BK|RAW)\b|\(B\)/.test(e)) return 0;
+  if (/\b(UHD|4K)\b/.test(e)) return 1;
+  if (/\bSD\b/.test(e)) return 2;
+  if (/\b(FHD|1080P?)\b/.test(e)) return 4;
+  if (/\b(HD|720P?)\b/.test(e)) return 5;
+  return 3;
+}
+function kanaletPaketes(p) {
+  var set = PK[p]; if (!set || !S.live) return [];
+  var c = PK.cache[p]; if (c && c.ref === S.live && c.rev === PK.rev) return c.l;
+  var me = {}, rendi = [];
+  S.live.forEach(function (it) {
+    var k = pkCelesi(it); if (!k || !set[k]) return;
+    var x = me[k], pp = pkPiket(it.emri);
+    if (!x) { me[k] = { it: it, p: pp }; rendi.push(k); } else if (pp > x.p) { x.it = it; x.p = pp; }
+  });
+  var l = rendi.map(function (k) { return me[k].it; });
+  PK.cache[p] = { ref: S.live, rev: PK.rev, l: l };
+  return l;
+}
+function pkBaza() { return String(PANELI || "").replace(/api\/pajisja$/, ""); }
+function aplikoLogot() {
+  if (!S.live) return;
+  var z = (PK.logo && PK.logo.z) || {}, a = (PK.logo && PK.logo.a) || {}, b = pkBaza();
+  S.live.forEach(function (it) {
+    if (it.lo === undefined) it.lo = it.logo || "";   // logoja e ofruesit
+    var k = pkCelesi(it), u = z[k];
+    it.logo = (u ? (/^logot\//.test(u) ? b + u : u) : "") || it.lo || a[k] || "";
+  });
+}
+function merrLogot(d) {
+  if (!d || !d.hasOwnProperty("logot_v")) return;   // paneli i vjetër
+  var v = d.logot_v || "";
+  if (v === ((PK.logo && PK.logo.v) || "")) return;
+  if (!v) { PK.logo = null; LS.set("logot", null); aplikoLogot(); ND.ng = null; rivizato(); return; }
+  if (PK.logoDuke) return;
+  PK.logoDuke = true;
+  var x = new XMLHttpRequest();
+  x.open("GET", pkBaza() + "api/logot", true);
+  x.timeout = 30000;
+  x.onload = function () {
+    PK.logoDuke = false;
+    var r = null; try { r = JSON.parse(x.responseText); } catch (e) {}
+    if (!r || x.status !== 200) return;
+    PK.logo = { v: r.v || v, z: r.z || {}, a: r.a || {} };
+    LS.set("logot", PK.logo);
+    aplikoLogot(); ND.ng = null; rivizato();
+    if (UI.lKan && F.ekran === "live") infoKanali(UI.lKan.tani());
+  };
+  x.onerror = x.ontimeout = function () { PK.logoDuke = false; };
+  x.send();
+}
 function hartoNdeshjet() {   // ndeshja (indeksi) -> kanali i parë i listës së klientit, sipas ID-së së guidës ose emrit
   if (ND.kan && ND.ref === S.live) return ND.kan;
   var kan = {}, ids = {}, emrat = {};
@@ -1868,6 +1943,7 @@ function ngarkoListen() {
       D.serKat = D.serKat.filter(function (k) { return !c[k.id]; }); D.ser = D.ser.filter(function (x) { return !c[x.kat]; });
     }
     for (var k in D) S[k] = D[k];
+    aplikoLogot();
     $("#fillimi").classList.add("fsh");
     nisUI();
     nisGuiden(false);
