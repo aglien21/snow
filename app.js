@@ -17,7 +17,7 @@
    Burimi: Xtream Codes (host + përdorues + fjalëkalim) ose link M3U.
    Videoja luhet me AVPlay të televizorit: luan .ts, HLS, MPEG-2, HEVC, MP2… direkt nga ofruesi. */
 "use strict";
-var VERSIONI = "1.7.7";
+var VERSIONI = "1.7.8";
 (function () {   // TV i vjetër pa "gap" te flex (Chromium < 84, p.sh. Samsung 2020): app.css përdor margin në vend të tij
   try {
     var d = document.createElement("div");
@@ -1186,7 +1186,7 @@ function osdLive(shfaq) {
   if (!S.luan || S.luan.lloji !== "live") return;
   var it = S.luan.it, e = epgPer(it);
   $("#o-num").textContent = it.num; $("#o-num").style.display = "";
-  $("#o-logo").outerHTML = logoHtml(it.emri, it.logo, "o-logo").replace('class="o-logo"', 'id="o-logo" class="o-logo"');
+  $("#o-logo").outerHTML = logoHtml(it.emri, it.logo, "o-logo").replace('class="o-logo', 'id="o-logo" class="o-logo');
   $("#o-emri").textContent = it.emri + (S.fav[it.k] ? "  ⭐" : "");
   $("#o-tani").textContent = e && e.tani ? ora(e.tani.fil) + " – " + ora(e.tani.mb) + "   " + e.tani.tit : "";
   $("#o-prog").style.width = e && e.tani ? Math.min(100, (tani() - e.tani.fil) / (e.tani.mb - e.tani.fil) * 100) + "%" : "0";
@@ -1199,7 +1199,7 @@ function osdVod(shfaq, cak) {
   if (!S.luan) return;
   var d = L.gjatesia(), k = cak != null ? cak : L.kohaMs;
   $("#o-num").style.display = "none";
-  $("#o-logo").outerHTML = logoHtml(S.luan.it.emri, S.luan.it.logo, "o-logo").replace('class="o-logo"', 'id="o-logo" class="o-logo"');
+  $("#o-logo").outerHTML = logoHtml(S.luan.it.emri, S.luan.it.logo, "o-logo").replace('class="o-logo', 'id="o-logo" class="o-logo');
   $("#o-emri").textContent = S.luan.titull || S.luan.it.emri;
   $("#o-tani").textContent = (L.pauze ? "⏸  " : "▶  ") + kohe(k) + (d ? "  /  " + kohe(d) : "") + (cak != null ? "   ⏩" : "");
   $("#o-prog").style.width = d ? Math.min(100, k / d * 100) + "%" : "0";
@@ -1485,7 +1485,7 @@ function vizatoGuidenPlote() {
   if (!GP) return;
   var it = GP.it, pp = programetPlote(it), l = pp ? pp.l : [], t = tani();
   GP.n = l.length; GP.i = Math.max(0, Math.min(GP.i, l.length - 1));
-  $("#gp-logo").outerHTML = logoHtml(it.emri, it.logo, "o-logo").replace('class="o-logo"', 'id="gp-logo" class="o-logo"');
+  $("#gp-logo").outerHTML = logoHtml(it.emri, it.logo, "o-logo").replace('class="o-logo', 'id="gp-logo" class="o-logo');
   $("#gp-emri").textContent = it.num + ". " + it.emri;
   $("#gp-burimi").textContent = pp ? pp.burim + " · " + l.length + (l.length === 1 ? T(" program") : T(" programe")) : "";
   $("#gp-ora").textContent = oraTani();
