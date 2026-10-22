@@ -73,6 +73,7 @@ body.plote #ui { display: none; }
 .kat .rresht { height: 64px; }
 .kat .rresht .emri { font-size: 26px; font-weight: 500; }
 .kat-logo { max-height: 38px; max-width: 120px; vertical-align: middle; margin: -4px 12px 0 0; }
+.kat-logo.vetem { max-height: 46px; max-width: 230px; margin-right: 0; }
 .rresht.fokus .kat-logo { background: rgba(0,0,0,.45); border-radius: 6px; padding: 2px 5px; margin-left: -5px; margin-right: 7px; }
 .shirit-epg { height: 5px; background: rgba(255, 255, 255, 0.145); border-radius: 3px; margin-top: 6px; overflow: hidden; }
 .shirit-epg i { display: block; height: 100%; background: #33b5f0; background: var(--theks); }

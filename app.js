@@ -17,7 +17,7 @@
    Burimi: Xtream Codes (host + përdorues + fjalëkalim) ose link M3U.
    Videoja luhet me AVPlay të televizorit: luan .ts, HLS, MPEG-2, HEVC, MP2… direkt nga ofruesi. */
 "use strict";
-var VERSIONI = "1.7.9";
+var VERSIONI = "1.8.0";
 (function () {   // TV i vjetër pa "gap" te flex (Chromium < 84, p.sh. Samsung 2020): app.css përdor margin në vend të tij
   try {
     var d = document.createElement("div");
@@ -679,7 +679,7 @@ function pyetPanelin() {
     aplikoListatPanelit(d.listat || []);
     (d.mesazhe || []).forEach(shtoMesazh);
     merrNdeshjet(d);
-    merrPaketat(d); merrLogot(d);
+    merrKat(d); merrPaketat(d); merrLogot(d);
     if (F.ekran === "cil") vizatoCil();
   };
   x.onerror = x.ontimeout = function () { PN.duke = false; PN.gabimi = T("paneli s'u arrit"); };
@@ -860,10 +860,12 @@ function rreshtKanal(it, i, fokus, zgj) {
     '<div class="tekst"><div class="emri">' + esc(it.emri) + "</div>" + dyte + "</div>" +
     (luan ? '<div class="live-shenje">● LIVE</div>' : "") + (S.fav[it.k] ? '<div class="yll">★</div>' : "") + "</div>";
 }
+var KAT_LOGO = { "*": "++kall", fav: "++kfav", hist: "++khist", nd: "++knd" };
 function rreshtKat(k, i, fokus, zgj) {
-  var lg = k.id === "pk_t" || k.id === "pk_d" ? pkLogoKat(k.id.slice(3)) : "";   // 📡 → logoja nga paneli (kur ka)
-  var em = lg ? '<img class="kat-logo" src="' + esc(lg) + '" onerror="this.parentNode.replaceChild(document.createTextNode(\'\ud83d\udce1 \'),this)">' +
-    esc(k.emri.replace(/^[^\wÀ-ž]+\s*/, "")) : esc(k.emri);
+  var lg = KAT_LOGO[k.id] ? pkLogoUrl(KAT_LOGO[k.id]) : /^pk_/.test(k.id) ? pkLogoKat(k.id.slice(3)) : "";   // emoji → logoja nga paneli (kur ka)
+  var vetem = lg && katUi(k.id).pe;   // „vetëm logo”: pa emër (kur logoja s'hapet, del emri)
+  var em = lg ? '<img class="kat-logo' + (vetem ? " vetem" : "") + '" src="' + esc(lg) + '" data-e="' + esc(k.emri) + '" onerror="this.parentNode.textContent=this.getAttribute(\'data-e\')">' +
+    (vetem ? "" : esc(k.emri.replace(/^[^\wÀ-ž]+\s*/, ""))) : esc(k.emri);
   return '<div class="rresht' + (fokus ? " fokus" : "") + (zgj ? " zgjedhur" : "") + '"><div class="tekst"><div class="emri">' + em +
     "</div></div>" + (k.n != null ? '<div class="numer-kat">' + k.n + "</div>" : "") + "</div>";
 }
@@ -1085,11 +1087,11 @@ function rivizato() {
 function kategoriteLive() {
   var n = {}, rez = [];
   S.live.forEach(function (x) { n[x.kat] = (n[x.kat] || 0) + 1; });
-  rez.push({ id: "*", emri: T("📺 Të gjitha"), n: S.live.length });
-  rez.push({ id: "fav", emri: T("⭐ Të preferuarat"), n: S.live.filter(function (x) { return S.fav[x.k]; }).length });
-  rez.push({ id: "hist", emri: T("🕘 Të fundit") });
-  var ng = ngjarjetLive(); if (ng) rez.push({ id: "nd", emri: T("🏆 Eventet sportive"), n: ng.length });
-  ["t", "d"].forEach(function (p) { var l = PK[p] ? kanaletPaketes(p) : []; if (l.length) rez.push({ id: "pk_" + p, emri: PK_EMRAT[p], n: l.length }); });
+  rez.push({ id: "*", emri: katEmri("*", T("📺 Të gjitha")), n: S.live.length });
+  rez.push({ id: "fav", emri: katEmri("fav", T("⭐ Të preferuarat")), n: S.live.filter(function (x) { return S.fav[x.k]; }).length });
+  rez.push({ id: "hist", emri: katEmri("hist", T("🕘 Të fundit")) });
+  var ng = ngjarjetLive(); if (ng) rez.push({ id: "nd", emri: katEmri("nd", T("🏆 Eventet sportive")), n: ng.length });
+  pkIdet().forEach(function (p) { var l = PK[p] ? kanaletPaketes(p) : []; if (l.length) rez.push({ id: "pk_" + p, emri: katEmri("pk_" + p, PK_EMRAT[p] || "📁"), n: l.length }); });
   S.liveKat.forEach(function (k) { if (n[k.id]) rez.push({ id: k.id, emri: k.emri, n: n[k.id] }); });
   var pa = S.live.filter(function (x) { return !S.liveKat.some(function (k) { return k.id === x.kat; }); });
   if (pa.length && S.liveKat.length) rez.push({ id: "_", emri: T("Të tjera"), n: pa.length });
@@ -1099,7 +1101,7 @@ function kanaletE(katId) {
   if (katId === "*") return S.live;
   if (katId === "fav") return S.live.filter(function (x) { return S.fav[x.k]; });
   if (katId === "nd") return ngjarjetLive() || [];
-  if (katId === "pk_t" || katId === "pk_d") return kanaletPaketes(katId.slice(3));
+  if (/^pk_/.test(katId)) return kanaletPaketes(katId.slice(3));
   if (katId === "hist") { var m = {}; S.live.forEach(function (x) { m[x.k] = x; }); return S.hist.map(function (k) { return m[k]; }).filter(Boolean); }
   if (katId === "_") return S.live.filter(function (x) { return !S.liveKat.some(function (k) { return k.id === x.kat; }); });
   return S.live.filter(function (x) { return x.kat === katId; });
@@ -1642,7 +1644,29 @@ function rifreskoKatLive() {
 var PK = { t: null, d: null, rev: 0, cache: {}, logo: LS.get("logot", null), logoDuke: false };
 var PK_EMRAT = { t: "📡 Tring", d: "📡 DigitAlb" };
 function pkBashkesi(l) { if (!Array.isArray(l)) return null; var s = {}; l.forEach(function (c) { s[String(c)] = 1; }); return s; }
-function pkVendos(p) { PK.t = p ? pkBashkesi(p.t) : null; PK.d = p ? pkBashkesi(p.d) : null; PK.rev++; PK.cache = {}; }
+function pkVendos(p) {   // t, d dhe kategoritë e reja (c1, c2…)
+  (PK.ids || []).forEach(function (k) { PK[k] = null; });
+  PK.t = PK.d = null; PK.ids = [];
+  if (p) for (var k in p) if (p.hasOwnProperty(k) && /^(t|d|c\d{1,3})$/.test(k)) { PK[k] = pkBashkesi(p[k]); PK.ids.push(k); }
+  PK.rev++; PK.cache = {};
+}
+// ---- 🗂 kategoritë nga paneli: emri, „vetëm logo”, fjalët kyçe dhe kategoritë e reja (radha)
+var KATK = LS.get("kat", null) || { ui: {}, r: [] };
+function katUi(id) { return (KATK.ui && KATK.ui[id]) || {}; }
+function katEmri(id, def) { var e = katUi(id).e; return e ? String(e) : def; }
+function pkIdet() { return ["t", "d"].concat((KATK.r || []).filter(function (x) { return /^c\d{1,3}$/.test(x); })); }
+function merrKat(d) {
+  if (!d || !d.hasOwnProperty("kat")) return;   // paneli i vjetër
+  var k = d.kat && typeof d.kat === "object" ? d.kat : { ui: {}, r: [] };
+  if (JSON.stringify(k) === JSON.stringify(LS.get("kat", null) || { ui: {}, r: [] })) return;
+  LS.set("kat", k); KATK = { ui: k.ui || {}, r: k.r || [] }; PK.rev++; PK.cache = {};
+  rifreskoKatLive();
+}
+function pkPaThekse(t) { return String(t || "").toLowerCase().replace(/ë/g, "e").replace(/ç/g, "c"); }
+function pkFjalet(p) {   // fjalët kyçe të paketës (me presje) → listë
+  var u = katUi("pk_" + p);
+  return { fj: String(u.fj || "").split(",").map(function (x) { return pkPaThekse(x).replace(/^\s+|\s+$/g, ""); }).filter(Boolean), jo: pkBashkesi(u.jo) || {} };
+}
 pkVendos(LS.get("paketat", null));
 function merrPaketat(d) {
   if (!d || !d.hasOwnProperty("paketat")) return;   // paneli i vjetër
@@ -1664,9 +1688,15 @@ function pkPiket(e) {   // cili nga kopjet e të njëjtit kanal mbahet: HD > FHD
 function kanaletPaketes(p) {
   var set = PK[p]; if (!set || !S.live) return [];
   var c = PK.cache[p]; if (c && c.ref === S.live && c.rev === PK.rev) return c.l;
-  var me = {}, rendi = [];
+  var me = {}, rendi = [], f = pkFjalet(p);
   S.live.forEach(function (it) {
-    var k = pkCelesi(it); if (!k || !set[k]) return;
+    var k = pkCelesi(it); if (!k) return;
+    if (!set[k]) {   // jo me dorë: hyn vetëm kur emri ka një nga fjalët kyçe (dhe administratori s'e ka hequr)
+      if (!f.fj.length || f.jo[k]) return;
+      var e = pkPaThekse(it.emri), ok = false;
+      for (var i = 0; i < f.fj.length && !ok; i++) ok = e.indexOf(f.fj[i]) >= 0;
+      if (!ok) return;
+    }
     var x = me[k], pp = pkPiket(it.emri);
     if (!x) { me[k] = { it: it, p: pp }; rendi.push(k); } else if (pp > x.p) { x.it = it; x.p = pp; }
   });
@@ -1675,10 +1705,11 @@ function kanaletPaketes(p) {
   return l;
 }
 function pkBaza() { return String(PANELI || "").replace(/api\/pajisja$/, ""); }
-function pkLogoKat(p) {   // logoja e kategorisë „Tring” / „DigitAlb” që ngarkon administratori (çelësi „++pkt” / „++pkd”)
-  var z = (PK.logo && PK.logo.z) || {}, u = z["++pk" + p];
+function pkLogoUrl(c) {   // logo e administratorit sipas çelësit („++pkt”, „++kfav”…)
+  var z = (PK.logo && PK.logo.z) || {}, u = z[c];
   return u ? (/^logot\//.test(u) ? pkBaza() + u : String(u)) : "";
 }
+function pkLogoKat(p) { return pkLogoUrl("++pk" + p); }   // logoja e kategorisë së paketës (Tring, DigitAlb, të rejat)
 function aplikoLogot() {
   if (!S.live) return;
   var z = (PK.logo && PK.logo.z) || {}, a = (PK.logo && PK.logo.a) || {}, b = pkBaza();
