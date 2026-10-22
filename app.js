@@ -17,7 +17,7 @@
    Burimi: Xtream Codes (host + përdorues + fjalëkalim) ose link M3U.
    Videoja luhet me AVPlay të televizorit: luan .ts, HLS, MPEG-2, HEVC, MP2… direkt nga ofruesi. */
 "use strict";
-var VERSIONI = "1.7.6";
+var VERSIONI = "1.7.7";
 (function () {   // TV i vjetër pa "gap" te flex (Chromium < 84, p.sh. Samsung 2020): app.css përdor margin në vend të tij
   try {
     var d = document.createElement("div");
@@ -831,8 +831,11 @@ function posterUrl(u) {   // TMDB: madhësi e vogël në vend të "original" (m�
 var LOGO_RES = {};   // logoja -> logoja rezervë (kur e para s'hapet: guida -> ofruesi)
 function logoHtml(emri, src, klasa) {
   if (klasa === "poster") src = posterUrl(src);
-  var ini = esc(inicialet(emri)), res = src && LOGO_RES[src];
-  return '<div class="' + klasa + '" style="background:' + ngjyra(emri) + '">' +
+  var ini = esc(inicialet(emri)), res = src && LOGO_RES[src], ng = ngjyra(emri);
+  if (src && klasa !== "poster")   // logoja: pa ngjyrë prapa (e tejdukshme); ngjyra vetëm për inicialet kur s'ka logo
+    return '<div class="' + klasa + ' me-logo"><img src="' + esc(src) + '"' + (res ? ' data-r="' + esc(res) + '"' : "") +
+      ' onerror="var r=this.getAttribute(\'data-r\');if(r){this.removeAttribute(\'data-r\');this.src=r}else{var p=this.parentNode;p.className=p.className.replace(\' me-logo\',\'\');p.style.background=\'' + ng + '\';p.textContent=\'' + ini + '\'}"></div>';
+  return '<div class="' + klasa + '" style="background:' + ng + '">' +
     (src ? '<img src="' + esc(src) + '"' + (res ? ' data-r="' + esc(res) + '"' : "") +
       ' onerror="var r=this.getAttribute(\'data-r\');if(r){this.removeAttribute(\'data-r\');this.src=r}else this.parentNode.textContent=\'' + ini + '\'">' : ini) + "</div>";
 }
