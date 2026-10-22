@@ -17,7 +17,7 @@
    Burimi: Xtream Codes (host + përdorues + fjalëkalim) ose link M3U.
    Videoja luhet me AVPlay të televizorit: luan .ts, HLS, MPEG-2, HEVC, MP2… direkt nga ofruesi. */
 "use strict";
-var VERSIONI = "1.7.8";
+var VERSIONI = "1.7.9";
 (function () {   // TV i vjetër pa "gap" te flex (Chromium < 84, p.sh. Samsung 2020): app.css përdor margin në vend të tij
   try {
     var d = document.createElement("div");
@@ -861,7 +861,10 @@ function rreshtKanal(it, i, fokus, zgj) {
     (luan ? '<div class="live-shenje">● LIVE</div>' : "") + (S.fav[it.k] ? '<div class="yll">★</div>' : "") + "</div>";
 }
 function rreshtKat(k, i, fokus, zgj) {
-  return '<div class="rresht' + (fokus ? " fokus" : "") + (zgj ? " zgjedhur" : "") + '"><div class="tekst"><div class="emri">' + esc(k.emri) +
+  var lg = k.id === "pk_t" || k.id === "pk_d" ? pkLogoKat(k.id.slice(3)) : "";   // 📡 → logoja nga paneli (kur ka)
+  var em = lg ? '<img class="kat-logo" src="' + esc(lg) + '" onerror="this.parentNode.replaceChild(document.createTextNode(\'\ud83d\udce1 \'),this)">' +
+    esc(k.emri.replace(/^[^\wÀ-ž]+\s*/, "")) : esc(k.emri);
+  return '<div class="rresht' + (fokus ? " fokus" : "") + (zgj ? " zgjedhur" : "") + '"><div class="tekst"><div class="emri">' + em +
     "</div></div>" + (k.n != null ? '<div class="numer-kat">' + k.n + "</div>" : "") + "</div>";
 }
 function karte(it) {
@@ -1672,6 +1675,10 @@ function kanaletPaketes(p) {
   return l;
 }
 function pkBaza() { return String(PANELI || "").replace(/api\/pajisja$/, ""); }
+function pkLogoKat(p) {   // logoja e kategorisë „Tring” / „DigitAlb” që ngarkon administratori (çelësi „++pkt” / „++pkd”)
+  var z = (PK.logo && PK.logo.z) || {}, u = z["++pk" + p];
+  return u ? (/^logot\//.test(u) ? pkBaza() + u : String(u)) : "";
+}
 function aplikoLogot() {
   if (!S.live) return;
   var z = (PK.logo && PK.logo.z) || {}, a = (PK.logo && PK.logo.a) || {}, b = pkBaza();
@@ -1689,7 +1696,7 @@ function merrLogot(d) {
   if (!d || !d.hasOwnProperty("logot_v")) return;   // paneli i vjetër
   var v = d.logot_v || "";
   if (v === ((PK.logo && PK.logo.v) || "")) return;
-  if (!v) { PK.logo = null; LS.set("logot", null); aplikoLogot(); ND.ng = null; rivizato(); return; }
+  if (!v) { PK.logo = null; LS.set("logot", null); aplikoLogot(); ND.ng = null; rivizato(); if (UI.lKat) UI.lKat.vizato(); return; }
   if (PK.logoDuke) return;
   PK.logoDuke = true;
   var x = new XMLHttpRequest();
@@ -1701,7 +1708,7 @@ function merrLogot(d) {
     if (!r || x.status !== 200) return;
     PK.logo = { v: r.v || v, z: r.z || {}, a: r.a || {} };
     LS.set("logot", PK.logo);
-    aplikoLogot(); ND.ng = null; rivizato();
+    aplikoLogot(); ND.ng = null; rivizato(); if (UI.lKat) UI.lKat.vizato();   // edhe logot e kategorive (📡)
     if (UI.lKan && F.ekran === "live") infoKanali(UI.lKan.tani());
   };
   x.onerror = x.ontimeout = function () { PK.logoDuke = false; };
