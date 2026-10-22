@@ -17,7 +17,7 @@
    Burimi: Xtream Codes (host + përdorues + fjalëkalim) ose link M3U.
    Videoja luhet me AVPlay të televizorit: luan .ts, HLS, MPEG-2, HEVC, MP2… direkt nga ofruesi. */
 "use strict";
-var VERSIONI = "1.7.5";
+var VERSIONI = "1.7.6";
 (function () {   // TV i vjetër pa "gap" te flex (Chromium < 84, p.sh. Samsung 2020): app.css përdor margin në vend të tij
   try {
     var d = document.createElement("div");
@@ -828,11 +828,13 @@ Rrjet.prototype.vizato = function () {
 function posterUrl(u) {   // TMDB: madhësi e vogël në vend të "original" (më pak memorie në TV)
   return u ? String(u).replace(/(image\.tmdb\.org\/t\/p\/)(original|w\d+(?:_and_h\d+[^\/]*)?)\//i, "$1w342/") : u;
 }
+var LOGO_RES = {};   // logoja -> logoja rezervë (kur e para s'hapet: guida -> ofruesi)
 function logoHtml(emri, src, klasa) {
   if (klasa === "poster") src = posterUrl(src);
-  var ini = esc(inicialet(emri));
+  var ini = esc(inicialet(emri)), res = src && LOGO_RES[src];
   return '<div class="' + klasa + '" style="background:' + ngjyra(emri) + '">' +
-    (src ? '<img src="' + esc(src) + '" onerror="this.parentNode.textContent=\'' + ini + '\'">' : ini) + "</div>";
+    (src ? '<img src="' + esc(src) + '"' + (res ? ' data-r="' + esc(res) + '"' : "") +
+      ' onerror="var r=this.getAttribute(\'data-r\');if(r){this.removeAttribute(\'data-r\');this.src=r}else this.parentNode.textContent=\'' + ini + '\'">' : ini) + "</div>";
 }
 function epgPer(it) {
   var t = tani(), l = null;
@@ -1629,8 +1631,8 @@ function rifreskoKatLive() {
 }
 // ---- 📡 kategoritë „Tring” / „DigitAlb” (vetëm te klientët që zgjedh administratori) dhe 🖼 logot nga paneli
 // Paneli dërgon emrat e kanaleve të çdo pakete (si epgNorm: „AL| Tring Sport 1 FHD” = „Tring Sport 1 HD”). Kategoritë e ofruesit
-// s'preken; kur një kanal është disa herë (HD, FHD, backup…), del vetëm një herë. Logot: ato të administratorit zëvendësojnë
-// logon e ofruesit; ato nga guida plotësojnë vetëm kanalet pa logo.
+// s'preken; kur një kanal është disa herë (HD, FHD, backup…), del vetëm një herë.
+// Logot: e administratorit → e guidës (kur ekziston) → e ofruesit → inicialet; kur njëra s'hapet, provohet tjetra.
 var PK = { t: null, d: null, rev: 0, cache: {}, logo: LS.get("logot", null), logoDuke: false };
 var PK_EMRAT = { t: "📡 Tring", d: "📡 DigitAlb" };
 function pkBashkesi(l) { if (!Array.isArray(l)) return null; var s = {}; l.forEach(function (c) { s[String(c)] = 1; }); return s; }
@@ -1672,8 +1674,12 @@ function aplikoLogot() {
   var z = (PK.logo && PK.logo.z) || {}, a = (PK.logo && PK.logo.a) || {}, b = pkBaza();
   S.live.forEach(function (it) {
     if (it.lo === undefined) it.lo = it.logo || "";   // logoja e ofruesit
-    var k = pkCelesi(it), u = z[k];
-    it.logo = (u ? (/^logot\//.test(u) ? b + u : u) : "") || it.lo || a[k] || "";
+    var k = pkCelesi(it), u = z[k], l = [];
+    if (u) l.push(/^logot\//.test(u) ? b + u : u);
+    if (a[k]) l.push(a[k]);
+    if (it.lo) l.push(it.lo);
+    it.logo = l[0] || "";
+    for (var i = 0; i + 1 < l.length; i++) if (l[i + 1] !== l[i] && !LOGO_RES[l[i]]) LOGO_RES[l[i]] = l[i + 1];
   });
 }
 function merrLogot(d) {
