@@ -17,7 +17,7 @@
    Burimi: Xtream Codes (host + përdorues + fjalëkalim) ose link M3U.
    Videoja luhet me AVPlay të televizorit: luan .ts, HLS, MPEG-2, HEVC, MP2… direkt nga ofruesi. */
 "use strict";
-var VERSIONI = "1.8.0";
+var VERSIONI = "1.8.1";
 (function () {   // TV i vjetër pa "gap" te flex (Chromium < 84, p.sh. Samsung 2020): app.css përdor margin në vend të tij
   try {
     var d = document.createElement("div");
@@ -238,7 +238,13 @@ function linqetEpg(l) {
   var tekst = String((l && l.epg) || "") + " " + String((S.burim && S.burim.tvgUrl) || ""), pare = {}, r = [];
   tekst.split(/[\s,;]+/).forEach(function (u) {
     if (!u) return;
-    if (/^[a-z]{2}\d?$/i.test(u)) u = EPG_KODET + u.toUpperCase() + (/\d$/.test(u) ? "" : "1") + ".xml.gz";
+    if (/^[a-z]{2}\d?$/i.test(u)) {
+      var sh = EPG_SH[u.toUpperCase().replace(/\d$/, "")] || [];   // 📅 burimet shtesë të panelit për këtë vend (plotësojnë boshllëqet)
+      u = EPG_KODET + u.toUpperCase() + (/\d$/.test(u) ? "" : "1") + ".xml.gz";
+      if (!pare[u]) { pare[u] = 1; r.push(u); }
+      for (var j = 0; j < sh.length; j++) if (/^https?:\/\//i.test(sh[j]) && !pare[sh[j]]) { pare[sh[j]] = 1; r.push(sh[j]); }
+      return;
+    }
     else if (/^(ofruesi|provider|abonimi)$/i.test(u)) {
       if (!(l && l.lloji === "xtream" && l.host)) return;
       u = String(l.host).trim().replace(/\/+$/, "").replace(/^(?!https?:\/\/)/i, "http://") + "/xmltv.php?username=" + encodeURIComponent(l.user) + "&password=" + encodeURIComponent(l.pass);
@@ -246,6 +252,23 @@ function linqetEpg(l) {
     if (!pare[u]) { pare[u] = 1; r.push(u); }
   });
   return r.slice(0, 6);
+}
+var EPG_SH = LS.get("epgsh", null) || {};   // {"AL": ["https://iptv-epg.org/…"]} nga paneli (1.8.1+)
+function merrEpgSh(d) {
+  if (!d || !d.hasOwnProperty("epg_shtesa")) return;   // paneli i vjetër
+  var v = d.epg_shtesa && typeof d.epg_shtesa === "object" ? d.epg_shtesa : {};
+  if (JSON.stringify(v) === JSON.stringify(EPG_SH)) return;
+  EPG_SH = v; LS.set("epgsh", v);
+  if (S.burim && S.live && GX.urls.join(" ") !== linqetEpg(S.listat[S.aktive]).join(" ")) nisGuiden(true);
+}
+// program-vend pa informacion: „Unknown show”, „Programi i Tring Family”, titulli = emri i kanalit
+var EPG_BOSH = { unknownshow: 1, unknown: 1, noinformation: 1, noinfo: 1, na: 1, tba: 1, tobeannounced: 1, noprogramme: 1, noprogram: 1,
+  noprograminformation: 1, noprogrammeinformation: 1, painformacion: 1, programi: 1, noepg: 1, epg: 1 };
+function epgBosh(t, emriKanalit) {
+  t = String(t || "").replace(/^\s+|\s+$/g, "");
+  if (!t || EPG_BOSH[t.toLowerCase().replace(/[^a-z0-9]+/g, "")] || /^programi i /i.test(t)) return true;
+  var e = epgNorm(t);
+  return !!(e && emriKanalit && e === emriKanalit);
 }
 function emerEpg(u) {   // për ekranin: "epgshare01 · AL" / "serveri.com (abonimi)"
   var m = u.match(/epg_ripper_([A-Z0-9_]+)\.xml/i);
@@ -310,31 +333,39 @@ function lidhKanaletEpg(kanalet, ids, emrat, src, harta) {
 // buxheti i memories për guidën (TV/Android të dobët + abonime me mijëra kanale)
 var BUX = { p: 0, d: 0 };
 // lexuesi copë-copë i një skedari XMLTV
-function LexuesXmltv(src, kanalet, harta) {
+function LexuesXmltv(src, kanalet, harta, fundi) {
   var b = "", ids = {}, emrat = {}, gati = false, duhen = {}, lok = {}, t0 = tani() - 3 * 3600, t1 = tani() + 36 * 3600, self = this;
-  this.prog = {}; this.kanaleXml = 0; this.programe = 0;
+  var dn = {}, pas = {};   // dn: emri (norm) i kanalit te ky burim · pas: kanali i burimit -> plotëso vetëm pas kësaj ore
+  fundi = fundi || {};
+  this.prog = {}; this.kanaleXml = 0; this.programe = 0; this.mbush = {}; this.bosh = {};   // bosh: programet-vend, vetëm si zgjidhja e fundit
   function lidh() {
     gati = true;
     if (!self.kanaleXml) kanalet.forEach(function (it) { if (it.epg) ids[String(it.epg).toLowerCase()] = String(it.epg).toLowerCase(); });   // pa <channel>: vetëm sipas tvg-id
-    duhen = lidhKanaletEpg(kanalet.filter(function (it) { return !harta[it.k]; }), ids, emrat, src, lok);
+    // kanalet pa guidë + ato që guida e burimit të mëparshëm s'i mbulon deri në 30 orët e ardhshme (p.sh. „Unknown show”)
+    duhen = lidhKanaletEpg(kanalet.filter(function (it) { return !harta[it.k] || (fundi[it.k] || 0) < t1 - 6 * 3600; }), ids, emrat, src, lok);
+    for (var q in lok) {
+      var id = lok[q].slice(src.length + 1), nga = harta[q] ? (fundi[q] || 0) : 0;
+      pas[id] = pas.hasOwnProperty(id) ? Math.min(pas[id], nga) : nga;
+    }
   }
   function kanal(el) {
     var id = xmlAtr(el, "id").toLowerCase(); if (!id) return;
     self.kanaleXml++; ids[id] = id;
     var re = /<display-name\b[^>]*>([\s\S]*?)<\/display-name>/g, m;
-    while ((m = re.exec(el))) { var n = epgNorm(xmlTekst(m[1])); if (n && !emrat[n]) emrat[n] = id; }
+    while ((m = re.exec(el))) { var n = epgNorm(xmlTekst(m[1])); if (n && !emrat[n]) emrat[n] = id; if (n && !dn[id]) dn[id] = n; }
   }
   function programi(el) {
     if (!gati) lidh();
     var ch = xmlAtr(el, "channel").toLowerCase(); if (!duhen[ch]) return;
     var fil = xmlKoha(xmlAtr(el, "start")), mb = xmlKoha(xmlAtr(el, "stop")) || fil + 1800;
-    if (!fil || mb < t0 || fil > t1) return;
-    var k = src + "|" + ch, l = self.prog[k] || (self.prog[k] = []);
+    if (!fil || mb < t0 || fil > t1 || fil < (pas[ch] || 0) - 60) return;
+    var tit = xmlFut(el, "title").slice(0, 120), bosh = epgBosh(tit, dn[ch]);   // „Unknown show”: mbahet mënjanë
+    var k = src + "|" + ch, l = bosh ? (self.bosh[k] || (self.bosh[k] = [])) : (self.prog[k] || (self.prog[k] = []));
     if (l.length >= (BUX.p < 25000 ? 80 : BUX.p < 60000 ? 12 : 4)) return;   // pas një kufiri: më pak programe për kanalet e tjera
     var kt = xmlFut(el, "category").slice(0, 30), pr = xmlFut(el, "desc"), lim = BUX.d < 4e6 ? 900 : BUX.d < 7e6 ? 200 : 0;
     pr = !lim ? "" : pr.length > lim ? pr.slice(0, lim - 1) + "…" : pr;
     BUX.p++; BUX.d += pr.length;
-    l.push(kt ? [fil, mb, xmlFut(el, "title").slice(0, 120), pr, kt] : [fil, mb, xmlFut(el, "title").slice(0, 120), pr]);
+    l.push(kt ? [fil, mb, tit, pr, kt] : [fil, mb, tit, pr]);
     self.programe++;
   }
   this.shto = function (t) {
@@ -356,7 +387,12 @@ function LexuesXmltv(src, kanalet, harta) {
   this.mbaro = function () {
     if (!gati) lidh();
     for (var k in self.prog) self.prog[k].sort(function (a, z) { return a[0] - z[0]; });
-    for (var q in lok) if (self.prog[lok[q]]) harta[q] = lok[q];   // kanali lidhet vetëm me burimin që ka programe për të
+    for (k in self.bosh) self.bosh[k].sort(function (a, z) { return a[0] - z[0]; });
+    for (var q in lok) {   // kanali lidhet vetëm me burimin që ka programe për të
+      var kk = lok[q];
+      if (!harta[q]) { if (self.prog[kk] || self.bosh[kk]) { harta[q] = kk; if (!self.prog[kk]) self.prog[kk] = []; } }
+      else if (self.prog[kk]) self.mbush[q] = kk;   // ose plotëson boshllëkun (programet e vërteta) të burimit të mëparshëm
+    }
   };
 }
 
@@ -547,7 +583,7 @@ function aplikoGuiden() {
   if (F.ekran === "cil") vizatoCil();
 }
 function nisGuiden(detyro) {
-  var l = S.listat[S.aktive], urls = linqetEpg(l), celes = celesListe() + "|" + urls.join(" ") + "|e3", nr = ++GX.nr;
+  var l = S.listat[S.aktive], urls = linqetEpg(l), celes = celesListe() + "|" + urls.join(" ") + "|e4", nr = ++GX.nr;
   GX.prog = {}; GX.harta = {}; GX.n = 0; GX.urls = urls; GX.gabim = ""; GX.duke = false; GX.koha = 0;
   if (!urls.length) { GX.gjendja = ""; return; }
   var c = LS.get("xmltv", null);
@@ -558,12 +594,20 @@ function nisGuiden(detyro) {
   }
   GX.duke = true; GX.gjendja = T("duke u shkarkuar…"); BUX = { p: 0, d: 0 };
   if (F.ekran === "cil") vizatoCil();
-  var kanalet = S.live.slice(), harta = {}, prog = {}, gabimet = [], i = 0;
+  var kanalet = S.live.slice(), harta = {}, prog = {}, gabimet = [], i = 0, fundi = {}, boshG = {};
   (function tjetri() {
     if (nr !== GX.nr) return;
     if (i >= urls.length) {
       GX.duke = false;
-      var n = 0; for (var k in harta) n++;
+      var n = 0, perdor = {}; for (var k in harta) { n++; perdor[harta[k]] = 1; }
+      for (k in perdor) if (boshG[k]) {   // programet-vend vetëm aty ku s'ka program të vërtetë nga asnjë burim
+        var r = prog[k] || [], shto = boshG[k].filter(function (p) {
+          for (var j = 0; j < r.length; j++) if (r[j][0] < p[1] - 60 && p[0] < r[j][1] - 60) return false;
+          return true;
+        });
+        if (shto.length) prog[k] = r.concat(shto).sort(function (a, z) { return a[0] - z[0]; });
+      }
+      for (k in prog) if (!perdor[k]) delete prog[k];   // copat që u bashkuan te një burim tjetër
       if (!n) {   // asnjë kanal s'u gjet: mbaj guidën e vjetër nëse kishte
         GX.gabim = gabimet.length ? gabimet.join(" · ") : T("asnjë kanal i listës s'u gjet në këtë guidë");
         GX.gjendja = "gabim"; if (F.ekran === "cil") vizatoCil();
@@ -585,10 +629,20 @@ function nisGuiden(detyro) {
     }
     var u = urls[i++], provat = 0;
     (function provo() {   // nëse shkarkimi ngec ose prishet në mes, provohet edhe një herë pas 3 sekondash
-      var lx = new LexuesXmltv(String(i), kanalet, harta);
+      var lx = new LexuesXmltv(String(i), kanalet, harta, fundi);
       lexoBurimin(u, lx).then(function () {
         lx.mbaro();
         for (var k in lx.prog) prog[k] = lx.prog[k];
+        for (k in lx.bosh) boshG[k] = lx.bosh[k];
+        var bere = {};
+        for (var q in lx.mbush) {   // boshllëqet e burimit të mëparshëm: programet e këtij burimi pas orës ku mbaron ai
+          var baza = harta[q], sh = prog[lx.mbush[q]], vj = prog[baza];
+          if (!sh || !vj || bere[baza]) continue;
+          bere[baza] = 1;
+          var f = vj.length ? vj[vj.length - 1][1] : 0;
+          for (var j = 0; j < sh.length; j++) if (sh[j][0] >= f - 60) { vj.push(sh[j]); f = Math.max(f, sh[j][1]); }
+        }
+        for (q in harta) { var pq = prog[harta[q]]; fundi[q] = pq && pq.length ? pq[pq.length - 1][1] : 0; }
         if (!lx.kanaleXml && !lx.programe) gabimet.push(emerEpg(u) + T(": skedari s'duket si guidë XMLTV"));
       }).catch(function (e) {
         if (!(e && e.fund) && provat++ < 1 && nr === GX.nr) return "sërish";
@@ -679,7 +733,7 @@ function pyetPanelin() {
     aplikoListatPanelit(d.listat || []);
     (d.mesazhe || []).forEach(shtoMesazh);
     merrNdeshjet(d);
-    merrKat(d); merrPaketat(d); merrLogot(d);
+    merrKat(d); merrPaketat(d); merrLogot(d); merrEpgSh(d);
     if (F.ekran === "cil") vizatoCil();
   };
   x.onerror = x.ontimeout = function () { PN.duke = false; PN.gabimi = T("paneli s'u arrit"); };
