@@ -17,7 +17,7 @@
    Burimi: Xtream Codes (host + përdorues + fjalëkalim) ose link M3U.
    Videoja luhet me AVPlay të televizorit: luan .ts, HLS, MPEG-2, HEVC, MP2… direkt nga ofruesi. */
 "use strict";
-var VERSIONI = "1.8.2";
+var VERSIONI = "1.8.6";
 (function () {   // TV i vjetër pa "gap" te flex (Chromium < 84, p.sh. Samsung 2020): app.css përdor margin në vend të tij
   try {
     var d = document.createElement("div");
@@ -43,7 +43,7 @@ var LS = {
 // ------------------------------------------------------------------ gjuha (shqip / English)
 var GJ = LS.get("gjuha", "sq") === "en" ? "en" : "sq";
 var EN = {"🏆 Eventet sportive": "🏆 Sport events", "Asnjë ndeshje sot e nesër në kanalet e tua.": "No matches today or tomorrow on your channels.", "● LIVE · filloi në ": "● LIVE · started at ", "OK: shiko tani": "OK: watch now", "⏰ Kujtesa është vendosur: kur të fillojë, kalon vetë te kanali. OK: hiqe": "⏰ Reminder set: when it starts, it switches to the channel. OK: remove", "OK: ⏰ më kujto kur të fillojë (kalon vetë te kanali)": "OK: ⏰ remind me when it starts (switches to the channel)", "shkarkimi ngeci (s'erdhi asgjë për 90 sekonda)": "the download stalled (nothing arrived for 90 seconds)", "serveri s'u përgjigj për 60 sekonda": "the server did not respond for 60 seconds", "Ka filluar · ": "Started · ", "Fillon në ": "Starts at ", "🔴 Po luhet tani": "🔴 Live now", "🏆 Sporti sot në TV": "🏆 Sport on TV today", "🏆 Njoftimet e sportit": "🏆 Sport notifications", "Ndeshjet dhe garat e rëndësishme në cep të ekranit, kur e ke kanalin në listë": "Important matches and races in the corner of the screen, when the channel is in your list", "Provë": "Test", "Kategoria e Parë": "Albanian First Division", "✓ ⏰ Kalon vetë te ky kanal në ": "✓ ⏰ Switches to this channel at ", "OK: ✓ kalo vetë te ky kanal kur fillon": "OK: ✓ switch to this channel when it starts", "▲▼ programet · ◀ ▶ kanali tjetër · OK: ✓ / hiq kujtesën · <i class='ng ng-j'></i>/ Back: mbyll": "▲▼ programmes · ◀ ▶ other channel · OK: ✓ / remove reminder · <i class='ng ng-j'></i>/ Back: close", "⏰ Kujtesa u hoq": "⏰ Reminder removed", "✓ ⏰ Në ": "✓ ⏰ At ", " kalon vetë te ": " it switches to ", " (në një listë tjetër)": " (in another list)", " · kanali s'u gjet te lista": " · channel not found in the list", "⏰ Po fillon: ": "⏰ Starting now: ", "Kalon vetë pas ": "Switching in ", " sekondash": " seconds", "▶ Shko tani": "▶ Go now", "✖ Jo, qëndro këtu": "✖ No, stay here", "⏰ S'ke kujtesa. Te guida (🟢) zgjidh një program që s'ka filluar dhe shtyp OK.": "⏰ No reminders. In the guide (🟢) choose a programme that hasn't started and press OK.", "Mbyll": "Close", "⏰ Kujtesat (OK mbi njërën për ta hequr)": "⏰ Reminders (OK on one to remove it)", "⏰ Kujtesat": "⏰ Reminders", "Programet e shënuara me ✓ te guida: kanali hapet vetë kur fillojnë": "Programmes marked ✓ in the guide: the channel opens by itself when they start", "Rendit": "Sort", "Më të rejat": "Newest", "Vlerësimi": "Rating", "📅 Sipas datës (më të rejat)": "📅 By date added (newest)", "🔤 Sipas alfabetit (A–Z)": "🔤 Alphabetical (A–Z)", "⭐ Sipas vlerësimit": "⭐ By rating", "⌨️ Tastiera në ekran": "⌨️ On-screen keyboard", "Automatike": "Automatic", "Snow (me shigjeta)": "Snow (arrow keys)", "E sistemit": "System", "Nëse tastiera e Android TV mbyllet vetë, zgjidh Snow": "If the Android TV keyboard closes by itself, choose Snow", "▲▼◀▶ zgjidh · OK shkruaj · Back mbyll": "▲▼◀▶ choose · OK type · Back close", "Ndryshon gjuhën e aplikacionit (rihapet)": "Changes the app language (the app reopens)", "Serveri u përgjigj me gabim ": "The server replied with error ","Përgjigje e pakuptueshme nga serveri": "Unreadable reply from the server","S'u lidh dot me serverin. Kontrollo adresën dhe internetin.": "Could not connect to the server. Check the address and your internet.","Serveri nuk u përgjigj (koha mbaroi).": "The server did not reply (timed out).","Emri ose fjalëkalimi është i gabuar.": "Wrong username or password.","Pa emër": "No name","Linku nuk është playlist M3U.": "The link is not an M3U playlist.","Të tjera": "Other","Playlist-a është bosh.": "The playlist is empty.","guida është shumë e madhe për këtë TV (provo vetëm AL)": "the guide is too large for this TV (try only AL)","guida është shumë e madhe për këtë pajisje (provo vetëm AL)": "the guide is too large for this device (try only AL)","serveri u përgjigj ": "the server replied ","s'u lidh dot": "could not connect","koha mbaroi": "timed out","pa stream": "no stream","skedari .gz është i prerë": "the .gz file is truncated","skedari .gz është i dëmtuar": "the .gz file is damaged","skedari .gz s'mbështetet": "the .gz file is not supported","skedari .gz është bosh ose i dëmtuar": "the .gz file is empty or damaged","duke u shkarkuar…": "downloading…","asnjë kanal i listës s'u gjet në këtë guidë": "none of the list's channels were found in this guide",": skedari s'duket si guidë XMLTV": ": the file does not look like an XMLTV guide","pa link": "no link"," kanal": " channel"," kanale": " channels"," · po rifreskohet…": " · refreshing…","⚠️ s'u ngarkua": "⚠️ not loaded","përgjigje e gabuar": "invalid reply","paneli pret që administratori të pranojë çelësin e ri": "the panel is waiting for the administrator to accept the new key","paneli s'u arrit": "panel not reachable","📋 Listat u përditësuan nga administratori": "📋 The lists were updated by the administrator","📋 Administratori e hoqi listën": "📋 The administrator removed the list","📋 Administratori të dërgoi listën": "📋 The administrator sent you the list","📢 <b>Mesazh</b><br><div style='margin-top:16px;text-align:left;white-space:pre-wrap'>": "📢 <b>Message</b><br><div style='margin-top:16px;text-align:left;white-space:pre-wrap'>","U hoq nga të preferuarat": "Removed from favourites","⭐ U shtua te të preferuarat": "⭐ Added to favourites","Automatik": "Automatic","Mbush ekranin": "Fill screen","Origjinal (me shirita)": "Original (with bars)","🖼️ Figura: ": "🖼️ Picture: ","  · ruhet për këtë kanal": "  · saved for this channel","Nuk po hapet.": "It won't open.","S'u lidh dot me serverin e kanalit.": "Could not connect to the channel's server.","Formati i këtij kanali nuk mbështetet.": "This channel's format is not supported.","<small>Mund të jetë offline, ose abonimi po përdoret në një pajisje tjetër. (": "<small>It may be offline, or the subscription is in use on another device. (","Hap fillimisht një listë me kanale": "Open a list with channels first","<h2>🧪 Prova ": "<h2>🧪 Test "," (si tani)": " (current)","<div class='prog'><div class='tit'>A duket figura brenda kutisë lart?</div><div class='per'>Prit 2–3 sekonda pas çdo prove.</div></div>": "<div class='prog'><div class='tit'>Can you see the picture in the box above?</div><div class='per'>Wait 2–3 seconds after each test.</div></div>","<div class='prog'><div class='ora-p'>▼ prova tjetër · ▲ e mëparshmja</div><div class='tit'>OK = kjo punon (ruhet)</div><div class='per'>Back = anulo</div></div>": "<div class='prog'><div class='ora-p'>▼ next test · ▲ previous</div><div class='tit'>OK = this one works (saved)</div><div class='per'>Back = cancel</div></div>","✅ U ruajt prova ": "✅ Saved test "," për kutinë e vogël": " for the small box","✅ Kutia e vogël: si më parë": "✅ Small box: as before","Testi u anulua": "Test cancelled","📺 Të gjitha": "📺 All","⭐ Të preferuarat": "⭐ Favourites","🕘 Të fundit": "🕘 Recent","Këtu dalin kanalet që ke parë së fundi.": "Channels you watched recently appear here.","Bosh": "Empty","S'ka guidë për këtë kanal.": "No guide for this channel.","Duke marrë guidën…": "Loading the guide…","TANI · ": "NOW · ","TANI": "NOW","<div class='ndihme'>OK: shiko këtu · OK përsëri: ekran i plotë · Mbaj OK: ⭐<div class='ngjyrat'>": "<div class='ndihme'>OK: watch here · OK again: full screen · Hold OK: ⭐<div class='ngjyrat'>","Pastaj ": "Next ","▲▼ / CH: kanal tjetër · OK: menuja · ◀: lista · Back: dil<br>": "▲▼ / CH: other channel · OK: menu · ◀: list · Back: exit<br>",">Figura (": ">Picture (","OK: pauzë · ◀ ▶: 10 sek · ⏪ ⏩: 1 min · Back: dil<br><span class='ngj'><i class='ng ng-v'></i>/ ▼: figura (": "OK: pause · ◀ ▶: 10 sec · ⏪ ⏩: 1 min · Back: exit<br><span class='ngj'><i class='ng ng-v'></i>/ ▼: picture (","Kanalet · ": "Channels · ","▶ Episodi tjetër": "▶ Next episode","Vazhdo nga ": "Resume from ","▶ Vazhdo": "▶ Resume","⟲ Nga fillimi": "⟲ From the start","Të gjitha": "All","Ende s'ke të preferuar. Mbaj OK të shtypur mbi një poster.": "No favourites yet. Hold OK on a poster to add one.","S'ka seriale.": "No series.","S'ka filma.": "No movies.","Duke hapur serialin…": "Opening the series…","Ky serial s'ka episode.": "This series has no episodes.","Sezoni ": "Season "," episode": " episodes","Serial-i nuk u hap: ": "The series did not open: ","Episodi ": "Episode ","Shkruaj të paktën 2 shkronja.": "Type at least 2 letters.","Kanal · ": "Channel · ","Film": "Movie","Serial": "Series","Asgjë me „": "Nothing for “","Shkruaj diçka për të kërkuar.": "Type something to search.","📺 ID e këtij TV": "📺 This TV's ID","Çelësi: ": "Key: "," · jepja administratorit": " · give it to the administrator","Duke pyetur panelin…": "Asking the panel…","📋 Lista aktive": "📋 Active list","➕ Shto listë të re": "➕ Add a new list","✏️ Ndrysho listën aktive": "✏️ Edit the active list","🗑️ Fshi listën aktive": "🗑️ Delete the active list","🔄 Rifresko kanalet": "🔄 Refresh channels","📅 Guida (EPG)": "📅 Guide (EPG)"," · OK: rifresko": " · OK: refresh","Shto linkun te „Ndrysho listën aktive“ (p.sh. AL)": "Add the link in “Edit the active list” (e.g. AL)","Duke shkarkuar guidën…": "Downloading the guide…","🎚️ Formati i kanaleve live": "🎚️ Live channel format","Nëse kanalet ngecin ose s'hapen, provo formatin tjetër": "If channels stutter or don't open, try the other format","🖼️ Formati i figurës": "🖼️ Picture format","Për të gjitha kanalet. Për një kanal të vetëm: shtyp ▶ kur je në ekran të plotë": "For all channels. For a single channel: press ▶ in full screen","🧪 Testo kutinë e videos": "🧪 Test the video box","Prova ": "Test ","Standarde": "Standard","Nëse figura s'del te kutia e vogël (zëri po): provo mënyrat një nga një": "If the small box has sound but no picture: try the modes one by one","📐 Shkalla e videos": "📐 Video scale","Normale": "Normal","VETËM nëse video del gabim ose s'duket (Samsung 4K 2020): provo ×2": "ONLY if the video is misplaced or missing (Samsung 4K 2020): try ×2","📐 Shkalla e videos: ": "📐 Video scale: "," · kthehu te Live dhe shiko kutinë": " · go back to Live and check the box","🔞 Kategoritë për të rritur": "🔞 Adult categories","Të fshehura": "Hidden","Të dukshme": "Visible","⬇️ Kontrollo për përditësim": "⬇️ Check for updates"," s'u hap": " failed to open","▶️ Kur hapet: nis kanalin e fundit": "▶️ On start: play the last channel","Po": "Yes","Jo": "No","përditësuar nga GitHub": "updated from GitHub","versioni i instaluar": "installed version","<div style='margin:-4px 0 14px;font-size:20px;color:#ff9f43;color:var(--theks2)'>⚠️ Versioni ": "<div style='margin:-4px 0 14px;font-size:20px;color:#ff9f43;color:var(--theks2)'>⚠️ Version "," s'u hap në këtë pajisje": " failed to open on this device",". „Kontrollo për përditësim” e provon përsëri.</div>": ". “Check for updates” will try it again.</div>","pa afat": "no expiry","Llogaria: <b>": "Account: <b>","</b><br>Statusi: <b>": "</b><br>Status: <b>","</b><br>Skadon: <b>": "</b><br>Expires: <b>","</b><br>Lidhje njëkohësisht: <b>": "</b><br>Max connections: <b>","<div style='background:#1c2333;border-radius:12px;padding:14px 18px;margin:0 0 14px'>📺 ID e TV-së: <b style='font-size:30px;letter-spacing:1px'>": "<div style='background:#1c2333;border-radius:12px;padding:14px 18px;margin:0 0 14px'>📺 TV ID: <b style='font-size:30px;letter-spacing:1px'>","</b><br>Çelësi: <b style='font-size:26px'>": "</b><br>Key: <b style='font-size:26px'>","</b><br>Paneli: ": "</b><br>Panel: ","✅ i lidhur": "✅ connected","duke u lidhur…": "connecting…","Kanale: <b>": "Channels: <b>","</b> · Filma: <b>": "</b> · Movies: <b>","</b> · Seriale: <b>": "</b> · Series: <b>","<br>Guida: <b>": "<br>Guide: <b>","<br><br><b>Telekomanda</b><br>▲▼◀▶ lëviz · OK zgjidh · Mbaj OK: ⭐ të preferuarat<br>CH+/CH−: kanali tjetër · Numrat: shko te kanali<br>🔴 Listat · 🟢 Guida e plotë · 🟡 Formati i figurës · 🔵 Grupet e kanaleve<br>Back: kthehu": "<br><br><b>Remote</b><br>▲▼◀▶ move · OK select · Hold OK: ⭐ favourites<br>CH+/CH−: other channel · Numbers: go to channel<br>🔴 Lists · 🟢 Full guide · 🟡 Picture format · 🔵 Channel groups<br>Back: go back","🟡 Formati: hap fillimisht një kanal ose film": "🟡 Format: open a channel or movie first"," · duket në ekran të plotë": " · visible in full screen","🔵 Grupet: dil fillimisht nga filmi (Back)": "🔵 Groups: exit the movie first (Back)","📋 Zgjidh playlistën": "📋 Choose a playlist","E diel": "Sunday","E hënë": "Monday","E martë": "Tuesday","E mërkurë": "Wednesday","E enjte": "Thursday","E premte": "Friday","E shtunë": "Saturday","Sot": "Today","Nesër": "Tomorrow","Dje": "Yesterday"," orë": " h","Guida (EPG) e listës": "List guide (EPG)","Guida nga ofruesi": "Provider guide","Guida nga serveri": "Server guide","🟢 Guida është për kanalet live": "🟢 The guide is for live channels","🟢 Guida: shko te Live dhe zgjidh një kanal": "🟢 Guide: go to Live and choose a channel","S'ka guidë për këtë kanal.<br><br>Shto guidën te lista: Cilësimet → 📅 Guida (p.sh. <b>AL</b>).": "No guide for this channel.<br><br>Add a guide to the list: Settings → 📅 Guide (e.g. <b>AL</b>).","<span class='gp-etiketa tani'>TANI · mbaron pas ": "<span class='gp-etiketa tani'>NOW · ends in ","<span class='gp-etiketa'>Fillon pas ": "<span class='gp-etiketa'>Starts in ","Duke marrë përshkrimin…": "Loading the description…","S'ka përshkrim për këtë program.": "No description for this programme.","▲▼ programet · ◀ ▶ kanali tjetër · OK: shiko kanalin · <i class='ng ng-j'></i>/ Back: mbyll": "▲▼ programmes · ◀ ▶ other channel · OK: watch channel · <i class='ng ng-j'></i>/ Back: close","Cilën listë do të hapësh?": "Which list do you want to open?","🔒 Këtë listë e menaxhon administratori": "🔒 This list is managed by the administrator","Ta fshij listën „": "Delete the list “","🗑️ Po, fshije": "🗑️ Yes, delete","Ndrysho listën": "Edit list","Shto listë të re": "Add a new list","Mirë se erdhe! Shto listën e parë": "Welcome! Add your first list","Abonimi": "Subscription","📺 ID e këtij TV: <b>": "📺 This TV's ID: <b>","</b> · Çelësi: <b>": "</b> · Key: <b>","<br><small>Nëse administratori ta dërgon listën, ajo hapet vetë këtu.</small>": "<br><small>If the administrator sends you a list, it opens here automatically.</small>","◀  Xtream Codes (server + përdorues + fjalëkalim)  ▶": "◀  Xtream Codes (server + username + password)  ▶","◀  Link M3U  ▶": "◀  M3U link  ▶","Lista": "List","Plotëso serverin, përdoruesin dhe fjalëkalimin.": "Fill in the server, username and password.","Linku u kthye në Xtream (me guidë, filma e seriale)": "The link was converted to Xtream (with guide, movies and series)","Shkruaj linkun M3U.": "Enter the M3U link.","Duke u lidhur…": "Connecting…","Duke ngarkuar „": "Loading “","⚠️ Lista „": "⚠️ The list “","“ nuk u ngarkua.<br><small>": "” did not load.<br><small>","↻ Provo përsëri": "↻ Try again","⚙️ Ndrysho listën": "⚙️ Edit list","📋 Listë tjetër": "📋 Another list","S'ka kanal me numrin ": "No channel with number ","Të dalësh nga Snow IPTV?": "Exit Snow IPTV?","Po, dil": "Yes, exit","(në shfletues s'mund të dalë)": "(can't exit in a browser)","⏸ Pauzë": "⏸ Paused","▶ Vazhdon": "▶ Playing","Përditësimet s'janë aktive në këtë version": "Updates are not active in this version","Duke kontrolluar në GitHub…": "Checking GitHub…","⬇️ U shkarkua versioni i ri <b>": "⬇️ Downloaded the new version <b>","</b>.<br>Ta hap tani?": "</b>.<br>Open it now?","Po, rihape": "Yes, reopen","Më vonë": "Later","Listat": "Lists","Guida": "Guide","Formati": "Format","Grupet": "Groups"," program": " programme"," programe": " programmes","gabim ": "error ","Ende s'ke të preferuar.<br>Mbaj <b>OK</b> të shtypur mbi një kanal.": "No favourites yet.<br>Hold <b>OK</b> on a channel to add one."," (abonimi)": " (subscription)","“": "”","“?": "”?","“…": "”…","📺 Live": "📺 Live","🎬 Filma": "🎬 Movies","🎞️ Seriale": "🎞️ Series","🔍 Kërko": "🔍 Search","⚙️ Cilësimet": "⚙️ Settings","Kategoritë": "Categories","Kanalet": "Channels","Zgjidh një kanal": "Choose a channel","Filma": "Movies","Seriale": "Series","Sezonat": "Seasons","Episodet": "Episodes","Shkruaj emrin e kanalit, filmit ose serialit…": "Type the name of a channel, movie or series…","Shtyp OK te kutia për tastierën · ↓ për rezultatet": "Press OK on the box for the keyboard · ↓ for results","Shto listën": "Add list","Shkruaj të dhënat që të ka dhënë ofruesi. Shtyp": "Enter the details your provider gave you. Press","te një fushë për tastierën.": "on a field for the keyboard.","Mund të ngjitësh edhe linkun e plotë": "You can also paste the full link","te „Serveri“: e ndaj vetë.": "into “Server”: it is split automatically.","Emri i listës": "List name","p.sh. Abonimi": "e.g. Subscription","Lloji": "Type","Serveri (host:porta)": "Server (host:port)","Përdoruesi": "Username","Fjalëkalimi": "Password","Linku M3U": "M3U link","Guida EPG (opsionale) – p.sh.": "EPG guide (optional) – e.g.",", ose": ", or",", ose një link .xml / .xml.gz": ", or a .xml / .xml.gz link","✔ Ruaj dhe hyr": "✔ Save and enter","Anulo": "Cancel","http://serveri.com:8080": "http://server.com:8080","Duke u hapur…": "Opening…", "🔒 Listat i cakton administratori": "🔒 Lists are assigned by the administrator", "Mirë se erdhe në Snow IPTV!": "Welcome to Snow IPTV!", "<br><small>Jepja këto administratorit. Sapo të ta caktojë listën, ajo hapet vetë këtu.</small>": "<br><small>Give these to the administrator. As soon as they assign your list, it opens here automatically.</small>", "Guidën e cakton administratori te paneli": "The guide is set by the administrator in the panel", "⚽ Njoftimet e ndeshjeve": "⚽ Match notifications", "Ndeshjet e rëndësishme të futbollit në cep të ekranit (kanalet shqip dhe italisht)": "Important football matches in the corner of the screen (Albanian and Italian channels)", "⚽ Ka filluar · ": "⚽ Started · ", "⚽ Fillon në ": "⚽ Starts at ", "OK: shiko · Back: mbyll": "OK: watch · Back: close", "⚽ Ndeshjet e sotme": "⚽ Today's matches", " të tjera": " more", "OK: shiko të parën · Back: mbyll": "OK: watch the first · Back: close", "Kampionati Botëror": "World Cup", "Kampionati Europian": "European Championship", "Kualifikueset e Botërorit": "World Cup qualifiers", "Kualifikueset e Europianit": "Euro qualifiers", "Liga e Kombeve": "Nations League", "Ndeshje miqësore": "Friendly"};
-EN[" · 🔒 HTTPS"] = " · 🔒 HTTPS"; EN[" · HTTP (HTTPS s'u lidh)"] = " · HTTP (HTTPS did not connect)";
+EN[" · 🔒 HTTPS"] = " · 🔒 HTTPS"; EN["Ora "] = "Time "; EN["Po kontrolloj llogarinë te ofruesi…"] = "Checking the account with the provider…"; EN["TV-ja s'ka internet"] = "The TV has no internet"; EN["Kontrollo Wi-Fi-n ose kabllon e rrjetit."] = "Check the Wi-Fi or the network cable."; EN["Serveri në shtëpi e refuzoi hyrjen"] = "The home server refused the login"; EN["Ofruesi e refuzoi llogarinë"] = "The provider refused the account"; EN["Llogaria është bllokuar ose fjalëkalimi s'pranohet më."] = "The account is blocked or the password is no longer accepted."; EN["Abonimi ka skaduar"] = "The subscription has expired"; EN["Skadoi më "] = "Expired on "; EN["Llogaria është bllokuar nga ofruesi"] = "The account was blocked by the provider"; EN["Llogaria nuk është aktive"] = "The account is not active"; EN["Abonimi është i zënë: "] = "The subscription is busy: "; EN[" nga "] = " of "; EN[" lidhje"] = " connections"; EN["Është i hapur në një pajisje tjetër, ose ofruesi s'e ka liruar ende lidhjen e mëparshme (zakonisht lirohet vetë)."] = "It is open on another device, or the provider has not yet released the previous connection (it usually frees up by itself)."; EN["Llogaria është në rregull, por ky film s'po vjen"] = "The account is fine, but this movie is not coming through"; EN["Llogaria është në rregull, por ky kanal s'po vjen"] = "The account is fine, but this channel is not coming through"; EN["Aktive · "] = "Active · "; EN[" lidhje. Provo një kanal tjetër: nëse s'hapet asnjë, ofruesi po e bllokon përkohësisht ose ka problem në server."] = " connections. Try another channel: if none opens, the provider is blocking it temporarily or has a server problem."; EN["PC-ja në shtëpi s'po përgjigjet"] = "The home PC is not responding"; EN["Serveri i ofruesit s'po përgjigjet"] = "The provider's server is not responding"; EN["Interneti yt punon (paneli u lidh). "] = "Your internet works (the panel connected). "; EN["Problemi është te serveri, jo te TV-ja."] = "The problem is with the server, not the TV."; EN["TV: "] = "TV: "; EN["Serveri s'u përgjigj. Po e provoj nga jashtë (Oracle)…"] = "The server did not answer. Testing it from outside (Oracle)…"; EN["Serveri i ofruesit s'përgjigjet as nga jashtë"] = "The provider's server does not answer from outside either"; EN["U provua edhe nga Oracle"] = "Also tested from Oracle"; EN["adresa s'u gjet"] = "address not found"; EN["porta s'pranon lidhje"] = "port refuses connections"; EN["s'u përgjigj"] = "no answer"; EN["Më shumë gjasa serveri ka rënë: s'është problem i internetit tënd. Prit pak ose njofto ofruesin."] = "Most likely the server is down: it is not your internet. Wait a little or tell the provider."; EN["Linja e shtëpisë s'arrin te serveri i ofruesit"] = "Your home line cannot reach the provider's server"; EN["Nga jashtë serveri punon (u provua nga Oracle). Ose ISP-ja (interneti i shtëpisë) po e bllokon, ose ofruesi ka bllokuar IP-në e shtëpisë. Me internetin e telefonit duhet të punojë."] = "The server works from outside (tested from Oracle). Either your ISP (home internet) is blocking it, or the provider has blocked your home IP. It should work on mobile data."; EN["Serveri punon nga jashtë. Po provoj adresën direkte (IP)…"] = "The server works from outside. Trying the direct address (IP)…"; EN["Interneti i shtëpisë po e bllokon adresën e ofruesit (DNS)"] = "Your home internet is blocking the provider's address (DNS)"; EN["Serveri punon: u arrit nga Oracle dhe nga TV-ja me IP direkte. Zgjidhja: vendos DNS 1.1.1.1 ose 8.8.8.8 te rrjeti i TV-së ose te ruteri."] = "The server works: reached from Oracle and from the TV by direct IP. Fix: set DNS 1.1.1.1 or 8.8.8.8 in the TV's network settings or on the router."; EN["🏠 Kanalet e mia"] = "🏠 My channels"; EN["🎬 Filmat e mi"] = "🎬 My movies"; EN["🎬 Film"] = "🎬 Movie"; EN["🎬 Film nga shtëpia"] = "🎬 Movie from home"; EN["<div class='ndihme'>OK: shiko filmin · Mbaj OK: ⭐<div class='ngjyrat'>"] = "<div class='ndihme'>OK: watch the movie · Hold OK: ⭐<div class='ngjyrat'>"; EN[" · HTTP (HTTPS s'u lidh)"] = " · HTTP (HTTPS did not connect)";
 function T(s) { return GJ === "en" && EN[s] !== undefined ? EN[s] : s; }
 function perktheNgarkuesin(s) {   // mesazhet e js/ngarkuesi.js (skedar i instaluar, mbetet shqip)
   s = String(s == null ? "" : s);
@@ -747,6 +747,11 @@ function pyetPanelin() {
   if (sk) { trupi.skadon = sk.skadon; trupi.skadon_lista = sk.lista; PN.skRaport = sk.skadon; }
   var hs = adresaHttps(), provo = !!hs && Date.now() - (PN.httpsKeq || 0) >= PN_HTTPS_PRITJE;
   trupi.prot = provo ? "https" : "http";
+  if (SH.kfg) trupi.sh = SH.menyra;   // 🏠 "lan" / "ura" / "" (PC e fikur)
+  var gq = LS.get("gabimet_dergo", []);
+  if (gq instanceof Array && gq.length) trupi.gabimet = gq.map(function (g) {
+    return { i: g.i, k: g.k, t: g.t, d: g.d, e: g.e, lista: g.lista, kodi: g.kodi, mosha: Math.max(0, Math.round((Date.now() - (g.koha || 0)) / 1000)) };
+  });
   if (hs && !provo && PN.httpsGab) trupi.https_gab = PN.httpsGab;
   function mori(x, d) {
     PN.duke = false;
@@ -757,10 +762,14 @@ function pyetPanelin() {
     if (typeof d.https === "string" && /^https:\/\//.test(d.https)) { if (d.https !== hs) LS.set("https", d.https); }
     else if (hs) { try { localStorage.removeItem("mi_https"); } catch (e) {} }
     PN.gabimi = ""; PN.lidhur = Date.now(); PN.emri = d.emri || "";
+    if (trupi.gabimet) {   // ⚠️ paneli i mori: hiqi nga radha
+      var dg = {}; trupi.gabimet.forEach(function (g) { dg[g.i] = 1; });
+      var mb = LS.get("gabimet_dergo", []); LS.set("gabimet_dergo", (mb instanceof Array ? mb : []).filter(function (g) { return !dg[g.i]; }));
+    }
     aplikoListatPanelit(d.listat || []);
     (d.mesazhe || []).forEach(shtoMesazh);
     merrNdeshjet(d);
-    merrKat(d); merrPaketat(d); merrLogot(d); merrEpgSh(d);
+    merrKat(d); merrPaketat(d); merrLogot(d); merrEpgSh(d); merrShtepine(d);
     if (F.ekran === "cil") vizatoCil();
   }
   function sHttp(arsye) { PN.duke = false; PN.gabimi = /^json/.test(arsye) ? T("përgjigje e gabuar") : T("paneli s'u arrit"); }
@@ -921,9 +930,11 @@ function logoHtml(emri, src, klasa) {
     (src ? '<img src="' + esc(src) + '"' + (res ? ' data-r="' + esc(res) + '"' : "") +
       ' onerror="var r=this.getAttribute(\'data-r\');if(r){this.removeAttribute(\'data-r\');this.src=r}else this.parentNode.textContent=\'' + ini + '\'">' : ini) + "</div>";
 }
+function burimI(it) { return (it && it.b) || S.burim; }   // 🏠 kanalet e shtëpisë kanë serverin e tyre (it.b)
+function epgTaniI(it) { if (it && it.film) return null; var m = it && it.sh ? SH.epgTani : S.epgTani; return m && it ? m[String(it.sid)] || null : null; }
 function epgPer(it) {
   var t = tani(), l = null;
-  if (S.epgTani && S.epgTani[String(it.sid)]) l = S.epgTani[String(it.sid)].map(function (p) { return { fil: p[0], mb: p[1], tit: p[2] }; });
+  if (epgTaniI(it)) l = epgTaniI(it).map(function (p) { return { fil: p[0], mb: p[1], tit: p[2] }; });
   else if ((l = xmlPer(it))) {}   // guida nga linku EPG i listës
   else if (S.epgC[it.k]) l = S.epgC[it.k].l;
   if (!l) return null;
@@ -933,7 +944,8 @@ function epgPer(it) {
 function rreshtKanal(it, i, fokus, zgj) {
   if (it.nd) return rreshtNgjarje(it, fokus, zgj);
   var e = epgPer(it), dyte = "", luan = S.luan && S.luan.it && S.luan.it.k === it.k;
-  if (e && e.tani) {
+  if (it.film) dyte = '<div class="dyte">' + T("🎬 Film") + ((LS.get("poz_" + celesListe(), {})[it.k] || 0) ? " · ⏯ " + kohe(LS.get("poz_" + celesListe(), {})[it.k]) : "") + "</div>";
+  else if (e && e.tani) {
     var pct = Math.min(100, Math.max(0, (tani() - e.tani.fil) / (e.tani.mb - e.tani.fil) * 100));
     dyte = '<div class="dyte">' + esc(e.tani.tit) + "</div>" + '<div class="shirit-epg"><i style="width:' + pct.toFixed(0) + '%"></i></div>';
   }
@@ -1043,6 +1055,7 @@ var L = {
     var tekst = T("Nuk po hapet.");
     if (/CONNECTION|NETWORK|TIMEOUT/i.test(arsyeja)) tekst = T("S'u lidh dot me serverin e kanalit.");
     else if (/UNSUPPORTED|FORMAT|CODEC/i.test(arsyeja)) tekst = T("Formati i këtij kanali nuk mbështetet.");
+    if (diagnozoGabimin(arsyeja, tekst, nr)) return;   // 🔎 1.8.4: pyet ofruesin dhe shkruaj arsyen e saktë
     gabimVideo(true, "⚠️ " + tekst + T("<small>Mund të jetë offline, ose abonimi po përdoret në një pajisje tjetër. (") + esc(arsyeja).slice(0, 60) + ")</small>");
   },
   ndalo: function () {
@@ -1096,6 +1109,89 @@ var L = {
   luan: function () { return !!this.url; }
 };
 function ngarkim(po) { $("#ngarkim").classList.toggle("fsh", !po); $("#ngarkim").classList.toggle("i-vogel", po && !document.body.classList.contains("plote")); }
+// 🔎 1.8.4: kur një kanal/film s'hapet, Snow pyet ofruesin (player_api) për llogarinë dhe shkruan arsyen e saktë:
+// e bllokuar / e skaduar / e zënë (X nga Y lidhje) / në rregull (problemi te ky kanal) / serveri s'përgjigjet / TV pa internet.
+// Vetëm për listat Xtream (edhe M3U me linqe Xtream); për të tjerat mbetet mesazhi i vjetër. Ora del që ta fotografosh për ofruesin.
+function burimiGabimit() {
+  var it = S.luan && S.luan.it, b = it ? burimI(it) : S.burim;
+  if (b && !(b instanceof Xtream)) b = b.xt || null;
+  return b instanceof Xtream && b.host ? b : null;
+}
+function diagnozoGabimin(kodi, tekst, nr) {
+  var b = burimiGabimit(); if (!b) return false;
+  var sh = !!(S.luan && S.luan.it && S.luan.it.sh), film = !!(S.luan && S.luan.lloji !== "live");
+  var fund = "<small>" + T("Ora ") + oraTani() + " · " + esc(kodi).slice(0, 60) + "</small>";
+  function shfaq(ikona, titull, per) {
+    if (nr !== L._nr) return;
+    gabimVideo(true, ikona + " " + titull + (per ? "<small>" + per + "</small>" : "") + fund);
+    if (ikona !== "⚠️") raportoGabimin(ikona, titull, per, kodi);   // ⚠️ = ende po kontrollon
+  }
+  shfaq("⚠️", tekst, T("Po kontrolloj llogarinë te ofruesi…"));
+  if (navigator.onLine === false) { shfaq("📶", T("TV-ja s'ka internet"), T("Kontrollo Wi-Fi-n ose kabllon e rrjetit.")); return true; }
+  var u = b.host + "/player_api.php?username=" + encodeURIComponent(b.user) + "&password=" + encodeURIComponent(b.pass);
+  merr(u, "json", 8).then(function (d) {
+    var ui = d && d.user_info;
+    if (!ui || String(ui.auth) !== "1") return shfaq("🔒", sh ? T("Serveri në shtëpi e refuzoi hyrjen") : T("Ofruesi e refuzoi llogarinë"),
+      T("Llogaria është bllokuar ose fjalëkalimi s'pranohet më.") + (ui && ui.message ? " (" + esc(String(ui.message)).slice(0, 80) + ")" : ""));
+    var st = String(ui.status || "Active"), exp = +ui.exp_date || 0, ak = +ui.active_cons || 0, mx = +ui.max_connections || 0;
+    if (/expir/i.test(st) || (exp && exp < tani())) return shfaq("⌛", T("Abonimi ka skaduar"),
+      exp ? T("Skadoi më ") + new Date(exp * 1000).toLocaleDateString(GJ === "en" ? "en-GB" : "sq-AL") : "");
+    if (/ban/i.test(st)) return shfaq("⛔", T("Llogaria është bllokuar nga ofruesi"), "(Banned)");
+    if (!/^active$/i.test(st)) return shfaq("⛔", T("Llogaria nuk është aktive"), "(" + esc(st).slice(0, 30) + ")");
+    if (mx && ak >= mx) return shfaq("👥", T("Abonimi është i zënë: ") + ak + T(" nga ") + mx + (GJ === "en" && mx === 1 ? " connection" : T(" lidhje")),
+      T("Është i hapur në një pajisje tjetër, ose ofruesi s'e ka liruar ende lidhjen e mëparshme (zakonisht lirohet vetë)."));
+    shfaq("📡", film ? T("Llogaria është në rregull, por ky film s'po vjen") : T("Llogaria është në rregull, por ky kanal s'po vjen"),
+      T("Aktive · ") + ak + "/" + (mx || "?") + T(" lidhje. Provo një kanal tjetër: nëse s'hapet asnjë, ofruesi po e bllokon përkohësisht ose ka problem në server."));
+  }).catch(function (e) {
+    function pergjithshem() {
+      shfaq("🌐", sh ? T("PC-ja në shtëpi s'po përgjigjet") : T("Serveri i ofruesit s'po përgjigjet"),
+        (PN.lidhur && Date.now() - PN.lidhur < 15 * 60000 ? T("Interneti yt punon (paneli u lidh). ") : "") + T("Problemi është te serveri, jo te TV-ja."));
+    }
+    if (sh) return pergjithshem();
+    var gabTV = e && e.message ? " (" + T("TV: ") + esc(e.message).slice(0, 70) + ")" : "";
+    shfaq("⚠️", tekst, T("Serveri s'u përgjigj. Po e provoj nga jashtë (Oracle)…"));
+    // 🔎 1.8.5: paneli (Oracle) provon vetëm a përgjigjet serveri — pa përdorues/fjalëkalim, s'zë lidhje te ofruesi
+    provoNgaJashte(b.host, function (r) {
+      if (!r) return pergjithshem();
+      if (!r.arrin) return shfaq("🌐", T("Serveri i ofruesit s'përgjigjet as nga jashtë"),
+        T("U provua edhe nga Oracle") + " (" + (r.gabim === "dns" ? T("adresa s'u gjet") : r.gabim === "porta" ? T("porta s'pranon lidhje") : T("s'u përgjigj")) + "). " +
+        T("Më shumë gjasa serveri ka rënë: s'është problem i internetit tënd. Prit pak ose njofto ofruesin."));
+      function linja() {
+        shfaq("🚫", T("Linja e shtëpisë s'arrin te serveri i ofruesit"),
+          T("Nga jashtë serveri punon (u provua nga Oracle). Ose ISP-ja (interneti i shtëpisë) po e bllokon, ose ofruesi ka bllokuar IP-në e shtëpisë. Me internetin e telefonit duhet të punojë.") + gabTV);
+      }
+      var m = /^(https?:\/\/)([^\/:?#]+)(.*)$/i.exec(b.host);
+      if (!m || !r.ip || m[2] === r.ip) return linja();
+      shfaq("⚠️", tekst, T("Serveri punon nga jashtë. Po provoj adresën direkte (IP)…"));
+      merr(m[1] + r.ip + m[3] + "/player_api.php?username=" + encodeURIComponent(b.user) + "&password=" + encodeURIComponent(b.pass), "json", 6).then(function (d) {
+        if (!(d && d.user_info)) return linja();
+        shfaq("🚫", T("Interneti i shtëpisë po e bllokon adresën e ofruesit (DNS)"),
+          T("Serveri punon: u arrit nga Oracle dhe nga TV-ja me IP direkte. Zgjidhja: vendos DNS 1.1.1.1 ose 8.8.8.8 te rrjeti i TV-së ose te ruteri."));
+      }, linja);
+    });
+  });
+  return true;
+}
+// ⚠️ 1.8.6: çdo gabim i saktë i dërgohet edhe panelit (administratori e sheh te klienti → Gjendja → Gabimet e fundit).
+// Ruhet në radhë (10 të fundit) dhe dërgohet me lidhjen e radhës me panelin: nëse TV-ja s'ka internet, shkon më vonë.
+function tekstiThjeshte(h) { var e = document.createElement("div"); e.innerHTML = String(h || ""); return String(e.textContent || "").replace(/\s+/g, " ").replace(/^\s+|\s+$/g, ""); }
+function raportoGabimin(k, t, d, kodi) {
+  var it = S.luan && S.luan.it, l = LS.get("gabimet_dergo", []);
+  if (!(l instanceof Array)) l = [];
+  l.push({ i: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), k: k, t: tekstiThjeshte(t).slice(0, 120), d: tekstiThjeshte(d).slice(0, 300),
+    e: it ? String(it.emri || "").slice(0, 80) : "", lista: String((S.listat[S.aktive] || {}).emri || "").slice(0, 60), kodi: String(kodi || "").slice(0, 60), koha: Date.now() });
+  LS.set("gabimet_dergo", l.slice(-10));
+  dergoGabimetShpejt();
+}
+function dergoGabimetShpejt() {
+  clearTimeout(PN.gabTimer);
+  PN.gabTimer = setTimeout(function () { if (PN.duke) return dergoGabimetShpejt(); PN.gabT = Date.now(); pyetPanelin(); }, Math.max(2000, 30000 - (Date.now() - (PN.gabT || 0))));
+}
+function provoNgaJashte(host, kthe) {
+  if (!PANELI) return kthe(null);
+  var hs = adresaHttps(), u = PN.prot === "https" && hs ? hs + "api/ofruesi" : PANELI.replace(/pajisja$/, "ofruesi");
+  dergoPanelit(u, 20000, { id: idPajisjes(), celesi: celesiPajisjes(), host: host }, function (x, d) { kthe(d && d.ok ? d : null); }, function () { kthe(null); });
+}
 function gabimVideo(po, html) {
   var g = $("#gabimV"); g.classList.toggle("fsh", !po); if (po) g.innerHTML = html;
   g.classList.toggle("i-vogel", po && !document.body.classList.contains("plote"));
@@ -1170,8 +1266,10 @@ function kategoriteLive() {
   var n = {}, rez = [];
   S.live.forEach(function (x) { n[x.kat] = (n[x.kat] || 0) + 1; });
   rez.push({ id: "*", emri: katEmri("*", T("📺 Të gjitha")), n: S.live.length });
-  rez.push({ id: "fav", emri: katEmri("fav", T("⭐ Të preferuarat")), n: S.live.filter(function (x) { return S.fav[x.k]; }).length });
+  rez.push({ id: "fav", emri: katEmri("fav", T("⭐ Të preferuarat")), n: S.live.concat(SH.live, SH.filma).filter(function (x) { return S.fav[x.k]; }).length });
   rez.push({ id: "hist", emri: katEmri("hist", T("🕘 Të fundit")) });
+  if (SH.live.length) rez.push({ id: "sh", emri: katEmri("sh", (SH.kfg && SH.kfg.emri) || T("🏠 Kanalet e mia")), n: SH.live.length });
+  if (SH.filma.length) rez.push({ id: "shf", emri: katEmri("shf", (SH.kfg && SH.kfg.emri_f) || T("🎬 Filmat e mi")), n: SH.filma.length });
   var ng = ngjarjetLive(); if (ng) rez.push({ id: "nd", emri: katEmri("nd", T("🏆 Eventet sportive")), n: ng.length });
   pkIdet().forEach(function (p) { var l = PK[p] ? kanaletPaketes(p) : []; if (l.length) rez.push({ id: "pk_" + p, emri: katEmri("pk_" + p, PK_EMRAT[p] || "📁"), n: l.length }); });
   S.liveKat.forEach(function (k) { if (n[k.id]) rez.push({ id: k.id, emri: k.emri, n: n[k.id] }); });
@@ -1181,10 +1279,12 @@ function kategoriteLive() {
 }
 function kanaletE(katId) {
   if (katId === "*") return S.live;
-  if (katId === "fav") return S.live.filter(function (x) { return S.fav[x.k]; });
+  if (katId === "fav") return S.live.concat(SH.live, SH.filma).filter(function (x) { return S.fav[x.k]; });
+  if (katId === "sh") return SH.live;
+  if (katId === "shf") return SH.filma;
   if (katId === "nd") return ngjarjetLive() || [];
   if (/^pk_/.test(katId)) return kanaletPaketes(katId.slice(3));
-  if (katId === "hist") { var m = {}; S.live.forEach(function (x) { m[x.k] = x; }); return S.hist.map(function (k) { return m[k]; }).filter(Boolean); }
+  if (katId === "hist") { var m = {}; S.live.concat(SH.live).forEach(function (x) { m[x.k] = x; }); return S.hist.map(function (k) { return m[k]; }).filter(Boolean); }
   if (katId === "_") return S.live.filter(function (x) { return !S.liveKat.some(function (k) { return k.id === x.kat; }); });
   return S.live.filter(function (x) { return x.kat === katId; });
 }
@@ -1206,6 +1306,7 @@ function infoKanali(it) {
   var el = $("#l-info");
   if (!it) { el.innerHTML = ""; return; }
   if (it.nd) { el.innerHTML = infoNgjarje(it); return; }
+  if (it.film) { clearTimeout(epgTimer); el.innerHTML = infoFilmShtepie(it); return; }
   var kat = (S.liveKat.filter(function (k) { return k.id === it.kat; })[0] || {}).emri || "";
   var e = epgPer(it), h = "<h2>" + esc(it.num + ". " + it.emri) + "</h2><div class='kat-e'>" + esc(kat) + (S.fav[it.k] ? " · ⭐" : "") + "</div>";
   if (e && e.lista.length) {
@@ -1218,26 +1319,36 @@ function infoKanali(it) {
   el.innerHTML = h;
   clearTimeout(epgTimer);
   var c = S.epgC[it.k];
-  if (!(S.epgTani && S.epgTani[String(it.sid)]) && !kaGuideXml(it) && (!c || tani() - c.t > 600)) {
+  if (!epgTaniI(it) && !kaGuideXml(it) && (!c || tani() - c.t > 600)) {
     epgTimer = setTimeout(function () {
-      S.burim.epg(it).then(function (l) { S.epgC[it.k] = { t: tani(), l: l }; }).catch(function () { S.epgC[it.k] = { t: tani(), l: [] }; })
+      burimI(it).epg(it).then(function (l) { S.epgC[it.k] = { t: tani(), l: l }; }).catch(function () { S.epgC[it.k] = { t: tani(), l: [] }; })
         .then(function () { if (UI.lKan.tani() === it) { infoKanali(it); UI.lKan.vizato(); } if (S.luan && S.luan.it === it) osdLive(false); });
     }, 350);
   }
 }
+function infoFilmShtepie(it) {
+  var p = LS.get("poz_" + celesListe(), {})[it.k] || 0;
+  if (!it.gati && it.b && it.ura) epgTimer = setTimeout(function () { it.gati = 1; it.b.api("get_vod_info", "&vod_id=" + it.sid).catch(function () {}); }, 1500);   // PC-ja e përgatit .mp4-n për urën
+  return "<h2>" + esc(it.emri) + "</h2><div class='kat-e'>" + esc(T("🎬 Film nga shtëpia")) + (S.fav[it.k] ? " · ⭐" : "") + "</div>" +
+    (p ? "<div class='prog'><div class='per'>" + esc(T("Vazhdo nga ") + kohe(p)) + "</div></div>" : "") +
+    T("<div class='ndihme'>OK: shiko filmin · Mbaj OK: ⭐<div class='ngjyrat'>") + LEGJENDA + "</div></div>";
+}
+function luajFilmShtepie(it) { luajVod(it, burimI(it).urlVod(it), it.emri, it.k); }
+function paFilma(l) { for (var i = 0; i < l.length; i++) if (l[i].film) return l.filter(function (x) { return !x.film; }); return l; }   // CH+/CH− kalon vetëm kanalet
 function luajLive(it, lista, plote) {
   if (!it) return;
+  if (it.film) return luajFilmShtepie(it);
   S.luan = { lloji: "live", it: it, lista: lista || UI.lKan.items };
   shtoHist(it);
   LS.set("fundit_" + celesListe(), it.k);
-  L.hap(S.burim.urlLive(it), { live: true, rect: plote ? [0, 0, 1920, 1080] : rectKutia() });
+  L.hap(burimI(it).urlLive(it), { live: true, rect: plote ? [0, 0, 1920, 1080] : rectKutia() });
   $("#kutia-bosh").style.display = "none";
   if (plote) hyrPlote(); else rivizato();
   if (!S.epgC[it.k]) infoKanaliPaUI(it);
 }
 function infoKanaliPaUI(it) {
-  if ((S.epgTani && S.epgTani[String(it.sid)]) || kaGuideXml(it)) return;
-  S.burim.epg(it).then(function (l) { S.epgC[it.k] = { t: tani(), l: l }; if (S.luan && S.luan.it === it) osdLive(false); }).catch(function () {});
+  if (epgTaniI(it) || kaGuideXml(it)) return;
+  burimI(it).epg(it).then(function (l) { S.epgC[it.k] = { t: tani(), l: l }; if (S.luan && S.luan.it === it) osdLive(false); }).catch(function () {});
 }
 
 // ---- EKRAN I PLOTË
@@ -1263,6 +1374,10 @@ function dilPlote() {
       UI.lKat.i = ki; zgjidhKatLive(ki, true);
     } else { UI.lKan.i = p; UI.lKan.vizato(); }
     vendosZone("kan"); infoKanali(UI.lKan.tani());
+  } else if (F.prapa === "live") {   // 🎬 filmi i shtëpisë u hap nga lista Live: kthehu aty
+    ruajPozicionin(); L.ndalo(); S.luan = null;
+    shfaqEkran("live"); F.tab = 0; $("#kutia-bosh").style.display = "";
+    UI.lKan.vizato(); vendosZone("kan"); infoKanali(UI.lKan.tani());
   } else {
     ruajPozicionin(); L.ndalo(); S.luan = null;
     shfaqEkran(F.prapa || "vod"); vendosZone(F.prapa === "serdet" ? "ep" : F.prapa === "kerko" ? "klista" : F.prapa === "ser" ? "srr" : "vrr");
@@ -1297,16 +1412,17 @@ function osdVod(shfaq, cak) {
 }
 function zapKanal(d) {
   if (!S.luan || S.luan.lloji !== "live") return;
-  var l = S.luan.lista && S.luan.lista.length ? S.luan.lista : S.live, i = l.indexOf(S.luan.it);
+  var l = paFilma(S.luan.lista && S.luan.lista.length ? S.luan.lista : S.live), i = l.indexOf(S.luan.it);
+  if (!l.length) return;
   var it = l[(i + d + l.length) % l.length];
   S.luan = { lloji: "live", it: it, lista: l };
   shtoHist(it); LS.set("fundit_" + celesListe(), it.k);
-  L.hap(S.burim.urlLive(it), { live: true, rect: [0, 0, 1920, 1080] });
+  L.hap(burimI(it).urlLive(it), { live: true, rect: [0, 0, 1920, 1080] });
   osdLive(true);
   if (!S.epgC[it.k]) infoKanaliPaUI(it);
 }
 function hapZap() {
-  var l = S.luan.lista && S.luan.lista.length ? S.luan.lista : S.live;
+  var l = paFilma(S.luan.lista && S.luan.lista.length ? S.luan.lista : S.live);
   $("#zap").classList.remove("fsh"); $("#osd").classList.add("fsh");
   $("#z-titull").textContent = T("Kanalet · ") + l.length;
   UI.zLista.aktiv = true; UI.zLista.vendos(l, Math.max(0, l.indexOf(S.luan.it)));
@@ -1529,7 +1645,7 @@ function programetPlote(it) {
   var t = tani(), k = GX.harta[it.k], p = k && GX.prog[k], l = null, burim = "";
   if (p && p.length) { l = p.map(function (x) { return { fil: x[0], mb: x[1], tit: x[2], per: x[3], kat: x[4] || "" }; }); burim = T("Guida (EPG) e listës"); }
   else if (S.epgP && S.epgP[it.k] && S.epgP[it.k].l.length) { l = S.epgP[it.k].l; burim = T("Guida nga ofruesi"); }
-  else if (S.epgTani && S.epgTani[String(it.sid)]) { l = S.epgTani[String(it.sid)].map(function (x) { return { fil: x[0], mb: x[1], tit: x[2] }; }); burim = T("Guida nga serveri"); }
+  else if (epgTaniI(it)) { l = epgTaniI(it).map(function (x) { return { fil: x[0], mb: x[1], tit: x[2] }; }); burim = T("Guida nga serveri"); }
   else if (S.epgC[it.k] && S.epgC[it.k].l.length) { l = S.epgC[it.k].l; burim = T("Guida nga ofruesi"); }
   if (!l) return null;
   l = l.filter(function (x) { return x.mb > t; });
@@ -1560,11 +1676,11 @@ function mbyllGuiden() {
 function ngarkoGuidenPlote() {
   var it = GP.it, pp = programetPlote(it);
   if (pp && pp.xml) return;   // guida XML i ka të gjitha
-  if (!S.burim || !S.burim.epg) return;
+  if (!burimI(it) || !burimI(it).epg) return;
   S.epgP = S.epgP || {};
   var c = S.epgP[it.k]; if (c && tani() - c.t < 1800) return;
   GP.duke = true;
-  S.burim.epg(it, 40).then(function (l) { S.epgP[it.k] = { t: tani(), l: l || [] }; if (l && l.length) S.epgC[it.k] = { t: tani(), l: l.slice(0, 4) }; })
+  burimI(it).epg(it, 40).then(function (l) { S.epgP[it.k] = { t: tani(), l: l || [] }; if (l && l.length) S.epgC[it.k] = { t: tani(), l: l.slice(0, 4) }; })
     .catch(function () { S.epgP[it.k] = { t: tani(), l: [] }; })
     .then(function () { if (GP && GP.it === it) { GP.duke = false; vizatoGuidenPlote(); } });
 }
@@ -1711,6 +1827,56 @@ function merrNdeshjet(d) {
   if (ND.m === "fik") mbyllNdeshjen();
   if (para !== ND.lista.map(function (x) { return x.id; }).join(",")) rifreskoKatLive();   // 🏆 kategoria e ngjarjeve
 }
+// 🏠 1.8.3+: „Kanalet e mia” – kanalet e serverit familjar (PC-ja në shtëpi, përmes urës Oracle) si kategori më vete te Live.
+// Vetëm te klientët që administratori i shënon te paneli. Lista e ofruesit s'preket (as numrat, as „Të gjitha”).
+// Kur PC-ja e shtëpisë është e fikur, kategoria s'shfaqet; provohet përsëri çdo 10 minuta.
+// LAN: kur administratori ka shkruar adresën e PC-së në shtëpi (p.sh. http://192.168.1.10:8000), TV-ja provon fillimisht atë
+// (3 sekonda); nëse s'përgjigjet (TV s'është në shtëpi / PC-ja ndërroi IP), përdor urën Oracle si më parë.
+var SH = { kfg: LS.get("shtepia", null), live: [], filma: [], epgTani: null, nr: 0, menyra: "" };
+function shKfgOk(c) { return !!(c && typeof c === "object" && /^https?:\/\/[^\s\/]+/i.test(String(c.host || "")) && c.user && c.pass); }
+function merrShtepine(d) {
+  if (!d || !d.hasOwnProperty("shtepia")) return;   // paneli i vjetër
+  var x = d.shtepia, c = shKfgOk(x) ? { host: String(x.host).replace(/\/+$/, ""), user: String(x.user), pass: String(x.pass), emri: String(x.emri || "").slice(0, 40),
+    lan: /^https?:\/\/[^\s\/?#]+$/i.test(String(x.lan || "").replace(/\/+$/, "")) ? String(x.lan).replace(/\/+$/, "") : "", emri_f: String(x.emri_f || "").slice(0, 40) } : null;
+  if (JSON.stringify(c) === JSON.stringify(shKfgOk(SH.kfg) ? SH.kfg : null)) return;
+  SH.kfg = c; LS.set("shtepia", c);
+  if (SH.live.length) rifreskoKatLive();   // p.sh. admini ndryshoi vetëm emrin e kategorisë
+  ngarkoShtepine();
+}
+function ngarkoShtepine() {
+  var nr = ++SH.nr, c = SH.kfg;
+  function hiq() { SH.menyra = ""; if (SH.live.length || SH.filma.length) { SH.live = []; SH.filma = []; SH.epgTani = null; rifreskoKatLive(); } }
+  if (!shKfgOk(c)) return hiq();
+  if (!S.burim) return;   // ngarkohet pasi të hapet lista
+  var lan = c.lan ? merr(c.lan + "/player_api.php?username=" + encodeURIComponent(c.user) + "&password=" + encodeURIComponent(c.pass), "json", 3)
+    .then(function (d) { return !!(d && d.user_info && String(d.user_info.auth) === "1"); }).catch(function () { return false; }) : Promise.resolve(false);
+  var b = null, ura = false;
+  lan.then(function (ne) {
+    if (nr !== SH.nr) throw new Error("vjeter");
+    ura = !ne; b = new Xtream(ne ? c.lan : c.host, c.user, c.pass);
+    return b.hyr();
+  }).then(function () { return Promise.all([b.api("get_live_streams"), b.api("get_vod_streams").catch(function () { return []; })]); }).then(function (r) {
+    if (nr !== SH.nr) return;
+    SH.menyra = ura ? "ura" : "lan";
+    var l = [], f = [];
+    (Array.isArray(r[0]) ? r[0] : []).forEach(function (x, i) {
+      if (!x || x.stream_id == null) return;
+      l.push({ k: "h" + x.stream_id, sid: x.stream_id, num: +x.num || i + 1, emri: x.name || "", logo: x.stream_icon || "", kat: "sh", epg: x.epg_channel_id || "", sh: true, b: b });
+    });
+    (Array.isArray(r[1]) ? r[1] : []).forEach(function (x, i) {
+      if (!x || x.stream_id == null) return;
+      f.push({ k: "hv" + x.stream_id, sid: x.stream_id, num: i + 1, emri: x.name || x.title || "", logo: x.stream_icon || "", kat: "shf", ext: x.container_extension || "mp4", sh: true, film: true, ura: ura, b: b });
+    });
+    var gjurma = function (v) { return JSON.stringify(v.map(function (x) { return [x.k, x.emri, x.logo, x.num, x.ext, x.b && x.b.host]; })); };
+    if (gjurma(l) !== gjurma(SH.live) || gjurma(f) !== gjurma(SH.filma)) {
+      SH.live = l; SH.filma = f; rifreskoKatLive();
+      var kz = UI.lKat && UI.lKat.items[UI.lKat.zgjedhur];
+      if (kz && (kz.id === "sh" || kz.id === "shf")) zgjidhKatLive(UI.lKat.zgjedhur, true);
+    }
+    b.epgTani().then(function (m) { if (nr === SH.nr && m) { SH.epgTani = m; rivizato(); } });
+  }).catch(function (e) { if (nr === SH.nr) hiq(); });
+}
+setInterval(function () { if (!document.hidden && S.burim && shKfgOk(SH.kfg)) ngarkoShtepine(); }, 10 * 60000);
 function rifreskoKatLive() {
   if (!UI.lKat || !S.live || !S.live.length) return;
   var v = UI.lKat.items, idI = v[UI.lKat.i] && v[UI.lKat.i].id, idZ = v[UI.lKat.zgjedhur] && v[UI.lKat.zgjedhur].id, r = kategoriteLive();
@@ -2077,6 +2243,7 @@ function ngarkoListen() {
     nisUI();
     nisGuiden(false);
     S.burim.epgTani().then(function (m) { if (m) { S.epgTani = m; rivizato(); infoKanali(UI.lKan.tani()); } });
+    SH.live = []; SH.filma = []; SH.epgTani = null; ngarkoShtepine();   // 🏠 kanalet e shtëpisë (nëse administratori t'i ka dhënë)
     var sk = skadimiListes(); if (sk && sk.skadon !== PN.skRaport) setTimeout(pyetPanelin, 2500);   // paneli mëson datën e skadimit
   }).catch(function (e) {
     $("#fillimi").classList.add("fsh");
@@ -2400,7 +2567,8 @@ function veprim(k) {
   if (k === K.KUQ || k === K.JESHIL || k === K.VERDHE || k === K.BLU) return veprimNgjyre(k);
   if (plote) return tastPlote(k);
   if (k === K.CHUP || k === K.CHDN) {
-    if (F.ekran === "live" && S.luan && S.luan.lloji === "live") { var l = UI.lKan; var i = l.items.indexOf(S.luan.it); var n = l.items[i + (k === K.CHUP ? 1 : -1)];
+    if (F.ekran === "live" && S.luan && S.luan.lloji === "live") { var l = UI.lKan, hap = k === K.CHUP ? 1 : -1, i = l.items.indexOf(S.luan.it), n = l.items[i + hap];
+      while (n && n.film) { i += hap; n = l.items[i + hap]; }
       if (n) { l.i = l.items.indexOf(n); l.vizato(); infoKanali(n); luajLive(n, l.items, false); } }
     return;
   }
@@ -2439,6 +2607,7 @@ function tastLive(k) {
     else if (k === K.OK) {
       var it = UI.lKan.tani(); if (!it) return;
       if (it.nd) return okNgjarje(it);
+      if (it.film) return luajFilmShtepie(it);   // 🎬 filmat e shtëpisë hapen menjëherë në ekran të plotë
       if (S.luan && S.luan.it === it && L.luan()) hyrPlote(); else luajLive(it, UI.lKan.items, false);
     } else if (k === K.PRAPA) { if (!teKanaliQeLuan()) dilNgaApp(); }
     else if (k === K.INFO) infoKanali(UI.lKan.tani());
