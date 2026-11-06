@@ -17,7 +17,7 @@
    Burimi: Xtream Codes (host + përdorues + fjalëkalim) ose link M3U.
    Videoja luhet me AVPlay të televizorit: luan .ts, HLS, MPEG-2, HEVC, MP2… direkt nga ofruesi. */
 "use strict";
-var VERSIONI = "1.8.6";
+var VERSIONI = "1.8.7";
 (function () {   // TV i vjetër pa "gap" te flex (Chromium < 84, p.sh. Samsung 2020): app.css përdor margin në vend të tij
   try {
     var d = document.createElement("div");
@@ -297,6 +297,26 @@ function epgAlias(e) {
   m = /^sky(?:sport|calcio)\d{0,2}(2[56]\d)$/.exec(e);   // "Sky Calcio 251", "Sky Calcio 10 260" = Sky Sport 251 / 260
   return m ? "skysport" + m[1] : e;
 }
+// 🔁 1.8.7: kanalet që te lista kanë emër tjetër nga guida (nga paneli: [["Tring Max", "Tring Action"]]).
+// Vlen VETËM për guidën: kategoritë, logot, paketat dhe njoftimet s'preken. Kanali i tillë merr vetëm guidën e kanalit të zgjedhur.
+var EPG_EMRAT = {}, EPG_EMRAT_N = 0;
+function vendosEmratGuide(l) {
+  EPG_EMRAT = {}; EPG_EMRAT_N = 0;
+  (Array.isArray(l) ? l : []).forEach(function (x) {
+    if (!x || x.length !== 2) return;
+    var a = epgNorm(x[0]), b = epgNorm(x[1]);
+    if (a && b && a !== b) { EPG_EMRAT[a] = b; EPG_EMRAT_N++; }
+  });
+}
+vendosEmratGuide(LS.get("epg_emrat", []));
+function emriGuides(it) { return EPG_EMRAT_N ? EPG_EMRAT[epgNorm(it.emri)] || "" : ""; }
+function merrEmratGuide(d) {   // kur administratori ndryshon „Emrat në guidë”, guida lidhet përsëri
+  if (!d || !d.hasOwnProperty("epg_emrat")) return;   // paneli i vjetër
+  var l = Array.isArray(d.epg_emrat) ? d.epg_emrat : [];
+  if (JSON.stringify(l) === JSON.stringify(LS.get("epg_emrat", []))) return;
+  LS.set("epg_emrat", l); vendosEmratGuide(l);
+  if (S.burim && S.live && GX.urls && GX.urls.length) nisGuiden(true);
+}
 function epgVendi(tvgId, xmlId) {   // "24TV.by" s'merr guidën e "24.TV.al"
   var a = /\.([a-z]{2})$/i.exec(tvgId || ""), b = /\.([a-z]{2})$/i.exec(xmlId || "");
   return !(a && b) || a[1].toLowerCase() === b[1].toLowerCase();
@@ -325,8 +345,12 @@ function lidhKanaletEpg(kanalet, ids, emrat, src, harta) {
   var perdorur = {};
   kanalet.forEach(function (it) {
     if (harta[it.k]) return;
-    var id = it.epg ? ids[String(it.epg).toLowerCase()] : null;
-    if (!id) { var n = epgNorm(it.emri), c = n && emrat[n]; if (c && epgVendi(it.epg, c)) id = c; }
+    var ng = emriGuides(it), id = null;
+    if (ng) id = emrat[ng] || null;   // 🔁 emër tjetër te guida: vetëm kanali i zgjedhur nga administratori
+    else {
+      id = it.epg ? ids[String(it.epg).toLowerCase()] : null;
+      if (!id) { var n = epgNorm(it.emri), c = n && emrat[n]; if (c && epgVendi(it.epg, c)) id = c; }
+    }
     if (id) { harta[it.k] = src + "|" + id; perdorur[id] = 1; }
   });
   return perdorur;
@@ -584,7 +608,7 @@ function aplikoGuiden() {
   if (F.ekran === "cil") vizatoCil();
 }
 function nisGuiden(detyro) {
-  var l = S.listat[S.aktive], urls = linqetEpg(l), celes = celesListe() + "|" + urls.join(" ") + "|e4", nr = ++GX.nr;
+  var l = S.listat[S.aktive], urls = linqetEpg(l), celes = celesListe() + "|" + urls.join(" ") + "|e4" + (EPG_EMRAT_N ? "|" + JSON.stringify(EPG_EMRAT) : ""), nr = ++GX.nr;
   GX.prog = {}; GX.harta = {}; GX.n = 0; GX.urls = urls; GX.gabim = ""; GX.duke = false; GX.koha = 0;
   if (!urls.length) { GX.gjendja = ""; return; }
   var c = LS.get("xmltv", null);
@@ -769,7 +793,7 @@ function pyetPanelin() {
     aplikoListatPanelit(d.listat || []);
     (d.mesazhe || []).forEach(shtoMesazh);
     merrNdeshjet(d);
-    merrKat(d); merrPaketat(d); merrLogot(d); merrEpgSh(d); merrShtepine(d);
+    merrKat(d); merrPaketat(d); merrLogot(d); merrEpgSh(d); merrShtepine(d); merrEmratGuide(d);
     if (F.ekran === "cil") vizatoCil();
   }
   function sHttp(arsye) { PN.duke = false; PN.gabimi = /^json/.test(arsye) ? T("përgjigje e gabuar") : T("paneli s'u arrit"); }
@@ -934,7 +958,7 @@ function burimI(it) { return (it && it.b) || S.burim; }   // 🏠 kanalet e sht�
 function epgTaniI(it) { if (it && it.film) return null; var m = it && it.sh ? SH.epgTani : S.epgTani; return m && it ? m[String(it.sid)] || null : null; }
 function epgPer(it) {
   var t = tani(), l = null;
-  if (epgTaniI(it)) l = epgTaniI(it).map(function (p) { return { fil: p[0], mb: p[1], tit: p[2] }; });
+  if (epgTaniI(it) && !(emriGuides(it) && kaGuideXml(it))) l = epgTaniI(it).map(function (p) { return { fil: p[0], mb: p[1], tit: p[2] }; });
   else if ((l = xmlPer(it))) {}   // guida nga linku EPG i listës
   else if (S.epgC[it.k]) l = S.epgC[it.k].l;
   if (!l) return null;
