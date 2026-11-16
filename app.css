@@ -69,6 +69,9 @@ body.plote #ui { display: none; }
 .rresht .emri { font-size: 28px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .rresht .dyte { font-size: 21px; color: #8e97ab; color: var(--zbehte); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
 .rresht .yll { color: #ff9f43; color: var(--theks2); font-size: 26px; }
+.rresht.rf, .rresht.luan.rf { background: #5ee1ff; border-color: #fff; color: #04222d; box-shadow: 0 8px 22px rgba(0, 0, 0, 0.6); }
+.rresht.rf .dyte, .rresht.rf .nr { color: #0b3a4a; }
+.rresht .rf-shigj { flex: none; color: #04222d; font-size: 24px; font-weight: 700; letter-spacing: -2px; }
 .rresht .numer-kat { font-size: 22px; color: #8e97ab; color: var(--zbehte); }
 .kat .rresht { height: 64px; }
 .kat .rresht .emri { font-size: 26px; font-weight: 500; }
