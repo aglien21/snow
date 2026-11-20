@@ -158,6 +158,9 @@ body.pritje .forma-id small { font-size: 24px; }
 .o-ndihme { font-size: 20px; color: #8e97ab; color: var(--zbehte); margin-top: 10px; line-height: 1.5; }
 
 #zap { position: absolute; left: 50px; top: 50px; bottom: 50px; width: 760px; z-index: 6; background: rgba(11, 14, 20, 0.949); border-radius: 18px; display: flex; flex-direction: column; }
+#zap.me-kat { left: 470px; }
+#zk { position: absolute; left: 50px; top: 50px; bottom: 50px; width: 400px; z-index: 6; background: rgba(11, 14, 20, 0.949); border-radius: 18px; display: flex; flex-direction: column; }
+#zap.fsh + #zk { display: none; }
 
 #numri { position: absolute; top: 50px; right: 70px; z-index: 9; font-size: 90px; font-weight: 800; color: #ff9f43; color: var(--theks2); background: rgba(0, 0, 0, 0.8); border-radius: 16px; padding: 10px 36px; }
 #ngarkim { position: absolute; left: 0; top: 0; width: 100%; height: 100%; z-index: 7; display: grid; align-items: center; justify-items: center; place-items: center; pointer-events: none; }
