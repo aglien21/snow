@@ -17,7 +17,7 @@
    Burimi: Xtream Codes (host + përdorues + fjalëkalim) ose link M3U.
    Videoja luhet me AVPlay të televizorit: luan .ts, HLS, MPEG-2, HEVC, MP2… direkt nga ofruesi. */
 "use strict";
-var VERSIONI = "1.9.2";
+var VERSIONI = "1.9.3";
 (function () {   // TV i vjetër pa "gap" te flex (Chromium < 84, p.sh. Samsung 2020): app.css përdor margin në vend të tij
   try {
     var d = document.createElement("div");
@@ -796,7 +796,7 @@ function pyetPanelin() {
     aplikoListatPanelit(d.listat || []);
     (d.mesazhe || []).forEach(shtoMesazh);
     merrNdeshjet(d);
-    merrKat(d); merrPaketat(d); merrLogot(d); merrEpgSh(d); merrShtepine(d); merrEmratGuide(d); merrUdhezuesin(d);
+    merrKat(d); merrPaketat(d); merrLogot(d); merrEpgSh(d); merrShtepine(d); merrEmratGuide(d); merrUdhezuesin(d); merrTlf(d);
     if (F.ekran === "cil") vizatoCil();
   }
   function sHttp(arsye) { PN.duke = false; PN.gabimi = /^json/.test(arsye) ? T("përgjigje e gabuar") : T("paneli s'u arrit"); }
@@ -1466,6 +1466,140 @@ function merrUdhezuesin(d) {
   rifreskoKatLive();
   if (ishte) zgjidhKatLive(r ? UI.lKat.zgjedhur : iKatGjitha(), true);   // videoja u hoq/u ndërrua ndërsa ishte e hapur
 }
+// ------------------------------------------------------------------ 📱 1.9.3: telekomanda nga telefoni
+// Vetëm TV-të që administratori i ndez te paneli („Telekomanda nga telefoni”). TV-ja pret komandat te paneli me një pyetje
+// që rri e hapur deri 20 s (s'e ngarkon TV-në). Listën dhe kanalin që luan ia dërgon vetëm kur telefoni është i hapur.
+// Pa shenjë nga paneli (ose panel i vjetër) asgjë s'ndryshon: s'niset asnjë pyetje.
+var TLF = { po: LS.get("tlf", 0) === 1, duke: false, pas: -1, gab: 0, tel: false, timer: null, tani: "", listaV: "", listaKoha: 0, dergon: false, forca: false, zeriGab: 0 };
+function tlfBaza() { var hs = adresaHttps(); return PN.prot === "https" && hs ? hs : PANELI.replace(/api\/pajisja$/, ""); }
+function tlfTrupi(x) { x = x || {}; x.id = idPajisjes(); x.celesi = celesiPajisjes(); return x; }
+function merrTlf(d) {
+  var po = d.tk === 1;
+  if (po !== TLF.po) { TLF.po = po; LS.set("tlf", po ? 1 : 0); }
+  if (po) tlfPrit(); else tlfTel(false);
+}
+function tlfPrit() {
+  if (!TLF.po || TLF.duke || !PANELI) return;
+  TLF.duke = true;
+  dergoPanelit(tlfBaza() + "api/tk/prit", 30000, tlfTrupi({ pas: TLF.pas }), function (x, d) {
+    TLF.duke = false;
+    if (x.status === 403 || x.status === 404) { TLF.po = false; LS.set("tlf", 0); tlfTel(false); return; }   // u fik te paneli / panel i vjetër
+    if (!d.ok) { TLF.gab++; return tlfPas(); }
+    TLF.gab = 0;
+    if (typeof d.nr === "number" && (TLF.pas < 0 || TLF.pas > d.nr)) TLF.pas = d.nr;
+    (d.cmd || []).forEach(function (c) { if (c && c.n > TLF.pas) { TLF.pas = c.n; try { tlfKryej(c); } catch (e) {} } });
+    tlfTel(!!d.tel);
+    tlfPas();
+  }, function () { TLF.duke = false; TLF.gab++; tlfPas(); });
+}
+function tlfPas() { setTimeout(tlfPrit, TLF.gab ? Math.min(60000, 2000 * TLF.gab) : document.hidden ? 15000 : 30); }
+function tlfTel(po) {   // telefoni është i hapur: dërgo ndryshimet çdo 2 s (vetëm kur ndryshon diçka)
+  TLF.tel = po && TLF.po;
+  if (TLF.tel && !TLF.timer) { TLF.timer = setInterval(function () { tlfGjendja(false); }, 2000); tlfGjendja(false); }
+  if (!TLF.tel && TLF.timer) { clearInterval(TLF.timer); TLF.timer = null; }
+}
+function tlfZeri() { try { var a = window.tizen && tizen.tvaudiocontrol; return a ? { v: a.getVolume(), m: a.isMute() ? 1 : 0 } : null; } catch (e) { return null; } }
+function tlfZeriNdrysho(d) {
+  try { var a = tizen.tvaudiocontrol; if (d > 0) a.setVolumeUp(); else if (d < 0) a.setVolumeDown(); else a.setMute(!a.isMute()); TLF.zeriGab = 0; }
+  catch (e) { TLF.zeriGab = 1; }
+}
+function tlfTani() {
+  var lu = S.luan, it = lu && lu.it, live = !!(lu && lu.lloji === "live" && it && !it.film), e = live ? epgPer(it) : null, t = tani();
+  return {
+    k: it ? it.k : "", emri: it ? String((live ? it.emri : lu.titull || it.emri) || "").slice(0, 100) : "", num: live ? it.num : "", logo: it ? String(it.logo || "").slice(0, 300) : "",
+    lloji: lu ? (live ? "live" : "film") : "", luan: !!(lu && L.luan()), plote: ePlote(), figura: figura(L.figura).t,
+    prog: e && e.tani ? { t: String(e.tani.tit || "").slice(0, 120), o: ora(e.tani.fil) + " – " + ora(e.tani.mb), p: Math.round(Math.min(1, Math.max(0, (t - e.tani.fil) / (e.tani.mb - e.tani.fil))) * 100) } : null,
+    pastaj: e && e.pastaj ? { t: String(e.pastaj.tit || "").slice(0, 120), o: ora(e.pastaj.fil) } : null,
+    ekran: F.ekran, fsh: document.hidden ? 1 : 0, kat: katLiveTani(), zeri: tlfZeri(), z_gab: TLF.zeriGab, fav: it && S.fav ? (S.fav[it.k] ? 1 : 0) : 0
+  };
+}
+function tlfHash(s) { var h = 5381; for (var i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0; return (h >>> 0).toString(36) + "." + s.length; }
+function tlfLista() {
+  if (!S.burim || !UI.lKat || !S.live) return null;
+  var kan = [], ix = {}, kat = [];
+  function shto(x) {
+    if (!x || !x.k) return -1;
+    if (ix.hasOwnProperty(x.k)) return ix[x.k];
+    ix[x.k] = kan.length; kan.push([x.k, x.num || "", String(x.emri || "").slice(0, 80), String(x.logo || "").slice(0, 300), x.film ? 1 : 0]);
+    return ix[x.k];
+  }
+  S.live.forEach(shto); var nGjitha = kan.length; SH.live.forEach(shto); SH.filma.forEach(shto);
+  kategoriteLive().forEach(function (k) {
+    if (k.id === "udh") return;
+    if (k.id === "*") { kat.push({ id: "*", e: k.emri, a: nGjitha }); return; }
+    var l = []; kanaletE(k.id).forEach(function (x) { var i = shto(x.nd ? x.it : x); if (i >= 0) l.push(i); });
+    kat.push({ id: k.id, e: k.emri, l: l });
+  });
+  var r = { kan: kan, kat: kat, emri: String((S.listat[S.aktive] || {}).emri || "").slice(0, 60) }, js = JSON.stringify(r);
+  if (js.length > 700000) { kan.forEach(function (x) { x[3] = ""; }); js = JSON.stringify(r); }   // shumë kanale: pa logo
+  if (js.length > 900000) return null;
+  r.v = tlfHash(js);
+  return r;
+}
+function tlfGjendja(forca) {
+  if (!TLF.po) return;
+  if (TLF.dergon) { if (forca) TLF.forca = true; return; }
+  var t = tlfTani(), js = JSON.stringify(t), trupi = tlfTrupi(), ka = false;
+  if (forca || js !== TLF.tani) { trupi.tani = t; ka = true; }
+  if (forca || Date.now() - TLF.listaKoha > 30000) {
+    TLF.listaKoha = Date.now();
+    var l = null; try { l = tlfLista(); } catch (e) {}
+    if (l && (forca || l.v !== TLF.listaV)) { trupi.lista = l; ka = true; }
+  }
+  if (!ka) return;
+  TLF.dergon = true;
+  dergoPanelit(tlfBaza() + "api/tk/gj", 20000, trupi, function (x, d) {
+    TLF.dergon = false;
+    if (d.ok) { TLF.tani = js; if (trupi.lista) TLF.listaV = trupi.lista.v; }
+    if (TLF.forca) { TLF.forca = false; tlfGjendja(true); }
+  }, function () { TLF.dergon = false; if (TLF.forca) { TLF.forca = false; setTimeout(function () { tlfGjendja(true); }, 2000); } });
+}
+function tlfGjej(k) {
+  var l = S.live.concat(SH.live, SH.filma);
+  for (var i = 0; i < l.length; i++) if (l[i].k === k) return l[i];
+  return null;
+}
+function tlfEpg(k) {
+  var it = tlfGjej(k);
+  function dergo(l) {
+    var t = tani(), r = (l || []).filter(function (p) { return p.mb > t; }).slice(0, 40).map(function (p) {
+      return { d: emerDite(p.fil), o: ora(p.fil) + " – " + ora(p.mb), t: String(p.tit || "").slice(0, 120), p: String(p.per || "").slice(0, 400), n: p.fil <= t ? 1 : 0 };
+    });
+    dergoPanelit(tlfBaza() + "api/tk/gj", 20000, tlfTrupi({ epg: { k: k, l: r } }), function () {}, function () {});
+  }
+  if (!it || it.film) return dergo([]);
+  var e = epgPer(it);
+  if (e && e.lista.length) return dergo(e.lista);
+  if (epgTaniI(it) || kaGuideXml(it)) return dergo(e ? e.lista : []);
+  burimI(it).epg(it).then(function (l) { S.epgC[it.k] = { t: tani(), l: l }; }).catch(function () { S.epgC[it.k] = { t: tani(), l: [] }; })
+    .then(function () { var e2 = epgPer(it); dergo(e2 ? e2.lista : []); });
+}
+function tlfKryej(c) {
+  if (c.c === "gjendja") return tlfGjendja(true);
+  if (c.c === "epg") return tlfEpg(c.k);
+  if (c.c === "zeri") { tlfZeriNdrysho(c.d); return setTimeout(function () { tlfGjendja(false); }, 300); }
+  if (document.hidden) return;   // aplikacioni s'është në ekran
+  if (c.c === "tast") {
+    var e = { keyCode: c.kodi, repeat: false, preventDefault: function () {} };
+    tasti(e); if (c.kodi === K.OK) tastiLart(e);
+  } else if (F.ekran === "forma" || !S.burim) {
+    return njofto(T("📱 Zgjidh fillimisht një listë në TV"), 3000);
+  } else if (c.c === "luaj") {
+    var it = tlfGjej(c.k);
+    if (!it) return njofto(T("📱 Kanali s'u gjet në listën e TV-së"), 3000);
+    if (DG) mbyllDialog(null);
+    if (TK || TS) return njofto(T("📱 Mbyll fillimisht dritaren në TV"), 3000);
+    if (it.film && ePlote() && S.luan && S.luan.lloji === "live") dilPlote();
+    shkoTeKanali(it);
+  } else if (c.c === "plote") {
+    if (!S.luan || !L.luan()) return njofto(T("📱 Zgjidh fillimisht një kanal"), 3000);
+    if (DG) mbyllDialog(null);
+    if (ePlote()) { if (S.luan.lloji === "live") dilPlote(); }
+    else hyrPlote();
+  } else if (c.c === "figura") ngjyraFormati();
+  setTimeout(function () { tlfGjendja(false); }, 500);
+}
+
 function paFilma(l) { for (var i = 0; i < l.length; i++) if (l[i].film) return l.filter(function (x) { return !x.film; }); return l; }   // CH+/CH− kalon vetëm kanalet
 function luajLive(it, lista, plote) {
   if (!it) return;
@@ -3209,6 +3343,7 @@ function nis() {
   $("#ora").textContent = oraTani();
   if (S.listat.length) ngarkoListen(); else { hapForme(-1); if (LS.get("gjuha", null) === null) setTimeout(zgjidhGjuhenFillim, 400); }
   setTimeout(pyetPanelin, 1500);
+  if (TLF.po) setTimeout(tlfPrit, 2500);   // 📱 telekomanda nga telefoni (vetëm kur paneli e ka ndezur për këtë TV)
   setInterval(function () { if (!document.hidden) pyetPanelin(); }, 5 * 60000);
   setInterval(function () {   // paneli mëson se ç'po shikon TV-ja: pas 8 s në të njëjtin kanal/film (jo gjatë zapping-ut), pastaj çdo 2 min
     if (document.hidden) return;
