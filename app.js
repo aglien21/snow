@@ -17,7 +17,7 @@
    Burimi: Xtream Codes (host + përdorues + fjalëkalim) ose link M3U.
    Videoja luhet me AVPlay të televizorit: luan .ts, HLS, MPEG-2, HEVC, MP2… direkt nga ofruesi. */
 "use strict";
-var VERSIONI = "1.9.4";
+var VERSIONI = "1.9.5";
 (function () {   // TV i vjetër pa "gap" te flex (Chromium < 84, p.sh. Samsung 2020): app.css përdor margin në vend të tij
   try {
     var d = document.createElement("div");
@@ -1620,10 +1620,90 @@ function tlfFav(k) {
   if (!ePlote() && F.ekran === "live" && katLiveTani() === "fav" && UI.lKat) zgjidhKatLive(UI.lKat.zgjedhur, true);
   TLF.listaKoha = 0;
 }
+// 🎬 filmat dhe serialet: telefoni i kërkon kur i hap (kategoritë, një kategori, kërkimi, episodet) – jo të gjitha njëherësh
+function tlfPergj(x) { dergoPanelit(tlfBaza() + "api/tk/gj", 30000, tlfTrupi({ pp: x }), function () {}, function () {}); }
+function tlfPoz(celes) { var p = LS.get("poz_" + celesListe(), {})[celes] || 0; return p ? kohe(p) : ""; }
+function tlfVodR(x) { return [x.k, String(x.emri || "").slice(0, 90), String(x.logo || "").slice(0, 300), x.vl ? String(x.vl).slice(0, 5) : "", x.k.charAt(0) === "v" ? tlfPoz(x.k) : ""]; }
+function tlfVodKat(c) {
+  var ser = c.l === "ser";
+  tlfPergj({ id: c.id, lloji: "kat", l: c.l, kat: kategoriteVod(ser ? S.ser : S.vod, ser ? S.serKat : S.vodKat).map(function (k) { return { id: k.id, e: k.emri, n: k.n }; }) });
+}
+function tlfMadhesia(x, items) {   // ≤ 800 KB për një përgjigje: pa postera nëse duhet, pastaj më pak rreshta
+  var js = JSON.stringify(x);
+  if (js.length > 800000) { items.forEach(function (r) { r[2] = ""; }); js = JSON.stringify(x); }
+  while (js.length > 800000 && items.length > 100) { items.length = Math.floor(items.length * 0.7); js = JSON.stringify(x); }
+}
+function tlfVodL(c) {
+  var ser = c.l === "ser", lista = ser ? S.ser : S.vod;
+  var l = c.kat === "*" ? lista : c.kat === "fav" ? lista.filter(function (x) { return S.fav[x.k]; }) : lista.filter(function (x) { return x.kat === c.kat; });
+  if (!ser) l = renditVod(l);
+  var items = l.slice(0, 3000).map(tlfVodR), x = { id: c.id, lloji: "l", l: c.l, kat: c.kat, n: l.length, items: items };
+  tlfMadhesia(x, items);
+  tlfPergj(x);
+}
+function tlfNorm(t) { return String(t || "").toLowerCase().replace(/[ëèéê]/g, "e").replace(/ç/g, "c").replace(/[^a-z0-9]+/g, " "); }
+function tlfKerko(c) {
+  var fj = tlfNorm(c.q).split(" ").filter(Boolean), vod = [], ser = [];
+  function ka(x) { var e = tlfNorm(x.emri); for (var i = 0; i < fj.length; i++) if (e.indexOf(fj[i]) < 0) return false; return fj.length > 0; }
+  for (var i = 0; i < S.vod.length && vod.length < 80; i++) if (ka(S.vod[i])) vod.push(tlfVodR(S.vod[i]));
+  for (var j = 0; j < S.ser.length && ser.length < 80; j++) if (ka(S.ser[j])) ser.push(tlfVodR(S.ser[j]));
+  tlfPergj({ id: c.id, lloji: "kerko", q: c.q, vod: vod, ser: ser });
+}
+function tlfGjejV(k, ser) { var l = ser ? S.ser : S.vod; for (var i = 0; i < l.length; i++) if (l[i].k === k) return l[i]; return null; }
+function tlfSerial(c) {
+  var it = tlfGjejV(c.k, true);
+  if (!it || !S.burim || !S.burim.serial) return tlfPergj({ id: c.id, lloji: "ser", k: c.k, gab: T("Seriali s'u gjet") });
+  S.burim.serial(it).then(function (d) {
+    var ep = (d && d.episodes) || {}, inf = (d && d.info) || {}, sez = Object.keys(ep).sort(function (a, b) { return a - b; });
+    var x = { id: c.id, lloji: "ser", k: c.k, emri: it.emri, logo: it.logo || "", info: [inf.genre, inf.releaseDate || inf.year, inf.rating ? "★ " + inf.rating : ""].filter(Boolean).join(" · "),
+      per: String(inf.plot || it.per || "").slice(0, 600), sez: sez.map(function (sz) {
+        return { s: sz, ep: ep[sz].slice(0, 300).map(function (e, j) { var i2 = e.info || {}; return [j, e.episode_num || j + 1, String(e.title || "").slice(0, 90), String(i2.duration || "").slice(0, 12), tlfPoz("e" + e.id)]; }) };
+      }) };
+    tlfPergj(x);
+  }).catch(function (e) { tlfPergj({ id: c.id, lloji: "ser", k: c.k, gab: String((e && e.message) || e).slice(0, 120) }); });
+}
+function tlfLiroEkranin() {   // si te shkoTeKanali: ruan filmin që po luan, del nga ekrani i plotë
+  if (DG) mbyllDialog(null);
+  if (GP) mbyllGuiden();
+  if (RV.hap) mbyllRendit();
+  $("#zap").classList.add("fsh");
+  if (S.luan && S.luan.lloji !== "live") {
+    ruajPozicionin(); L.ndalo(); S.luan = null;
+    if (ePlote()) { document.body.classList.remove("plote"); $("#osd").classList.add("fsh"); }
+  }
+}
+function tlfLuajVod(c) {
+  var it = tlfGjejV(c.k, false);
+  if (!it) return njofto(T("📱 Filmi s'u gjet në listën e TV-së"), 3000);
+  if (TK || TS) return njofto(T("📱 Mbyll fillimisht dritaren në TV"), 3000);
+  tlfLiroEkranin();
+  luajVod(it, S.burim.urlVod(it), it.emri, "v" + it.sid, null, c.vazhdo === true ? true : c.vazhdo === false ? false : null);
+}
+function tlfLuajEp(c) {
+  var it = tlfGjejV(c.k, true);
+  if (!it) return njofto(T("📱 Seriali s'u gjet në listën e TV-së"), 3000);
+  if (TK || TS) return njofto(T("📱 Mbyll fillimisht dritaren në TV"), 3000);
+  function luaj() {
+    if (!S.serTani || S.serTani.it !== it) return;
+    var si = -1; UI.dSez.items.forEach(function (x, i) { if (String(x.s) === String(c.s)) si = i; });
+    if (si < 0) return;
+    UI.dSez.i = si; zgjidhSezonin(si); vendosZone("ep");
+    luajEpisod(si, c.e, c.vazhdo === true ? true : c.vazhdo === false ? false : null);
+  }
+  tlfLiroEkranin();
+  if (ePlote() && S.luan && S.luan.lloji === "live") dilPlote();
+  if (S.serTani && S.serTani.it === it) { shfaqEkran("serdet"); luaj(); }
+  else { var p = hapSerial(it); if (p && p.then) p.then(luaj); }
+}
 function tlfKryej(c) {
   if (c.c === "gjendja") return tlfGjendja(true);
   if (c.c === "epg") return tlfEpg(c.k);
   if (c.c === "pr") return tlfPr(c.ks);
+  if (!S.burim && /^(vod_kat|vod_l|kerko|ser)$/.test(c.c)) return tlfPergj({ id: c.id, lloji: "bosh" });
+  if (c.c === "vod_kat") return tlfVodKat(c);
+  if (c.c === "vod_l") return tlfVodL(c);
+  if (c.c === "kerko") return tlfKerko(c);
+  if (c.c === "ser") return tlfSerial(c);
   if (c.c === "fav") { if (S.burim) tlfFav(c.k); return setTimeout(function () { tlfGjendja(false); }, 300); }
   if (c.c === "zeri") { tlfZeriNdrysho(c.d); return setTimeout(function () { tlfGjendja(false); }, 300); }
   if (document.hidden) return;   // aplikacioni s'është në ekran
@@ -1645,6 +1725,8 @@ function tlfKryej(c) {
     if (ePlote()) { if (S.luan.lloji === "live") dilPlote(); }
     else hyrPlote();
   } else if (c.c === "figura") ngjyraFormati();
+  else if (c.c === "luaj_v") tlfLuajVod(c);
+  else if (c.c === "luaj_ep") tlfLuajEp(c);
   setTimeout(function () { tlfGjendja(false); }, 500);
 }
 
@@ -1803,7 +1885,7 @@ function ruajPozicionin() {
   var k = Object.keys(p); if (k.length > 200) delete p[k[0]];
   LS.set("poz_" + celesListe(), p);
 }
-function luajVod(it, url, titull, celes, pas) {
+function luajVod(it, url, titull, celes, pas, fillimi) {
   var p = LS.get("poz_" + celesListe(), {})[celes] || 0;
   var nis = function (fillim) {
     if (L.luan() && S.luan && S.luan.lloji === "live") L.ndalo();
@@ -1815,7 +1897,8 @@ function luajVod(it, url, titull, celes, pas) {
     hyrPlote();
     clearInterval(pozTimer); pozTimer = setInterval(ruajPozicionin, 15000);
   };
-  if (p) dialog(T("Vazhdo nga ") + kohe(p) + "?", [{ t: T("▶ Vazhdo"), f: function () { nis(p); } }, { t: T("⟲ Nga fillimi"), f: function () { nis(0); } }]);
+  if (fillimi != null) nis(fillimi === true ? p : 0);   // 📱 zgjedhur nga telefoni
+  else if (p) dialog(T("Vazhdo nga ") + kohe(p) + "?", [{ t: T("▶ Vazhdo"), f: function () { nis(p); } }, { t: T("⟲ Nga fillimi"), f: function () { nis(0); } }]);
   else nis(0);
 }
 var kerkimTimer = null, kerkimCak = null;
@@ -1847,7 +1930,7 @@ function zgjidhKatVod(lloji, i) {
 function hapSerial(it) {
   $("#fillimi-tekst").textContent = T("Duke hapur serialin…");
   ngarkim(true);
-  S.burim.serial(it).then(function (d) {
+  return S.burim.serial(it).then(function (d) {
     ngarkim(false);
     var ep = (d && d.episodes) || {}, sez = Object.keys(ep).sort(function (a, b) { return a - b; });
     if (!sez.length) return njofto(T("Ky serial s'ka episode."));
@@ -1873,7 +1956,7 @@ function zgjidhSezonin(i) {
   }), 0);
   $("#d-titull").textContent = T("Sezoni ") + s.s + " · " + UI.dEp.items.length + (GJ === "en" && UI.dEp.items.length === 1 ? " episode" : T(" episode"));
 }
-function luajEpisod(sIdx, eIdx) {
+function luajEpisod(sIdx, eIdx, fillimi) {
   var s = UI.dSez.items[sIdx], ser = S.serTani; if (!s) return;
   var ep = ser.ep[s.s][eIdx]; if (!ep) return;
   var pas = function () {
@@ -1882,7 +1965,7 @@ function luajEpisod(sIdx, eIdx) {
     else dilPlote();
   };
   UI.dEp.i = eIdx;
-  luajVod(ser.it, S.burim.urlEp(ep), ser.it.emri + " · S" + s.s + " E" + (ep.episode_num || eIdx + 1) + (ep.title ? " · " + ep.title : ""), "e" + ep.id, pas);
+  luajVod(ser.it, S.burim.urlEp(ep), ser.it.emri + " · S" + s.s + " E" + (ep.episode_num || eIdx + 1) + (ep.title ? " · " + ep.title : ""), "e" + ep.id, pas, fillimi);
 }
 
 // ---- KËRKO
