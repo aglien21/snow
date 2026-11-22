@@ -17,7 +17,7 @@
    Burimi: Xtream Codes (host + përdorues + fjalëkalim) ose link M3U.
    Videoja luhet me AVPlay të televizorit: luan .ts, HLS, MPEG-2, HEVC, MP2… direkt nga ofruesi. */
 "use strict";
-var VERSIONI = "1.9.3";
+var VERSIONI = "1.9.4";
 (function () {   // TV i vjetër pa "gap" te flex (Chromium < 84, p.sh. Samsung 2020): app.css përdor margin në vend të tij
   try {
     var d = document.createElement("div");
@@ -1574,9 +1574,57 @@ function tlfEpg(k) {
   burimI(it).epg(it).then(function (l) { S.epgC[it.k] = { t: tani(), l: l }; }).catch(function () { S.epgC[it.k] = { t: tani(), l: [] }; })
     .then(function () { var e2 = epgPer(it); dergo(e2 ? e2.lista : []); });
 }
+// programi i tanishëm për kanalet që po sheh telefoni: nga guida që TV-ja ka gati; të tjerat merren 2 nga 2 (si kur lëviz listën në TV)
+var TLF_PR = { q: [], duke: 0, gati: {}, timer: null };
+function tlfPrI(it) {
+  var e = epgPer(it);
+  if (!e) return null;
+  return e.tani ? [String(e.tani.tit || "").slice(0, 90), e.tani.fil, e.tani.mb, e.pastaj ? String(e.pastaj.tit || "").slice(0, 60) : ""] : [];
+}
+function tlfPr(ks) {
+  (ks || []).slice(0, 100).forEach(function (k) {
+    var it = tlfGjej(k), c;
+    if (!it || it.film) return;
+    var r = tlfPrI(it);
+    if (r) { TLF_PR.gati[k] = r; return; }
+    c = S.epgC[it.k];
+    if ((c && tani() - c.t < 600) || epgTaniI(it) || kaGuideXml(it)) { TLF_PR.gati[k] = []; return; }
+    if (TLF_PR.q.indexOf(it) < 0 && TLF_PR.q.length < 150) TLF_PR.q.push(it);
+  });
+  tlfPrPune(); tlfPrDergo();
+}
+function tlfPrPune() {
+  while (TLF_PR.duke < 2 && TLF_PR.q.length) (function (it) {
+    var b = burimI(it);
+    if (!b || !b.epg) { TLF_PR.gati[it.k] = []; return; }
+    TLF_PR.duke++;
+    var p; try { p = b.epg(it); } catch (e) { p = null; }
+    if (!p || !p.then) { TLF_PR.duke--; TLF_PR.gati[it.k] = []; return; }
+    p.then(function (l) { S.epgC[it.k] = { t: tani(), l: l }; }, function () { S.epgC[it.k] = { t: tani(), l: [] }; })
+      .then(function () { TLF_PR.duke--; TLF_PR.gati[it.k] = tlfPrI(it) || []; tlfPrDergo(); tlfPrPune(); });
+  })(TLF_PR.q.shift());
+}
+function tlfPrDergo() {
+  if (TLF_PR.timer) return;
+  TLF_PR.timer = setTimeout(function () {
+    TLF_PR.timer = null;
+    var g = TLF_PR.gati; TLF_PR.gati = {};
+    for (var k in g) if (g.hasOwnProperty(k)) return dergoPanelit(tlfBaza() + "api/tk/gj", 20000, tlfTrupi({ pr: g }), function () {}, function () {});
+  }, 600);
+}
+function tlfFav(k) {
+  var it = tlfGjej(k);
+  if (!it || it.udh) return;
+  ndryshoFav(it);
+  rifreskoKatLive();
+  if (!ePlote() && F.ekran === "live" && katLiveTani() === "fav" && UI.lKat) zgjidhKatLive(UI.lKat.zgjedhur, true);
+  TLF.listaKoha = 0;
+}
 function tlfKryej(c) {
   if (c.c === "gjendja") return tlfGjendja(true);
   if (c.c === "epg") return tlfEpg(c.k);
+  if (c.c === "pr") return tlfPr(c.ks);
+  if (c.c === "fav") { if (S.burim) tlfFav(c.k); return setTimeout(function () { tlfGjendja(false); }, 300); }
   if (c.c === "zeri") { tlfZeriNdrysho(c.d); return setTimeout(function () { tlfGjendja(false); }, 300); }
   if (document.hidden) return;   // aplikacioni s'është në ekran
   if (c.c === "tast") {
